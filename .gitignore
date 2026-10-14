@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+vendor/
+**/node_modules/
+**/vendor/
+
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+*.env
+
+# Expo & React Native
+.expo/
+**/dist/
+**/web-build/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# Logs
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+*.log
+
+# Editor & OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Laravel specifics
+**/storage/*.key
+**/storage/framework/cache/*
+**/storage/framework/sessions/*
+**/storage/framework/views/*
+**/storage/logs/*
+**/public/storage
+**/public/hot
+**/public/build
+Homestead.json
+Homestead.yaml
+_ide_helper.php
+.phpunit.result.cache

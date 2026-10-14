@@ -1,0 +1,80 @@
+{
+  "expo": {
+    "name": "Waydrop",
+    "slug": "waydrop",
+    "scheme": "waydrop",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "backgroundColor": "#F8FAFC",
+    "ios": {
+      "bundleIdentifier": "app.waydrop",
+      "supportsTablet": true,
+      "usesAppleSignIn": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Waydrop uses your location to find runners near you and errands along the routes you walk. It's only shared with your runner during an errand.",
+        "NSCameraUsageDescription": "Take a profile photo, or a photo of an item at pickup.",
+        "NSPhotoLibraryUsageDescription": "Choose a profile photo."
+      }
+    },
+    "android": {
+      "package": "app.waydrop",
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA",
+        "POST_NOTIFICATIONS"
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0F172A"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-secure-store",
+      "expo-apple-authentication",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#FF5500",
+          "image": "./assets/splash-mark.png",
+          "imageWidth": 96
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Waydrop uses your location to find runners near you and errands along the routes you walk. It's only shared with your runner during an errand."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Choose a profile photo.",
+          "cameraPermission": "Take a profile photo, or a photo of an item at pickup."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#FF5500"
+        }
+      ],
+      "expo-status-bar",
+      "expo-image",
+      "expo-web-browser"
+    ],
+    "experiments": {
+      "typedRoutes": false
+    },
+    "icon": "./assets/icon.png"
+  }
+}
