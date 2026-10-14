@@ -270,9 +270,9 @@ CREATE TABLE tasks (
     bounty_kobo BIGINT NOT NULL CHECK (bounty_kobo >= 20000), -- minimum ₦200
     suggested_min_kobo BIGINT NOT NULL,
     platform_fee_kobo BIGINT NOT NULL,
-    pin VARCHAR(4) NOT NULL, -- 4-digit handshake delivery PIN
-    pin_attempts INT NOT NULL DEFAULT 0,
-    status VARCHAR(20) NOT NULL DEFAULT 'pending', -- pending, accepted, picked_up, completed, cancelled
+    pin_code VARCHAR(255) NOT NULL, -- Encrypted 4-digit handshake delivery PIN (AES-256-CBC)
+    pin_attempts INT NOT NULL DEFAULT 0, -- Anti-brute force counter (locks at 3)
+    status VARCHAR(20) NOT NULL DEFAULT 'pending', -- pending, accepted, picked_up, completed, cancelled, disputed
     cancellation_reason VARCHAR(255) NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     accepted_at TIMESTAMP NULL,
@@ -485,6 +485,183 @@ sequenceDiagram
    - The admin panel displays side-by-side: Document photo, live selfie, AI confidence score, and bank name match.
    - Admin retains final 1-click **Approve** or **Reject** with structured feedback (e.g. *"ID card was blurry"*, *"Bank name does not match ID"*).
 
+### 5.4 Handshake PIN & Proof-of-Delivery Engine
+
+The Handshake PIN is Waydrop’s cryptographic proof-of-delivery mechanism. It ensures absolute zero-trust verification between students without requiring expensive hardware scanners or paper signatures.
+
+#### 5.4.1 The Threat Model It Eliminates
+1. **Premature Runner Completion Fraud**: A runner cannot mark an errand "Delivered" from 100 meters away just to release escrow funds early.
+2. **False Requester Non-Delivery Denial**: A dishonest requester cannot take the item, wait for the runner to leave, and claim *"I never received it, refund my money"*. Possession of the item is physically exchanged for the 4-digit PIN.
+
+#### 5.4.2 Generation, Encryption & Role-Based Visibility
+* **Generation**: Upon task creation (`POST /api/v1/tasks`), the backend generates a random 4-digit numeric code:
+  ```php
+  $plainPin = str_pad((string) random_int(1000, 9999), 4, '0', STR_PAD_LEFT);
+  ```
+* **Storage & Encryption**: Stored in `tasks.pin_code` using Laravel's AES-256-CBC encrypted cast:
+  ```php
+  // app/Models/Task.php
+  protected $casts = [
+      'pin_code' => 'encrypted',
+      'bounty_kobo' => 'integer',
+      'platform_fee_kobo' => 'integer',
+  ];
+  protected $hidden = ['pin_code']; // Hidden by default from all serialized arrays
+  ```
+* **Visibility Matrix**:
+  | Role | Visibility in API & UI | UI Display |
+  | :--- | :--- | :--- |
+  | **Requester** | `delivery_pin: "4829"` (Exposed only if `auth()->id() === $task->requester_id`) | Large numeric card on tracking screen: *"Your Delivery PIN: 4829. Do NOT share until item is in hand."* |
+  | **Runner** | `delivery_pin: null` (Always stripped by `TaskResource`) | 4-digit numeric input pad: *"Ask the recipient for the 4-digit Delivery PIN."* |
+  | **Third-Party Recipient** | Shareable via WhatsApp/SMS link (`https://waydrop.app/d/{task_id}?token=...`) | Requester taps *"Share PIN with Recipient"* to forward delivery pass to roommate or classmate. |
+
+#### 5.4.3 Handshake Physical & Settlement Flow
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Runner as Runner Mobile
+    actor Recipient as Recipient / Requester
+    participant Laravel as Laravel API
+    participant DB as Postgres (ACID Lock)
+    participant Ably as Ably Real-Time
+
+    Runner->>Recipient: Arrives at Drop-off location with physical item
+    Recipient->>Recipient: Inspects item (Calculator, Food, Documents)
+    Note over Recipient,Runner: Physical Handover: Recipient verbally reads 4-digit PIN to Runner
+    Runner->>Runner: Types PIN ("4829") into Waydrop App keypad
+    Runner->>Laravel: POST /api/v1/tasks/{id}/complete { pin: "4829" }
+    
+    activate Laravel
+    Laravel->>DB: SELECT * FROM tasks WHERE id = ? FOR UPDATE
+    Note over Laravel,DB: Validates status === 'picked_up' & pin_attempts < 3
+    
+    alt PIN is Correct
+        Laravel->>DB: UPDATE tasks SET status = 'completed', completed_at = NOW()
+        Laravel->>DB: Transfer funds: Requester Escrow -> Runner Balance (minus platform fee)
+        Laravel->>DB: INSERT into transactions (Escrow Release & Runner Earning)
+        Laravel->>Ably: Publish task.completed on task:{task_id} & user:{requester_id}
+        Laravel-->>Runner: 200 OK { status: "completed", payout_kobo: 45000, fee_kobo: 5000 }
+        Ably-->>Recipient: Instant UI update: "Errand Completed!"
+    else Incorrect PIN (Attempt 1 or 2)
+        Laravel->>DB: UPDATE tasks SET pin_attempts = pin_attempts + 1
+        Laravel-->>Runner: 422 Unprocessable Entity { code: "INVALID_PIN", attempts_remaining: 2 }
+    else Incorrect PIN (Attempt 3 - Exhausted)
+        Laravel->>DB: UPDATE tasks SET status = 'disputed', pin_attempts = 3
+        Laravel->>DB: Freeze Escrow funds & Flag in Admin Dashboard
+        Laravel->>Ably: Publish task.disputed on task:{task_id}
+        Laravel-->>Runner: 423 Locked { code: "TASK_DISPUTED", message: "Errand locked. Contact Campus Desk." }
+        Ably-->>Recipient: Instant UI update: "Delivery Disputed - Admin Reviewing"
+    end
+    deactivate Laravel
+```
+
+#### 5.4.4 Atomic Escrow Settlement Logic (`CompleteTaskAction`)
+The completion handler is executed inside a database transaction with pessimistic locking (`lockForUpdate()`) to prevent race conditions or double payout:
+
+```php
+namespace App\Actions\Errands;
+
+use App\Models\Task;
+use App\Models\Transaction;
+use Illuminate\Support\Facades\DB;
+use App\Exceptions\InvalidDeliveryPinException;
+use App\Exceptions\TaskDisputedException;
+
+class CompleteTaskAction
+{
+    public function execute(Task $task, string $enteredPin, string $runnerId): Task
+    {
+        return DB::transaction(function () use ($task, $enteredPin, $runnerId) {
+            /** @var Task $lockedTask */
+            $lockedTask = Task::where('id', $task->id)->lockForUpdate()->firstOrFail();
+
+            if ($lockedTask->runner_id !== $runnerId) {
+                abort(403, 'Unauthorized runner');
+            }
+
+            if ($lockedTask->status !== 'picked_up') {
+                abort(400, "Task cannot be completed in current status: {$lockedTask->status}");
+            }
+
+            if ($lockedTask->pin_attempts >= 3) {
+                throw new TaskDisputedException('Maximum verification attempts reached. Task is disputed.');
+            }
+
+            // Verify PIN
+            if ($lockedTask->pin_code !== trim($enteredPin)) {
+                $lockedTask->increment('pin_attempts');
+
+                if ($lockedTask->pin_attempts >= 3) {
+                    $lockedTask->update(['status' => 'disputed']);
+                    // Broadcast task.disputed to Ably channel
+                    return $lockedTask;
+                }
+
+                throw new InvalidDeliveryPinException(
+                    attemptsRemaining: 3 - $lockedTask->pin_attempts
+                );
+            }
+
+            // Mark completed
+            $lockedTask->update([
+                'status' => 'completed',
+                'completed_at' => now(),
+            ]);
+
+            // Release Escrow
+            $payoutKobo = $lockedTask->bounty_kobo - $lockedTask->platform_fee_kobo;
+            
+            // 1. Debit Requester Escrow
+            $requesterWallet = $lockedTask->requester->wallet()->lockForUpdate()->first();
+            $requesterWallet->decrement('escrow_kobo', $lockedTask->bounty_kobo);
+
+            // 2. Credit Runner Balance
+            $runnerWallet = $lockedTask->runner->wallet()->lockForUpdate()->first();
+            $runnerWallet->increment('balance_kobo', $payoutKobo);
+
+            // 3. Credit Platform Treasury
+            $platformWallet = config('services.platform.treasury_wallet_id');
+            // increment platform fee...
+
+            // 4. Log Double-Entry Transactions
+            Transaction::create([
+                'wallet_id' => $runnerWallet->id,
+                'task_id' => $lockedTask->id,
+                'type' => 'escrow_release',
+                'amount_kobo' => $payoutKobo,
+                'balance_before_kobo' => $runnerWallet->balance_kobo - $payoutKobo,
+                'balance_after_kobo' => $runnerWallet->balance_kobo,
+                'reference' => 'REL_' . $lockedTask->id . '_' . time(),
+                'status' => 'success',
+            ]);
+
+            return $lockedTask;
+        });
+    }
+}
+```
+
+#### 5.4.5 Anti-Brute-Force & Lockout Policy
+* **Attempt Limit**: Maximum of **3 attempts** per errand.
+* **Lockout Escalation**: On the 3rd consecutive failed attempt:
+  1. The task status instantly transitions to `disputed`.
+  2. Escrow funds remain frozen in the requester's `escrow_kobo` column (cannot be withdrawn or refunded automatically).
+  3. Real-time event `task.disputed` is broadcast to both runner and requester screens.
+  4. An alert is highlighted on the **Campus Admin Desk** with:
+     - Drop-off location coordinates
+     - Both students' phone numbers & campus profiles
+     - In-app VoIP audio recording logs (if call took place)
+     - 1-click Admin Override (Force Complete & Payout Runner, or Force Cancel & Refund Requester).
+
+#### 5.4.6 Campus Edge Cases & Offline Fallbacks
+* **Hostel Basement / Network Deadzone**:
+  - If the runner enters the PIN at a hostel doorstep with zero cellular reception, the mobile app caches the PIN entry payload with an accurate local timestamp and GPS fix.
+  - As soon as the runner steps outside and reconnects, the app automatically dispatches the cached `POST /tasks/{id}/complete` request accompanied by the original `Idempotency-Key`.
+* **Recipient Is Unreachable**:
+  - If the recipient does not appear at the drop-off location, the runner initiates a 10-minute countdown by tapping *"Recipient Not Responding"*.
+  - Waydrop sends high-priority SMS and Push alerts to the requester.
+  - If after 10 minutes the recipient is still absent, the runner can return the item to the pickup point or the nearest Campus Student Union Helpdesk, logging GPS proof.
+
 ---
 
 ## 6. Detailed API Endpoints & Request/Response Contracts
@@ -591,9 +768,11 @@ All API endpoints reside under the prefix `/api/v1` and follow standard REST con
   * **Response (200):** Updated `Task` with raised offer.
 * `POST /api/v1/tasks/{id}/cancel` *(Requires `Idempotency-Key`)*
   * **Response (200):** Cancelled `Task` with unlocked escrow.
-* `POST /api/v1/tasks/{id}/complete` *(Runner Only)*
+* `POST /api/v1/tasks/{id}/complete` *(Runner Only, Requires `Idempotency-Key`)*
   * **Payload:** `{ "pin": "4829" }`
-  * **Response (200):** `{ "status": "completed", "payout_kobo": 45000, "fee_kobo": 5000 }`
+  * **Response (200):** `{ "status": "completed", "payout_kobo": 45000, "fee_kobo": 5000, "completed_at": "2026-10-14T17:30:00Z" }`
+  * **Response (422):** `{ "code": "INVALID_PIN", "message": "Incorrect delivery PIN. 2 attempts remaining.", "attempts_remaining": 2 }`
+  * **Response (423):** `{ "code": "TASK_DISPUTED", "message": "Maximum PIN attempts exceeded. Errand is now under dispute review." }`
 
 ### 6.7 In-App Calling
 * `POST /api/v1/tasks/{id}/call/token`
