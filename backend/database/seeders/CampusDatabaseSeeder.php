@@ -85,10 +85,32 @@ class CampusDatabaseSeeder extends Seeder
         }
 
         // 4. Admin & Staff Accounts
+        $superAdmin = User::create([
+            'name' => 'Waydrop Headquarters',
+            'first_name' => 'HQ',
+            'last_name' => 'SuperAdmin',
+            'email' => 'superadmin@waydrop.ng',
+            'phone' => '+2348000000000',
+            'role' => 'super_admin',
+            'runner_status' => 'verified',
+            'password' => Hash::make('password123'),
+            'area_id' => null, // National scope across all Nigerian campuses
+            'phone_verified_at' => now(),
+            'email_verified_at' => now(),
+        ]);
+
+        Wallet::create([
+            'user_id' => $superAdmin->id,
+            'balance_kobo' => 100000000, // ₦1,000,000 national treasury reserve
+            'escrow_kobo' => 0,
+            'virtual_bank_name' => 'Squad GTCO Master Escrow',
+            'virtual_account_nuban' => '8010000001',
+        ]);
+
         $admin = User::create([
-            'name' => 'Waydrop Operations',
-            'first_name' => 'Desk',
-            'last_name' => 'Admin',
+            'name' => 'BUK Desk Lead',
+            'first_name' => 'Musa',
+            'last_name' => 'Ibrahim',
             'email' => 'admin@waydrop.ng',
             'phone' => '+2348000000001',
             'role' => 'admin',
@@ -101,7 +123,7 @@ class CampusDatabaseSeeder extends Seeder
 
         Wallet::create([
             'user_id' => $admin->id,
-            'balance_kobo' => 50000000, // ₦500,000 platform escrow float
+            'balance_kobo' => 50000000, // ₦500,000 BUK campus float
             'escrow_kobo' => 0,
             'virtual_bank_name' => 'Squad GTCO Escrow',
             'virtual_account_nuban' => '8019994821',

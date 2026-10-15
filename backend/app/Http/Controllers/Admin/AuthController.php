@@ -35,8 +35,8 @@ class AuthController extends Controller
         if (Auth::attempt($credentials, $remember)) {
             $user = Auth::user();
 
-            // Restrict access strictly to staff and administrators
-            if (!in_array($user->role, ['admin', 'staff'])) {
+            // Restrict access strictly to super_admin, admin, and staff
+            if (!$user->isStaffOrAdmin()) {
                 Auth::logout();
                 return back()->withErrors([
                     'email' => 'Access restricted: Only administrative and campus desk staff accounts can access Waydrop Desk.',

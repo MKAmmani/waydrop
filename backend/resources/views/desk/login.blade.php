@@ -259,11 +259,15 @@
       </svg>
     </button>
 
-    <div class="demo-box">
-      <div>
-        <strong style="color:var(--brand-dark);">Test Account:</strong> admin@waydrop.ng
+    <div class="demo-box" style="flex-direction:column;align-items:stretch;gap:8px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <span><strong style="color:var(--brand-dark);">👑 HQ Super Admin:</strong> superadmin@waydrop.ng</span>
+        <button type="button" class="demo-fill-btn" onclick="fillSuperAdmin()">Fill HQ</button>
       </div>
-      <button type="button" class="demo-fill-btn" onclick="fillDemo()">Auto-fill</button>
+      <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid #E2E8F0;padding-top:6px;">
+        <span><strong style="color:var(--brand-dark);">🏫 BUK Campus Lead:</strong> admin@waydrop.ng</span>
+        <button type="button" class="demo-fill-btn" onclick="fillCampusAdmin()">Fill Campus</button>
+      </div>
     </div>
   </form>
 </div>
@@ -272,11 +276,15 @@
   <svg width="14" height="14" viewBox="0 0 256 256" fill="currentColor">
     <path d="M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Z"/>
   </svg>
-  <span>Secured Campus Escrow & Operational Network · Bayero University Kano</span>
+  <span>Secured Campus Escrow & Operational Network · Nigeria Platform Operations</span>
 </div>
 
 <script>
-  function fillDemo() {
+  function fillSuperAdmin() {
+    document.getElementById('email').value = 'superadmin@waydrop.ng';
+    document.getElementById('password').value = 'password123';
+  }
+  function fillCampusAdmin() {
     document.getElementById('email').value = 'admin@waydrop.ng';
     document.getElementById('password').value = 'password123';
   }

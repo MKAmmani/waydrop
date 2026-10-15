@@ -27,6 +27,7 @@ Route::prefix('desk')->name('desk.')->middleware('auth')->group(function () {
     Route::get('/crew', [AdminDeskController::class, 'crew'])->name('crew');
     Route::get('/rules', [AdminDeskController::class, 'rules'])->name('rules');
     Route::get('/audit', [AdminDeskController::class, 'audit'])->name('audit');
+    Route::get('/campuses', [AdminDeskController::class, 'campuses'])->name('campuses');
 
     // Desk Action Endpoints
     Route::post('/kyc/{id}/review', [AdminDeskController::class, 'reviewKyc'])->name('kyc.review');
@@ -34,4 +35,9 @@ Route::prefix('desk')->name('desk.')->middleware('auth')->group(function () {
     Route::post('/tasks/{id}/unlock-pin', [AdminDeskController::class, 'unlockPin'])->name('tasks.unlock_pin');
     Route::post('/payouts/{id}/retry', [AdminDeskController::class, 'retryPayout'])->name('payouts.retry');
     Route::post('/places/{id}/approve', [AdminDeskController::class, 'approvePlace'])->name('places.approve');
+
+    // Super Admin Exclusive Actions
+    Route::post('/campuses', [AdminDeskController::class, 'createCampus'])->name('campuses.store');
+    Route::post('/admins', [AdminDeskController::class, 'createCampusAdmin'])->name('admins.store');
+    Route::post('/campus/switch', [AdminDeskController::class, 'switchCampus'])->name('campus.switch');
 });

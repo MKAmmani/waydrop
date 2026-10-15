@@ -115,6 +115,12 @@ class AdminPanelProvider extends PanelProvider
                     ->icon('heroicon-o-clipboard-document-list')
                     ->group('System')
                     ->sort(11),
+
+                NavigationItem::make('👑 Campuses & Admins')
+                    ->url('/desk/campuses')
+                    ->icon('heroicon-o-building-library')
+                    ->group('System')
+                    ->sort(12),
             ])
             ->navigationGroups([
                 NavigationGroup::make('Operations'),

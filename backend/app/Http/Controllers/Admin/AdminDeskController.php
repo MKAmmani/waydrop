@@ -18,9 +18,23 @@ use App\Models\Wallet;
 use App\Services\SquadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class AdminDeskController extends Controller
 {
+    /**
+     * Get active campus filter for current user.
+     */
+    protected function getActiveCampusId(): ?string
+    {
+        $user = auth()->user();
+        if ($user && $user->isSuperAdmin()) {
+            return session('active_campus_id'); // null means all campuses (HQ view)
+        }
+
+        return $user?->area_id;
+    }
+
     /**
      * Today & Campus Pulse (Desk 01)
      */
@@ -346,4 +360,117 @@ class AdminDeskController extends Controller
 
         return back()->with('success', 'Place approved and student bounty rewarded.');
     }
+
+    /**
+     * Campus Network & Staff Management (Super Admin Exclusive Desk)
+     */
+    public function campuses()
+    {
+        $user = auth()->user();
+        if (!$user->isSuperAdmin()) {
+            abort(403, 'Unauthorized: Only Super Administrators can manage campus creation and admin provisioning.');
+        }
+
+        $campuses = Area::withCount(['places', 'tasks', 'users'])->get();
+        $admins = User::whereIn('role', ['admin', 'super_admin'])->with('area')->latest()->get();
+
+        return view('desk.campuses', compact('campuses', 'admins'));
+    }
+
+    /**
+     * Create a new Campus / University Area (Super Admin)
+     */
+    public function createCampus(Request $request)
+    {
+        if (!auth()->user()->isSuperAdmin()) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'id' => 'required|string|max:50|unique:areas,id',
+            'name' => 'required|string|max:100',
+            'subtitle' => 'required|string|max:150',
+            'lat' => 'required|numeric',
+            'lng' => 'required|numeric',
+            'radius_meters' => 'required|integer|min:500',
+        ]);
+
+        $area = Area::create($validated);
+
+        AuditLog::record(
+            action: 'campus.create',
+            targetType: 'Area',
+            targetId: $area->id,
+            reason: 'Super Admin provisioned new university campus: ' . $area->name
+        );
+
+        return back()->with('success', "Campus '{$area->name}' created successfully.");
+    }
+
+    /**
+     * Provision a new Campus Lead Administrator (Super Admin)
+     */
+    public function createCampusAdmin(Request $request)
+    {
+        if (!auth()->user()->isSuperAdmin()) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:100',
+            'email' => 'required|email|unique:users,email',
+            'phone' => 'required|string|unique:users,phone',
+            'password' => 'required|string|min:6',
+            'area_id' => 'required|exists:areas,id',
+        ]);
+
+        $newAdmin = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'],
+            'password' => Hash::make($validated['password']),
+            'area_id' => $validated['area_id'],
+            'role' => 'admin',
+            'runner_status' => 'verified',
+            'phone_verified_at' => now(),
+            'email_verified_at' => now(),
+        ]);
+
+        Wallet::create([
+            'user_id' => $newAdmin->id,
+            'balance_kobo' => 50000000, // ₦500k initial float
+            'escrow_kobo' => 0,
+            'virtual_bank_name' => 'Squad GTCO Escrow',
+            'virtual_account_nuban' => '80' . rand(10000000, 99999999),
+        ]);
+
+        AuditLog::record(
+            action: 'admin.provision',
+            targetType: 'User',
+            targetId: $newAdmin->id,
+            reason: "Super Admin provisioned Campus Lead for campus: {$validated['area_id']}"
+        );
+
+        return back()->with('success', "Campus Lead '{$newAdmin->name}' provisioned successfully.");
+    }
+
+    /**
+     * Switch Active Campus Scope (Super Admin only)
+     */
+    public function switchCampus(Request $request)
+    {
+        if (!auth()->user()->isSuperAdmin()) {
+            abort(403);
+        }
+
+        $campusId = $request->input('campus_id');
+        if ($campusId === 'all' || empty($campusId)) {
+            session()->forget('active_campus_id');
+        } else {
+            session(['active_campus_id' => $campusId]);
+        }
+
+        return back()->with('success', 'Active campus switched.');
+    }
 }
+

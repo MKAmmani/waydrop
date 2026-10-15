@@ -76,8 +76,32 @@ class User extends Authenticatable implements FilamentUser
      */
     public function canAccessPanel(Panel $panel): bool
     {
-        // Allow staff and admin access to admin panel
-        return in_array($this->role, ['admin', 'staff']);
+        // Allow super_admin, admin, and staff access to admin panel
+        return in_array($this->role, ['super_admin', 'admin', 'staff']);
+    }
+
+    /**
+     * Check if user is a national platform Super Administrator.
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'super_admin';
+    }
+
+    /**
+     * Check if user is a local campus lead administrator.
+     */
+    public function isCampusAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    /**
+     * Check if user has administrative or staff operational privileges.
+     */
+    public function isStaffOrAdmin(): bool
+    {
+        return in_array($this->role, ['super_admin', 'admin', 'staff']);
     }
 
     /**
