@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -90,7 +90,7 @@
   <a href="/desk/rules" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,80a24,24,0,1,1-24-24A24,24,0,0,1,128,80Zm40,72a24,24,0,1,0,24,24A24,24,0,0,0,168,152Z" opacity="0.2"/><path d="M40,88H73a32,32,0,0,0,62,0h81a8,8,0,0,0,0-16H135a32,32,0,0,0-62,0H40a8,8,0,0,0,0,16Zm64-24A16,16,0,1,1,88,80,16,16,0,0,1,104,64ZM216,168H199a32,32,0,0,0-62,0H40a8,8,0,0,0,0,16h97a32,32,0,0,0,62,0h17a8,8,0,0,0,0-16Zm-48,24a16,16,0,1,1,16-16A16,16,0,0,1,168,192Z"/></svg> Rules</a>
   <a href="/desk/audit" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M208,48V216a8,8,0,0,1-8,8H56a8,8,0,0,1-8-8V48a8,8,0,0,1,8-8H96a39.83,39.83,0,0,0-8,24v8h80V64a39.83,39.83,0,0,0-8-24h40A8,8,0,0,1,208,48Z" opacity="0.2"/><path d="M168,152a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,152Zm-8-40H96a8,8,0,0,0,0,16h64a8,8,0,0,0,0-16Zm56-64V216a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V48A16,16,0,0,1,56,32H92.26a47.92,47.92,0,0,1,71.48,0H200A16,16,0,0,1,216,48ZM96,64h64a32,32,0,0,0-64,0ZM200,48H173.25A47.93,47.93,0,0,1,176,64v8a8,8,0,0,1-8,8H88a8,8,0,0,1-8-8V64a47.93,47.93,0,0,1,2.75-16H56V216H200Z"/></svg> Audit log</a>
   @if(auth()->user()?->isSuperAdmin())
-  <a href="/desk/campuses" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216ZM144,80a16,16,0,1,1-16-16A16,16,0,0,1,144,80Zm24,72a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h16V120a8,8,0,0,1,16,0v24h16A8,8,0,0,1,168,152Z"/></svg> 👑 Campuses & Admins</a>
+  <a href="/desk/campuses" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216ZM144,80a16,16,0,1,1-16-16A16,16,0,0,1,144,80Zm24,72a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h16V120a8,8,0,0,1,16,0v24h16A8,8,0,0,1,168,152Z"/></svg> Campuses & Admins</a>
   @endif
   <div class="shift"><span class="av">{{ strtoupper(substr(auth()->user()->name ?? "AD", 0, 2)) }}</span><div style="flex:1;"><b>{{ auth()->user()->name ?? "Waydrop Operations" }}</b><small>{{ ucfirst(auth()->user()->role ?? "admin") }} · <a href="/logout" style="color:var(--brand);text-decoration:none;font-weight:600;">Sign out</a></small></div></div>
 </nav>
@@ -103,7 +103,7 @@
         <div class="campus" style="cursor:pointer;padding:4px 10px;">
           <span class="dotlive" style="background:#2563EB;"></span>
           <select name="campus_id" onchange="this.form.submit()" style="border:none;background:transparent;font-family:inherit;font-weight:600;font-size:12.5px;color:inherit;outline:none;cursor:pointer;">
-            <option value="all" {{ empty(session('active_campus_id')) ? 'selected' : '' }}>👑 National HQ (All Campuses)</option>
+            <option value="all" {{ empty(session('active_campus_id')) ? 'selected' : '' }}>National HQ (All Campuses)</option>
             @foreach (\App\Models\Area::all() as $c)
               <option value="{{ $c->id }}" {{ session('active_campus_id') === $c->id ? 'selected' : '' }}>🏫 {{ $c->name }}</option>
             @endforeach

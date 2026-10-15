@@ -261,7 +261,7 @@
 
     <div class="demo-box" style="flex-direction:column;align-items:stretch;gap:8px;">
       <div style="display:flex;align-items:center;justify-content:space-between;">
-        <span><strong style="color:var(--brand-dark);">👑 HQ Super Admin:</strong> superadmin@waydrop.ng</span>
+        <span><strong style="color:var(--brand-dark);">HQ Super Admin:</strong> superadmin@waydrop.ng</span>
         <button type="button" class="demo-fill-btn" onclick="fillSuperAdmin()">Fill HQ</button>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid #E2E8F0;padding-top:6px;">

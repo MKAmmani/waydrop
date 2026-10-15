@@ -116,7 +116,7 @@ class AdminPanelProvider extends PanelProvider
                     ->group('System')
                     ->sort(11),
 
-                NavigationItem::make('👑 Campuses & Admins')
+                NavigationItem::make('Campuses & Admins')
                     ->url('/desk/campuses')
                     ->icon('heroicon-o-building-library')
                     ->group('System')
