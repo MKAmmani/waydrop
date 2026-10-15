@@ -94,7 +94,22 @@
   <main>
     <div class="top">
       <label class="search"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"/></svg><input id="q" placeholder="Phone number, name, or errand reference (WD-…)" aria-label="Search"><kbd>/</kbd></label>
-      <div class="campus"><span class="dotlive"></span> University of Lagos <svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M216.49,104.49l-80,80a12,12,0,0,1-17,0l-80-80a12,12,0,0,1,17-17L128,159l71.51-71.52a12,12,0,0,1,17,17Z"/></svg></div>
+      @if(auth()->user()?->isSuperAdmin())
+      <form method="POST" action="{{ route('desk.campus.switch') }}" style="display:inline-flex;margin:0;">
+        @csrf
+        <div class="campus" style="cursor:pointer;padding:4px 10px;">
+          <span class="dotlive" style="background:#2563EB;"></span>
+          <select name="campus_id" onchange="this.form.submit()" style="border:none;background:transparent;font-family:inherit;font-weight:600;font-size:12.5px;color:inherit;outline:none;cursor:pointer;">
+            <option value="all" {{ empty(session('active_campus_id')) ? 'selected' : '' }}>👑 National HQ (All Campuses)</option>
+            @foreach (\App\Models\Area::all() as $c)
+              <option value="{{ $c->id }}" {{ session('active_campus_id') === $c->id ? 'selected' : '' }}>🏫 {{ $c->name }}</option>
+            @endforeach
+          </select>
+        </div>
+      </form>
+      @else
+      <div class="campus"><span class="dotlive"></span> {{ auth()->user()?->area?->name ?? 'BUK New Site' }}</div>
+      @endif
       <div style="margin-left:auto;font-size:12px;color:var(--ink3)" id="clock"></div>
     </div>
     <div class="page">
