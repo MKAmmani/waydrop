@@ -1,11 +1,21 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminDeskController;
+use App\Http\Controllers\Admin\AuthController;
 use Illuminate\Support\Facades\Route;
 
+// Top-level redirects
 Route::redirect('/', '/desk/today');
+Route::redirect('/admin', '/desk/today');
+Route::redirect('/admin/login', '/login');
 
-Route::prefix('desk')->name('desk.')->group(function () {
+// Authentication Routes (Waydrop Desk Custom Theme)
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])->name('logout');
+
+// Operational Desks (Protected by Auth Middleware)
+Route::prefix('desk')->name('desk.')->middleware('auth')->group(function () {
     Route::get('/today', [AdminDeskController::class, 'today'])->name('today');
     Route::get('/queue', [AdminDeskController::class, 'queue'])->name('queue');
     Route::get('/disputes', [AdminDeskController::class, 'disputes'])->name('disputes');
@@ -18,7 +28,7 @@ Route::prefix('desk')->name('desk.')->group(function () {
     Route::get('/rules', [AdminDeskController::class, 'rules'])->name('rules');
     Route::get('/audit', [AdminDeskController::class, 'audit'])->name('audit');
 
-    // Action Handlers
+    // Desk Action Endpoints
     Route::post('/kyc/{id}/review', [AdminDeskController::class, 'reviewKyc'])->name('kyc.review');
     Route::post('/disputes/{id}/resolve', [AdminDeskController::class, 'resolveDispute'])->name('disputes.resolve');
     Route::post('/tasks/{id}/unlock-pin', [AdminDeskController::class, 'unlockPin'])->name('tasks.unlock_pin');
