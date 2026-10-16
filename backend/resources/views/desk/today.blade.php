@@ -1,10 +1,113 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Waydrop Desk: Today & Campus Pulse</title>
 <link rel="stylesheet" href="/admin_desk/admin_desk.css">
+<!-- Leaflet & Ably WebSockets SDKs -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
+<style>
+  :root { --brand: #FF5500; }
+  .leaflet-container { font-family: 'DM Sans', -apple-system, sans-serif; background: #EDF0F3; }
+  .leaflet-popup-content-wrapper { border-radius: 12px; box-shadow: 0 10px 25px rgba(15,23,42,0.15); border: 1px solid #E2E8F0; padding: 4px; }
+  .leaflet-popup-content { margin: 10px 14px; font-size: 13px; line-height: 1.45; }
+  .leaflet-popup-tip { background: #FFFFFF; }
+
+  /* Moving Runner Marker */
+  .runner-radar-pin {
+    position: relative;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #0F172A;
+    border: 2.5px solid #FFFFFF;
+    box-shadow: 0 2px 8px rgba(15,23,42,0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FFFFFF;
+    font-size: 11px;
+    font-weight: 700;
+    transition: transform 0.6s linear, left 0.6s linear, top 0.6s linear;
+  }
+  .runner-radar-pin::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    background: rgba(255, 85, 0, 0.25);
+    animation: radar-pulse 2s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+    z-index: -1;
+  }
+  .runner-radar-pin .direction-arrow {
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-bottom: 7px solid #FF5500;
+  }
+  @keyframes radar-pulse {
+    0% { transform: scale(0.8); opacity: 0.8; }
+    100% { transform: scale(1.8); opacity: 0; }
+  }
+
+  /* Waiting Errand Hotspot Marker */
+  .errand-radar-pin {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #FF5500;
+    border: 2px solid #FFFFFF;
+    box-shadow: 0 0 10px rgba(255,85,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FFFFFF;
+    font-size: 11px;
+    animation: errand-glow 1.5s ease-in-out infinite alternate;
+  }
+  @keyframes errand-glow {
+    from { box-shadow: 0 0 4px rgba(255,85,0,0.4); transform: scale(0.95); }
+    to { box-shadow: 0 0 14px rgba(255,85,0,0.9); transform: scale(1.08); }
+  }
+
+  /* Landmark & Building Marker */
+  .place-radar-pin {
+    padding: 4px 9px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.96);
+    border: 1.5px solid #0F172A;
+    box-shadow: 0 3px 10px rgba(15,23,42,0.22);
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #0F172A;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .place-radar-pin:hover {
+    transform: scale(1.12);
+    box-shadow: 0 6px 18px rgba(15,23,42,0.35);
+    background: #FFFFFF;
+    border-color: #FF5500;
+  }
+  .place-radar-pin.focused {
+    background: #0F172A;
+    color: #FFFFFF;
+    border-color: #FF5500;
+    box-shadow: 0 0 0 4px rgba(255,85,0,0.3);
+  }
+</style>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -75,16 +178,16 @@
 <nav aria-label="Desk">
   <div class="brand"><a href="/desk/today" style="text-decoration:none;display:flex;align-items:center;gap:10px;color:inherit;"><svg width="30" height="30" aria-hidden="true"><use href="#logo"/></svg><b>Waydrop</b><span>DESK</span></a></div>
   <a href="/desk/today" class="nlink on" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M96,40l33.52,88H56Zm104,88H129.52L160,208Z" opacity="0.2"/><path d="M240,128a8,8,0,0,1-8,8H204.94l-37.78,75.58A8,8,0,0,1,160,216h-.4a8,8,0,0,1-7.08-5.14L95.35,60.76,63.28,131.31A8,8,0,0,1,56,136H24a8,8,0,0,1,0-16H50.85L88.72,36.69a8,8,0,0,1,14.76.46l57.51,151,31.85-63.71A8,8,0,0,1,200,120h32A8,8,0,0,1,240,128Z"/></svg> Today</a>
-  <a href="/desk/queue" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M216,48V160H179.31a8,8,0,0,0-5.66,2.34l-19.31,19.32a8,8,0,0,1-5.66,2.34H107.31a8,8,0,0,1-5.66-2.34L82.34,162.34A8,8,0,0,0,76.68,160H40V48a8,8,0,0,1,8-8H208A8,8,0,0,1,216,48Z" opacity="0.2"/><path d="M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32Zm0,16V152h-28.7A15.86,15.86,0,0,0,168,156.69L148.69,176H107.31L88,156.68A15.89,15.89,0,0,0,76.69,152H48V48Zm0,160H48V168H76.69L96,187.32A15.89,15.89,0,0,0,107.31,192h41.38A15.86,15.86,0,0,0,160,187.31L179.31,168H208v40Z"/></svg> All open <em class=" hot">11</em></a>
-  <a href="/desk/disputes" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M56,88l32,80c0,17.67-20,24-32,24s-32-6.33-32-24ZM200,56l-32,80c0,17.67,20,24,32,24s32-6.33,32-24Z" opacity="0.2"/><path d="M239.43,133l-32-80h0a8,8,0,0,0-9.16-4.84L136,62V40a8,8,0,0,0-16,0V65.58L54.26,80.19A8,8,0,0,0,48.57,85h0v.06L16.57,165a7.92,7.92,0,0,0-.57,3c0,23.31,24.54,32,40,32s40-8.69,40-32a7.92,7.92,0,0,0-.57-3L66.92,93.77,120,82V208H104a8,8,0,0,0,0,16h48a8,8,0,0,0,0-16H136V78.42L187,67.1,160.57,133a7.92,7.92,0,0,0-.57,3c0,23.31,24.54,32,40,32s40-8.69,40-32A7.92,7.92,0,0,0,239.43,133ZM56,184c-7.53,0-22.76-3.61-23.93-14.64L56,109.54l23.93,59.82C78.76,180.39,63.53,184,56,184Zm144-32c-7.53,0-22.76-3.61-23.93-14.64L200,77.54l23.93,59.82C222.76,148.39,207.53,152,200,152Z"/></svg> Disputes <em class="">3</em></a>
-  <a href="/desk/kyc" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M216,48H40a8,8,0,0,0-8,8V200a8,8,0,0,0,8,8H216a8,8,0,0,0,8-8V56A8,8,0,0,0,216,48ZM96,144a24,24,0,1,1,24-24A24,24,0,0,1,96,144Z" opacity="0.2"/><path d="M200,112a8,8,0,0,1-8,8H152a8,8,0,0,1,0-16h40A8,8,0,0,1,200,112Zm-8,24H152a8,8,0,0,0,0,16h40a8,8,0,0,0,0-16Zm40-80V200a16,16,0,0,1-16,16H40a16,16,0,0,1-16-16V56A16,16,0,0,1,40,40H216A16,16,0,0,1,232,56ZM216,200V56H40V200H216Zm-80.26-34a8,8,0,1,1-15.5,4c-2.63-10.26-13.06-18-24.25-18s-21.61,7.74-24.25,18a8,8,0,1,1-15.5-4,39.84,39.84,0,0,1,17.19-23.34,32,32,0,1,1,45.12,0A39.76,39.76,0,0,1,135.75,166ZM96,136a16,16,0,1,0-16-16A16,16,0,0,0,96,136Z"/></svg> ID checks <em class="">5</em></a>
-  <a href="/desk/locked-handovers" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M208,88H48a8,8,0,0,0-8,8V208a8,8,0,0,0,8,8H208a8,8,0,0,0,8-8V96A8,8,0,0,0,208,88Zm-80,72a20,20,0,1,1,20-20A20,20,0,0,1,128,160Z" opacity="0.2"/><path d="M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Zm-80-96a28,28,0,0,0-8,54.83V184a8,8,0,0,0,16,0V166.83A28,28,0,0,0,128,112Zm0,40a12,12,0,1,1,12-12A12,12,0,0,1,128,152Z"/></svg> Locked handovers <em class="">1</em></a>
-  <a href="/desk/payouts" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232,96H24L128,32Z" opacity="0.2"/><path d="M24,104H48v64H32a8,8,0,0,0,0,16H224a8,8,0,0,0,0-16H208V104h24a8,8,0,0,0,4.19-14.81l-104-64a8,8,0,0,0-8.38,0l-104,64A8,8,0,0,0,24,104Zm40,0H96v64H64Zm80,0v64H112V104Zm48,64H160V104h32ZM128,41.39,203.74,88H52.26ZM248,208a8,8,0,0,1-8,8H16a8,8,0,0,1,0-16H240A8,8,0,0,1,248,208Z"/></svg> Failed payouts <em class="">2</em></a>
+  <a href="/desk/queue" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M216,48V160H179.31a8,8,0,0,0-5.66,2.34l-19.31,19.32a8,8,0,0,1-5.66,2.34H107.31a8,8,0,0,1-5.66-2.34L82.34,162.34A8,8,0,0,0,76.68,160H40V48a8,8,0,0,1,8-8H208A8,8,0,0,1,216,48Z" opacity="0.2"/><path d="M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32Zm0,16V152h-28.7A15.86,15.86,0,0,0,168,156.69L148.69,176H107.31L88,156.68A15.89,15.89,0,0,0,76.69,152H48V48Zm0,160H48V168H76.69L96,187.32A15.89,15.89,0,0,0,107.31,192h41.38A15.86,15.86,0,0,0,160,187.31L179.31,168H208v40Z"/></svg> All open <em class="{{ ($deskBadges['openErrands'] ?? 0) > 0 ? ' hot' : '' }}">{{ $deskBadges['openErrands'] ?? 0 }}</em></a>
+  <a href="/desk/disputes" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M56,88l32,80c0,17.67-20,24-32,24s-32-6.33-32-24ZM200,56l-32,80c0,17.67,20,24,32,24s32-6.33,32-24Z" opacity="0.2"/><path d="M239.43,133l-32-80h0a8,8,0,0,0-9.16-4.84L136,62V40a8,8,0,0,0-16,0V65.58L54.26,80.19A8,8,0,0,0,48.57,85h0v.06L16.57,165a7.92,7.92,0,0,0-.57,3c0,23.31,24.54,32,40,32s40-8.69,40-32a7.92,7.92,0,0,0-.57-3L66.92,93.77,120,82V208H104a8,8,0,0,0,0,16h48a8,8,0,0,0,0-16H136V78.42L187,67.1,160.57,133a7.92,7.92,0,0,0-.57,3c0,23.31,24.54,32,40,32s40-8.69,40-32A7.92,7.92,0,0,0,239.43,133ZM56,184c-7.53,0-22.76-3.61-23.93-14.64L56,109.54l23.93,59.82C78.76,180.39,63.53,184,56,184Zm144-32c-7.53,0-22.76-3.61-23.93-14.64L200,77.54l23.93,59.82C222.76,148.39,207.53,152,200,152Z"/></svg> Disputes <em class="{{ ($deskBadges['disputes'] ?? 0) > 0 ? ' hot' : '' }}">{{ $deskBadges['disputes'] ?? 0 }}</em></a>
+  <a href="/desk/kyc" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M216,48H40a8,8,0,0,0-8,8V200a8,8,0,0,0,8,8H216a8,8,0,0,0,8-8V56A8,8,0,0,0,216,48ZM96,144a24,24,0,1,1,24-24A24,24,0,0,1,96,144Z" opacity="0.2"/><path d="M200,112a8,8,0,0,1-8,8H152a8,8,0,0,1,0-16h40A8,8,0,0,1,200,112Zm-8,24H152a8,8,0,0,0,0,16h40a8,8,0,0,0,0-16Zm40-80V200a16,16,0,0,1-16,16H40a16,16,0,0,1-16-16V56A16,16,0,0,1,40,40H216A16,16,0,0,1,232,56ZM216,200V56H40V200H216Zm-80.26-34a8,8,0,1,1-15.5,4c-2.63-10.26-13.06-18-24.25-18s-21.61,7.74-24.25,18a8,8,0,1,1-15.5-4,39.84,39.84,0,0,1,17.19-23.34,32,32,0,1,1,45.12,0A39.76,39.76,0,0,1,135.75,166ZM96,136a16,16,0,1,0-16-16A16,16,0,0,0,96,136Z"/></svg> ID checks <em class="{{ ($deskBadges['kyc'] ?? 0) > 0 ? ' hot' : '' }}">{{ $deskBadges['kyc'] ?? 0 }}</em></a>
+  <a href="/desk/locked-handovers" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M208,88H48a8,8,0,0,0-8,8V208a8,8,0,0,0,8,8H208a8,8,0,0,0,8-8V96A8,8,0,0,0,208,88Zm-80,72a20,20,0,1,1,20-20A20,20,0,0,1,128,160Z" opacity="0.2"/><path d="M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Zm-80-96a28,28,0,0,0-8,54.83V184a8,8,0,0,0,16,0V166.83A28,28,0,0,0,128,112Zm0,40a12,12,0,1,1,12-12A12,12,0,0,1,128,152Z"/></svg> Locked handovers <em class="{{ ($deskBadges['locked'] ?? 0) > 0 ? ' hot' : '' }}">{{ $deskBadges['locked'] ?? 0 }}</em></a>
+  <a href="/desk/payouts" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232,96H24L128,32Z" opacity="0.2"/><path d="M24,104H48v64H32a8,8,0,0,0,0,16H224a8,8,0,0,0,0-16H208V104h24a8,8,0,0,0,4.19-14.81l-104-64a8,8,0,0,0-8.38,0l-104,64A8,8,0,0,0,24,104Zm40,0H96v64H64Zm80,0v64H112V104Zm48,64H160V104h32ZM128,41.39,203.74,88H52.26ZM248,208a8,8,0,0,1-8,8H16a8,8,0,0,1,0-16H240A8,8,0,0,1,248,208Z"/></svg> Failed payouts <em class="{{ ($deskBadges['failedPayouts'] ?? 0) > 0 ? ' hot' : '' }}">{{ $deskBadges['failedPayouts'] ?? 0 }}</em></a>
   <div class="ngrp">Look up</div>
-  <a href="/desk/locked-handovers" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,129.09V232a8,8,0,0,1-3.84-1l-88-48.18a8,8,0,0,1-4.16-7V80.18a8,8,0,0,1,.7-3.25Z" opacity="0.2"/><path d="M223.68,66.15,135.68,18a15.88,15.88,0,0,0-15.36,0l-88,48.17a16,16,0,0,0-8.32,14v95.64a16,16,0,0,0,8.32,14l88,48.17a15.88,15.88,0,0,0,15.36,0l88-48.17a16,16,0,0,0,8.32-14V80.18A16,16,0,0,0,223.68,66.15ZM128,32l80.34,44-29.77,16.3-80.35-44ZM128,120,47.66,76l33.9-18.56,80.34,44ZM40,90l80,43.78v85.79L40,175.82Zm176,85.78h0l-80,43.79V133.82l32-17.51V152a8,8,0,0,0,16,0V107.55L216,90v85.77Z"/></svg> Errands</a>
+  <a href="/desk/queue" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,129.09V232a8,8,0,0,1-3.84-1l-88-48.18a8,8,0,0,1-4.16-7V80.18a8,8,0,0,1,.7-3.25Z" opacity="0.2"/><path d="M223.68,66.15,135.68,18a15.88,15.88,0,0,0-15.36,0l-88,48.17a16,16,0,0,0-8.32,14v95.64a16,16,0,0,0,8.32,14l88,48.17a15.88,15.88,0,0,0,15.36,0l88-48.17a16,16,0,0,0,8.32-14V80.18A16,16,0,0,0,223.68,66.15ZM128,32l80.34,44-29.77,16.3-80.35-44ZM128,120,47.66,76l33.9-18.56,80.34,44ZM40,90l80,43.78v85.79L40,175.82Zm176,85.78h0l-80,43.79V133.82l32-17.51V152a8,8,0,0,0,16,0V107.55L216,90v85.77Z"/></svg> Errands</a>
   <a href="/desk/people" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M224,128a95.76,95.76,0,0,1-31.8,71.37A72,72,0,0,0,128,160a40,40,0,1,0-40-40,40,40,0,0,0,40,40,72,72,0,0,0-64.2,39.37h0A96,96,0,1,1,224,128Z" opacity="0.2"/><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24ZM74.08,197.5a64,64,0,0,1,107.84,0,87.83,87.83,0,0,1-107.84,0ZM96,120a32,32,0,1,1,32,32A32,32,0,0,1,96,120Zm97.76,66.41a79.66,79.66,0,0,0-36.06-28.75,48,48,0,1,0-59.4,0,79.66,79.66,0,0,0-36.06,28.75,88,88,0,1,1,131.52,0Z"/></svg> People</a>
   <div class="ngrp">Campus</div>
-  <a href="/desk/places" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M184,80c0,56-56,88-56,88S72,136,72,80a56,56,0,0,1,112,0Z" opacity="0.2"/><path d="M112,80a16,16,0,1,1,16,16A16,16,0,0,1,112,80ZM64,80a64,64,0,0,1,128,0c0,59.95-57.58,93.54-60,94.95a8,8,0,0,1-7.94,0C121.58,173.54,64,140,64,80Zm16,0c0,42.2,35.84,70.21,48,78.5,12.15-8.28,48-36.3,48-78.5a48,48,0,0,0-96,0Zm122.77,67.63a8,8,0,0,0-5.54,15C213.74,168.74,224,176.92,224,184c0,13.36-36.52,32-96,32s-96-18.64-96-32c0-7.08,10.26-15.26,26.77-21.36a8,8,0,0,0-5.54-15C29.22,156.49,16,169.41,16,184c0,31.18,57.71,48,112,48s112-16.82,112-48C240,169.41,226.78,156.49,202.77,147.63Z"/></svg> Places <em class="">4</em></a>
+  <a href="/desk/places" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M184,80c0,56-56,88-56,88S72,136,72,80a56,56,0,0,1,112,0Z" opacity="0.2"/><path d="M112,80a16,16,0,1,1,16,16A16,16,0,0,1,112,80ZM64,80a64,64,0,0,1,128,0c0,59.95-57.58,93.54-60,94.95a8,8,0,0,1-7.94,0C121.58,173.54,64,140,64,80Zm16,0c0,42.2,35.84,70.21,48,78.5,12.15-8.28,48-36.3,48-78.5a48,48,0,0,0-96,0Zm122.77,67.63a8,8,0,0,0-5.54,15C213.74,168.74,224,176.92,224,184c0,13.36-36.52,32-96,32s-96-18.64-96-32c0-7.08,10.26-15.26,26.77-21.36a8,8,0,0,0-5.54-15C29.22,156.49,16,169.41,16,184c0,31.18,57.71,48,112,48s112-16.82,112-48C240,169.41,226.78,156.49,202.77,147.63Z"/></svg> Places <em class="{{ ($deskBadges['pendingPlaces'] ?? 0) > 0 ? ' hot' : '' }}">{{ $deskBadges['pendingPlaces'] ?? 0 }}</em></a>
   <a href="/desk/crew" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M168,144a40,40,0,1,1-40-40A40,40,0,0,1,168,144ZM64,56A32,32,0,1,0,96,88,32,32,0,0,0,64,56Zm128,0a32,32,0,1,0,32,32A32,32,0,0,0,192,56Z" opacity="0.2"/><path d="M244.8,150.4a8,8,0,0,1-11.2-1.6A51.6,51.6,0,0,0,192,128a8,8,0,0,1,0-16,24,24,0,1,0-23.24-30,8,8,0,1,1-15.5-4A40,40,0,1,1,219,117.51a67.94,67.94,0,0,1,27.43,21.68A8,8,0,0,1,244.8,150.4ZM190.92,212a8,8,0,1,1-13.85,8,57,57,0,0,0-98.15,0,8,8,0,1,1-13.84-8,72.06,72.06,0,0,1,33.74-29.92,48,48,0,1,1,58.36,0A72.06,72.06,0,0,1,190.92,212ZM128,176a32,32,0,1,0-32-32A32,32,0,0,0,128,176ZM72,120a8,8,0,0,0-8-8A24,24,0,1,1,87.24,82a8,8,0,1,0,15.5-4A40,40,0,1,0,37,117.51,67.94,67.94,0,0,0,9.6,139.19a8,8,0,1,0,12.8,9.61A51.6,51.6,0,0,1,64,128,8,8,0,0,0,72,120Z"/></svg> Crew and routines</a>
   <div class="ngrp">Control</div>
   <a href="/desk/rules" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,80a24,24,0,1,1-24-24A24,24,0,0,1,128,80Zm40,72a24,24,0,1,0,24,24A24,24,0,0,0,168,152Z" opacity="0.2"/><path d="M40,88H73a32,32,0,0,0,62,0h81a8,8,0,0,0,0-16H135a32,32,0,0,0-62,0H40a8,8,0,0,0,0,16Zm64-24A16,16,0,1,1,88,80,16,16,0,0,1,104,64ZM216,168H199a32,32,0,0,0-62,0H40a8,8,0,0,0,0,16h97a32,32,0,0,0,62,0h17a8,8,0,0,0,0-16Zm-48,24a16,16,0,1,1,16-16A16,16,0,0,1,168,192Z"/></svg> Rules</a>
@@ -116,120 +219,440 @@
       <div style="margin-left:auto;font-size:12px;color:var(--ink3)" id="clock"></div>
     </div>
     <div class="page">
-<div class="ph"><div><h1>Today at UNILAG</h1><p>Peak hour. Two numbers matter most: how fast errands get a runner, and how many get none.</p></div><a href="/desk/crew" class="btn b-line" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M176,48a24,24,0,1,1-24-24A24,24,0,0,1,176,48Z" opacity="0.2"/><path d="M152,80a32,32,0,1,0-32-32A32,32,0,0,0,152,80Zm0-48a16,16,0,1,1-16,16A16,16,0,0,1,152,32Zm64,112a8,8,0,0,1-8,8c-35.31,0-52.95-17.81-67.12-32.12-2.74-2.77-5.36-5.4-8-7.84l-13.43,30.88,37.2,26.57A8,8,0,0,1,160,176v56a8,8,0,0,1-16,0V180.12l-31.07-22.2L79.34,235.19A8,8,0,0,1,72,240a7.84,7.84,0,0,1-3.19-.67,8,8,0,0,1-4.15-10.52l54.08-124.37c-9.31-1.65-20.92,1.2-34.7,8.58a163.88,163.88,0,0,0-30.57,21.77,8,8,0,0,1-10.95-11.66c2.5-2.35,61.69-57.22,98.72-25.08,3.83,3.32,7.48,7,11,10.58C166.19,122.7,179.36,136,208,136A8,8,0,0,1,216,144Z"/></svg> Crew on shift: 6</a></div>
+<div class="ph"><div><h1>Today at {{ $activeCampusName }}</h1><p>Real-time campus operational dashboard and vital signals.</p></div><a href="/desk/crew" class="btn b-line" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M176,48a24,24,0,1,1-24-24A24,24,0,0,1,176,48Z" opacity="0.2"/><path d="M152,80a32,32,0,1,0-32-32A32,32,0,0,0,152,80Zm0-48a16,16,0,1,1-16,16A16,16,0,0,1,152,32Zm64,112a8,8,0,0,1-8,8c-35.31,0-52.95-17.81-67.12-32.12-2.74-2.77-5.36-5.4-8-7.84l-13.43,30.88,37.2,26.57A8,8,0,0,1,160,176v56a8,8,0,0,1-16,0V180.12l-31.07-22.2L79.34,235.19A8,8,0,0,1,72,240a7.84,7.84,0,0,1-3.19-.67,8,8,0,0,1-4.15-10.52l54.08-124.37c-9.31-1.65-20.92,1.2-34.7,8.58a163.88,163.88,0,0,0-30.57,21.77,8,8,0,0,1-10.95-11.66c2.5-2.35,61.69-57.22,98.72-25.08,3.83,3.32,7.48,7,11,10.58C166.19,122.7,179.36,136,208,136A8,8,0,0,1,216,144Z"/></svg> Crew Desk</a></div>
   <div class="rail" aria-label="Campus pulse">
-    <div><small><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M216,136a88,88,0,1,1-88-88A88,88,0,0,1,216,136Z" opacity="0.2"/><path d="M128,40a96,96,0,1,0,96,96A96.11,96.11,0,0,0,128,40Zm0,176a80,80,0,1,1,80-80A80.09,80.09,0,0,1,128,216ZM173.66,90.34a8,8,0,0,1,0,11.32l-40,40a8,8,0,0,1-11.32-11.32l40-40A8,8,0,0,1,173.66,90.34ZM96,16a8,8,0,0,1,8-8h48a8,8,0,0,1,0,16H104A8,8,0,0,1,96,16Z"/></svg> Time to match, median</small><div class="v"><span class="num">2:48</span><span>min</span></div><span class="goal ok">Goal under 4 min · 90% within 6:10</span><svg class="spark" viewBox="0 0 200 26" preserveAspectRatio="none" aria-hidden="true"><polyline points="0.0,3.0 28.57142857142857,10.692307692307686 57.14285714285714,6.076923076923073 85.71428571428571,16.84615384615384 114.28571428571428,19.92307692307692 142.85714285714286,21.46153846153846 171.42857142857142,13.769230769230766 200.0,23.0" fill="none" stroke="var(--paid)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg></div>
-    <div><small><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M215.46,216H40.54C27.92,216,20,202.79,26.13,192.09L113.59,40.22c6.3-11,22.52-11,28.82,0l87.46,151.87C236,202.79,228.08,216,215.46,216Z" opacity="0.2"/><path d="M236.8,188.09,149.35,36.22h0a24.76,24.76,0,0,0-42.7,0L19.2,188.09a23.51,23.51,0,0,0,0,23.72A24.35,24.35,0,0,0,40.55,224h174.9a24.35,24.35,0,0,0,21.33-12.19A23.51,23.51,0,0,0,236.8,188.09ZM222.93,203.8a8.5,8.5,0,0,1-7.48,4.2H40.55a8.5,8.5,0,0,1-7.48-4.2,7.59,7.59,0,0,1,0-7.72L120.52,44.21a8.75,8.75,0,0,1,15,0l87.45,151.87A7.59,7.59,0,0,1,222.93,203.8ZM120,144V104a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,180Z"/></svg> Errands with no runner</small><div class="v"><span class="num">6.1%</span><span>last hour</span></div><span class="goal warn">Goal under 5% · Faculty of Science is short</span><svg class="spark" viewBox="0 0 200 26" preserveAspectRatio="none" aria-hidden="true"><polyline points="0.0,23.0 28.57142857142857,18.0 57.14285714285714,20.5 85.71428571428571,13.0 114.28571428571428,5.5 142.85714285714286,3.0 171.42857142857142,6.0 200.0,7.500000000000002" fill="none" stroke="var(--held)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg></div>
-    <div><small>Open errands</small><div class="v"><span class="num">38</span></div><span class="goal" style="color:var(--ink3)">12 buy for me</span></div>
-    <div><small>Runners on routes</small><div class="v"><span class="num">54</span></div><span class="goal" style="color:var(--ink3)">17 on a routine</span></div>
-    <div><small>Held in escrow</small><div class="v"><span class="num">₦41k</span></div><span class="goal" style="color:var(--ink3)">Ledger balanced ✓</span></div>
+    <div><small><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M216,136a88,88,0,1,1-88-88A88,88,0,0,1,216,136Z" opacity="0.2"/><path d="M128,40a96,96,0,1,0,96,96A96.11,96.11,0,0,0,128,40Zm0,176a80,80,0,1,1,80-80A80.09,80.09,0,0,1,128,216ZM173.66,90.34a8,8,0,0,1,0,11.32l-40,40a8,8,0,0,1-11.32-11.32l40-40A8,8,0,0,1,173.66,90.34ZM96,16a8,8,0,0,1,8-8h48a8,8,0,0,1,0,16H104A8,8,0,0,1,96,16Z"/></svg> Time to match, median</small><div class="v"><span class="num">{{ $timeToMatchDisplay }}</span>@if($timeToMatchDisplay !== '—')<span>min</span>@endif</div><span class="goal ok">{{ $timeToMatchSub }}</span></div>
+    <div><small><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M215.46,216H40.54C27.92,216,20,202.79,26.13,192.09L113.59,40.22c6.3-11,22.52-11,28.82,0l87.46,151.87C236,202.79,228.08,216,215.46,216Z" opacity="0.2"/><path d="M236.8,188.09,149.35,36.22h0a24.76,24.76,0,0,0-42.7,0L19.2,188.09a23.51,23.51,0,0,0,0,23.72A24.35,24.35,0,0,0,40.55,224h174.9a24.35,24.35,0,0,0,21.33-12.19A23.51,23.51,0,0,0,236.8,188.09ZM222.93,203.8a8.5,8.5,0,0,1-7.48,4.2H40.55a8.5,8.5,0,0,1-7.48-4.2,7.59,7.59,0,0,1,0-7.72L120.52,44.21a8.75,8.75,0,0,1,15,0l87.45,151.87A7.59,7.59,0,0,1,222.93,203.8ZM120,144V104a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,180Z"/></svg> Open Disputes</small><div class="v"><span class="num">{{ $disputesCount }}</span><span>tickets</span></div><span class="goal {{ $disputesCount > 0 ? 'warn' : 'ok' }}">{{ $disputesCount > 0 ? 'Requires attention' : 'Zero disputes open' }}</span></div>
+    <div><small>Open errands</small><div class="v"><span class="num">{{ $openErrandsCount }}</span></div><span class="goal" style="color:var(--ink3)">Live in queue</span></div>
+    <div><small>Verified Runners</small><div class="v"><span class="num">{{ $activeRunnersCount }}</span></div><span class="goal" style="color:var(--ink3)">Active runners</span></div>
+    <div><small>Held in escrow</small><div class="v"><span class="num">₦{{ number_format($totalEscrowKobo / 100, 0) }}</span></div><span class="goal" style="color:var(--ink3)">Vault balanced ✓</span></div>
   </div>
   <div class="grid2">
-    <div class="sheet"><div class="sh-h"><b>Live campus</b><div class="legend"><span><i style="background:var(--live)"></i>Waiting errand</span><span><i style="background:var(--ink1)"></i>Runner</span><span><i style="background:#F2A900"></i>Crew</span></div></div>
-      <div class="mapbox" id="liveMap"><svg viewBox="0 0 900 1300" aria-hidden="true">
-            <rect width="900" height="1300" fill="#EDF0F3"/>
-            <path d="M540 60 C 640 20, 780 60, 800 150 C 820 240, 700 290, 610 260 C 530 235, 470 130, 540 60Z" fill="#CFE3F7"/>
-            <text x="640" y="170" font-family="DM Sans" font-size="13" font-weight="500" fill="#7C9CC0" text-anchor="middle">Campus Lake</text>
-            <path d="M40 1010 C 120 960, 260 980, 300 1060 C 330 1120, 200 1170, 110 1150 C 40 1130, 0 1060, 40 1010Z" fill="#D8EEDF"/>
-            <path d="M560 700 H760 V900 H560Z" rx="20" fill="#D8EEDF"/>
-            <g fill="#DFE4EA">
-              <rect x="30" y="30" width="170" height="210" rx="10"/><rect x="240" y="30" width="110" height="100" rx="10"/><rect x="240" y="150" width="110" height="90" rx="10"/>
-              <rect x="390" y="30" width="110" height="210" rx="10"/>
-              <rect x="30" y="280" width="170" height="140" rx="10"/><rect x="240" y="280" width="110" height="140" rx="10"/><rect x="390" y="280" width="110" height="140" rx="10"/>
-              <rect x="560" y="300" width="200" height="120" rx="10"/><rect x="800" y="300" width="80" height="300" rx="10"/>
-              <rect x="30" y="460" width="170" height="140" rx="10"/><rect x="240" y="460" width="110" height="140" rx="10"/><rect x="390" y="460" width="110" height="140" rx="10"/><rect x="560" y="460" width="200" height="140" rx="10"/>
-              <rect x="30" y="640" width="170" height="160" rx="10"/><rect x="240" y="640" width="110" height="150" rx="10"/><rect x="390" y="640" width="110" height="320" rx="10"/>
-              <rect x="30" y="830" width="170" height="130" rx="10"/><rect x="240" y="820" width="110" height="140" rx="10"/><rect x="800" y="640" width="80" height="320" rx="10"/>
-              <rect x="390" y="1010" width="110" height="130" rx="10"/><rect x="560" y="1010" width="200" height="110" rx="10"/><rect x="800" y="1010" width="80" height="140" rx="10"/>
-            </g>
-            <g stroke="#fff" stroke-linecap="round" fill="none">
-              <path d="M0 260 H900" stroke-width="18"/><path d="M0 620 H900" stroke-width="18"/><path d="M0 985 H900" stroke-width="16"/>
-              <path d="M220 0 V1300" stroke-width="16"/><path d="M530 0 V1300" stroke-width="18"/><path d="M780 260 V1300" stroke-width="14"/>
-              <path d="M370 260 V985" stroke-width="9"/><path d="M220 440 H780" stroke-width="9"/><path d="M0 810 H530" stroke-width="9"/>
-              <path d="M0 1230 Q450 1150 900 1250" stroke-width="14"/>
-            </g>
-            <g font-family="DM Sans" font-size="12" font-weight="500" fill="#94A3B8">
-              <text x="600" y="614">University Rd</text><text x="30" y="254">Library Rd</text>
-              <text x="524" y="560" transform="rotate(-90 524 560)">Faculty Ave</text>
-            </g>
-            <g font-family="DM Sans" font-size="13" font-weight="600" fill="#64748B" text-anchor="middle">
-              <text x="115" y="545">Moremi Hall</text><text x="445" y="355">Main Library</text><text x="660" y="535">LT3</text>
-              <text x="660" y="805">Sports Field</text><text x="295" y="718">Musa's Kitchen</text><text x="115" y="895">Ramat Hall</text><text x="660" y="1070">Faculty of Science</text>
-            </g>
-            <!-- Other people walking: ambient life -->
-            <g class="layer" id="walkers">
-              <g><circle r="9" fill="#fff"/><circle r="6" fill="#0F172A"/><animateMotion dur="70s" repeatCount="indefinite" path="M220 0 V1300"/></g>
-              <g><circle r="9" fill="#fff"/><circle r="6" fill="#0F172A"/><animateMotion dur="58s" repeatCount="indefinite" path="M900 620 H0"/></g>
-              <g><circle r="9" fill="#fff"/><circle r="6" fill="#0F172A"/><animateMotion dur="80s" repeatCount="indefinite" path="M530 1300 V0"/></g>
-              <g><circle r="9" fill="#fff"/><circle r="6" fill="#0F172A"/><animateMotion dur="64s" repeatCount="indefinite" path="M0 260 H900"/></g>
-              <g><circle r="9" fill="#fff"/><circle r="6" fill="#0F172A"/><animateMotion dur="44s" repeatCount="indefinite" path="M370 260 V985 V260"/></g>
-              <g><circle r="9" fill="#fff"/><circle r="6" fill="#0F172A"/><animateMotion dur="52s" repeatCount="indefinite" path="M220 440 H780 H220"/></g>
-              <g><circle r="9" fill="#fff"/><circle r="6" fill="#0F172A"/><animateMotion dur="90s" repeatCount="indefinite" path="M0 1230 Q450 1150 900 1250"/></g>
-            </g>
-          </svg></div></div>
-    <div class="sheet"><div class="sh-h"><b>Needs you now</b><a href="/desk/queue" class="btn b-line" style="text-decoration:none;">See all 11</a></div>
-      <div class="q"><a href="/desk/locked-handovers" class="qi" style="text-decoration:none;color:inherit;">
-  <span class="qic" style="background:var(--fault-wash);color:var(--fault-ink)">
-    <svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M208,88H48a8,8,0,0,0-8,8V208a8,8,0,0,0,8,8H208a8,8,0,0,0,8-8V96A8,8,0,0,0,208,88Zm-80,72a20,20,0,1,1,20-20A20,20,0,0,1,128,160Z" opacity="0.2"/><path d="M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Zm-80-96a28,28,0,0,0-8,54.83V184a8,8,0,0,0,16,0V166.83A28,28,0,0,0,128,112Zm0,40a12,12,0,1,1,12-12A12,12,0,0,1,128,152Z"/></svg>
-  </span>
-  <span style="min-width:0"><b>Handover locked after 5 wrong PINs</b><small>Locked handover · WD-T9K4 · Indomie x2 · Ramat Hall · runner waiting</small></span>
-  <span class="sla bad"><b>3 min</b>left</span>
-</a><a href="/desk/disputes" class="qi" style="text-decoration:none;color:inherit;">
-  <span class="qic" style="background:var(--held-wash);color:var(--held-ink)">
-    <svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M208,88H48a8,8,0,0,0-8,8V208a8,8,0,0,0,8,8H208a8,8,0,0,0,8-8V96A8,8,0,0,0,208,88Zm-80,72a20,20,0,1,1,20-20A20,20,0,0,1,128,160Z" opacity="0.2"/><path d="M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Zm-80-96a28,28,0,0,0-8,54.83V184a8,8,0,0,0,16,0V166.83A28,28,0,0,0,128,112Zm0,40a12,12,0,1,1,12-12A12,12,0,0,1,128,152Z"/></svg>
-  </span>
-  <span style="min-width:0"><b>Fried rice arrived spilled</b><small>Dispute · WD-4821 · Chidi N. vs Kunle B. · ₦800 held</small></span>
-  <span class="sla bad"><b>9 min</b>left</span>
-</a><a href="/desk/people" class="qi" style="text-decoration:none;color:inherit;">
-  <span class="qic" style="background:var(--fault-wash);color:var(--fault-ink)">
-    <svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M208,88H48a8,8,0,0,0-8,8V208a8,8,0,0,0,8,8H208a8,8,0,0,0,8-8V96A8,8,0,0,0,208,88Zm-80,72a20,20,0,1,1,20-20A20,20,0,0,1,128,160Z" opacity="0.2"/><path d="M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Zm-80-96a28,28,0,0,0-8,54.83V184a8,8,0,0,0,16,0V166.83A28,28,0,0,0,128,112Zm0,40a12,12,0,1,1,12-12A12,12,0,0,1,128,152Z"/></svg>
-  </span>
-  <span style="min-width:0"><b>Safety report: "made me feel unsafe"</b><small>Safety · Report on runner Kunle B. by Ada O.</small></span>
-  <span class="sla bad"><b>4 min</b>left</span>
-</a><a href="/desk/kyc" class="qi" style="text-decoration:none;color:inherit;">
-  <span class="qic" style="background:var(--inset);color:var(--ink2)">
-    <svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M208,88H48a8,8,0,0,0-8,8V208a8,8,0,0,0,8,8H208a8,8,0,0,0,8-8V96A8,8,0,0,0,208,88Zm-80,72a20,20,0,1,1,20-20A20,20,0,0,1,128,160Z" opacity="0.2"/><path d="M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Zm-80-96a28,28,0,0,0-8,54.83V184a8,8,0,0,0,16,0V166.83A28,28,0,0,0,128,112Zm0,40a12,12,0,1,1,12-12A12,12,0,0,1,128,152Z"/></svg>
-  </span>
-  <span style="min-width:0"><b>ID check: name mismatch to review</b><small>ID check · Ifeoma Chukwu · Student ID · provider unsure (0.71)</small></span>
-  <span class="sla warn"><b>22 min</b>left</span>
-</a><a href="/desk/disputes" class="qi" style="text-decoration:none;color:inherit;">
-  <span class="qic" style="background:var(--held-wash);color:var(--held-ink)">
-    <svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M208,88H48a8,8,0,0,0-8,8V208a8,8,0,0,0,8,8H208a8,8,0,0,0,8-8V96A8,8,0,0,0,208,88Zm-80,72a20,20,0,1,1,20-20A20,20,0,0,1,128,160Z" opacity="0.2"/><path d="M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Zm-80-96a28,28,0,0,0-8,54.83V184a8,8,0,0,0,16,0V166.83A28,28,0,0,0,128,112Zm0,40a12,12,0,1,1,12-12A12,12,0,0,1,128,152Z"/></svg>
-  </span>
-  <span style="min-width:0"><b>Charged the wrong amount (buy for me)</b><small>Dispute · WD-5102 · receipt shows ₦1,650, logged ₦1,800</small></span>
-  <span class="sla warn"><b>41 min</b>left</span>
-</a><a href="/desk/payouts" class="qi" style="text-decoration:none;color:inherit;">
-  <span class="qic" style="background:var(--inset);color:var(--ink2)">
-    <svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M208,88H48a8,8,0,0,0-8,8V208a8,8,0,0,0,8,8H208a8,8,0,0,0,8-8V96A8,8,0,0,0,208,88Zm-80,72a20,20,0,1,1,20-20A20,20,0,0,1,128,160Z" opacity="0.2"/><path d="M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Zm-80-96a28,28,0,0,0-8,54.83V184a8,8,0,0,0,16,0V166.83A28,28,0,0,0,128,112Zm0,40a12,12,0,1,1,12-12A12,12,0,0,1,128,152Z"/></svg>
-  </span>
-  <span style="min-width:0"><b>Withdrawal failed twice</b><small>Payout · Amaka O. · ₦3,500 to Access Bank</small></span>
-  <span class="sla ok"><b>55 min</b>left</span>
-</a></div>
+    <div class="sheet" style="padding:0;overflow:hidden;display:flex;flex-direction:column;">
+      <div class="sh-h" style="padding:14px 18px;border-bottom:1px solid var(--rule-soft,#EEF2F6);flex-wrap:wrap;gap:8px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <b>Live Campus Operations Radar</b>
+          <span class="chip {{ !empty($ablyApiKey) && !str_starts_with($ablyApiKey, 'ably_mock') ? 'c-paid' : 'c-held' }}" id="telemetryStatusBadge" style="display:inline-flex;align-items:center;gap:6px;font-size:11.5px;padding:3px 10px;">
+            <span class="dotlive" style="background:{{ !empty($ablyApiKey) && !str_starts_with($ablyApiKey, 'ably_mock') ? '#10B981' : '#F59E0B' }};"></span>
+            <span id="telemetryStatusText">{{ !empty($ablyApiKey) && !str_starts_with($ablyApiKey, 'ably_mock') ? 'Ably WebSockets Live' : 'Simulated Radar Telemetry' }}</span>
+          </span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap;">
+          {{-- Building Focus Selector --}}
+          <select id="selBuildingFocus" onchange="focusOnBuilding(this.value)" style="border:1px solid #CBD5E1;border-radius:8px;padding:4px 8px;font-size:12px;background:#FFF;color:#0F172A;font-weight:600;outline:none;cursor:pointer;height:30px;max-width:210px;">
+            <option value="">🏛️ Focus on Building...</option>
+            @foreach($campusPlaces as $cp)
+              <option value="{{ $cp->id }}">{{ $cp->name }}</option>
+            @endforeach
+          </select>
+          {{-- Satellite / Street Toggle --}}
+          <button type="button" id="btnToggleSatellite" class="btn b-line" onclick="toggleSatelliteView()" style="font-size:12px;height:30px;padding:0 10px;display:inline-flex;align-items:center;gap:4px;">
+            🛰️ Satellite
+          </button>
+          {{-- Fit Campus Buildings Button --}}
+          <button type="button" class="btn b-line" onclick="recenterCampusMap()" style="font-size:12px;height:30px;padding:0 10px;display:inline-flex;align-items:center;gap:4px;" title="Fit all campus buildings onto screen">
+            🎯 Fit Buildings
+          </button>
+        </div>
+      </div>
+
+      {{-- Radar Layers Toolbar --}}
+      <div style="padding:8px 16px;background:#F8FAFC;border-bottom:1px solid var(--rule-soft,#EEF2F6);display:flex;align-items:center;gap:14px;font-size:12px;flex-wrap:wrap;color:var(--ink2);">
+        <span style="font-weight:700;color:var(--ink1);">Layers:</span>
+        <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;">
+          <input type="checkbox" id="chkRunners" checked onchange="toggleRadarLayer('runners')">
+          <span class="dotlive" style="background:#0F172A;width:8px;height:8px;"></span> Moving Runners (<b id="lblRunnersCount">0</b>)
+        </label>
+        <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;">
+          <input type="checkbox" id="chkErrands" checked onchange="toggleRadarLayer('errands')">
+          <span class="dotlive" style="background:#FF5500;width:8px;height:8px;"></span> Waiting Errands (<b id="lblErrandsCount">0</b>)
+        </label>
+        <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;">
+          <input type="checkbox" id="chkPlaces" checked onchange="toggleRadarLayer('places')">
+          <span class="dotlive" style="background:#2563EB;width:8px;height:8px;"></span> Landmarks (<b id="lblPlacesCount">0</b>)
+        </label>
+        <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;">
+          <input type="checkbox" id="chkGeofence" checked onchange="toggleRadarLayer('geofence')">
+          <span class="dotlive" style="background:#10B981;width:8px;height:8px;"></span> Geofence (<b id="lblGeofenceRadius">{{ number_format($activeCampus->radius_meters ?? 2500) }}m</b>)
+        </label>
+      </div>
+
+      {{-- Interactive Leaflet Radar Viewport --}}
+      <div style="position:relative;flex:1;min-height:480px;background:#EDF0F3;">
+        <div id="campusRadarMap" style="width:100%;height:480px;"></div>
+      </div>
+    </div>
+    <div class="sheet"><div class="sh-h"><b>Needs you now</b><a href="/desk/queue" class="btn b-line" style="text-decoration:none;">See all ({{ $urgentLocked->count() + $urgentDisputes->count() + $urgentKyc->count() + $urgentPayouts->count() }})</a></div>
+      <div class="q">
+        @php
+          $totalUrgent = $urgentLocked->count() + $urgentDisputes->count() + $urgentKyc->count() + $urgentPayouts->count();
+        @endphp
+        @if($totalUrgent === 0)
+          <div style="padding:32px 16px;text-align:center;color:var(--ink3);">
+            <div style="font-size:24px;margin-bottom:8px;">🎉</div>
+            <b style="color:var(--ink1);">All clear!</b>
+            <p style="font-size:13px;margin:4px 0 0;">No urgent tickets or blocked handovers needing immediate attention.</p>
+          </div>
+        @else
+          @foreach($urgentLocked as $item)
+          <a href="/desk/locked-handovers?id={{ $item->id }}" class="qi" style="text-decoration:none;color:inherit;">
+            <span class="qic" style="background:var(--fault-wash);color:var(--fault-ink)">
+              <svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Z"/></svg>
+            </span>
+            <span style="min-width:0"><b>Handover locked ({{ $item->pin_attempts ?? 3 }} wrong PINs)</b><small>Locked handover · WD-{{ strtoupper(substr($item->id, 0, 4)) }} · {{ $item->title }} · {{ $item->area->name ?? 'Campus' }} · runner waiting</small></span>
+            <span class="sla bad"><b>Urgent</b>lock</span>
+          </a>
+          @endforeach
+
+          @foreach($urgentDisputes as $item)
+          <a href="/desk/disputes?id={{ $item->id }}" class="qi" style="text-decoration:none;color:inherit;">
+            <span class="qic" style="background:var(--held-wash);color:var(--held-ink)">
+              <svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Z"/></svg>
+            </span>
+            <span style="min-width:0"><b>{{ $item->reason ?? 'Disputed Errand' }}</b><small>Dispute · WD-{{ strtoupper(substr($item->task_id, 0, 4)) }} · {{ $item->requester->name ?? 'Requester' }} vs {{ $item->runner->name ?? 'Runner' }} · ₦{{ number_format(($item->task?->bounty_kobo ?? 0) / 100) }} held</small></span>
+            <span class="sla bad"><b>{{ $item->created_at?->diffForHumans(null, true) ?? 'Now' }}</b>open</span>
+          </a>
+          @endforeach
+
+          @foreach($urgentKyc as $item)
+          <a href="/desk/kyc?id={{ $item->id }}" class="qi" style="text-decoration:none;color:inherit;">
+            <span class="qic" style="background:var(--inset);color:var(--ink2)">
+              <svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,48a28,28,0,1,1-28,28A28,28,0,0,1,128,72Zm48,112H80a8,8,0,0,1,0-16c20.35,0,36-12.72,36-28a8,8,0,0,1,16,0c0,15.28,15.65,28,36,28a8,8,0,0,1,0,16Z"/></svg>
+            </span>
+            <span style="min-width:0"><b>ID check: {{ $item->user->name ?? 'Runner' }}</b><small>ID check · {{ $item->matric_number ?? $item->document_type }} · {{ $item->campus->name ?? 'Campus' }} · {{ $item->status }}</small></span>
+            <span class="sla warn"><b>Review</b>pending</span>
+          </a>
+          @endforeach
+
+          @foreach($urgentPayouts as $item)
+          <a href="/desk/payouts" class="qi" style="text-decoration:none;color:inherit;">
+            <span class="qic" style="background:var(--inset);color:var(--ink2)">
+              <svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Z"/></svg>
+            </span>
+            <span style="min-width:0"><b>Withdrawal failed: {{ $item->user->name ?? 'User' }}</b><small>Payout · ₦{{ number_format(($item->amount_kobo ?? 0) / 100) }} to {{ $item->bank_name ?? 'Bank' }} · {{ $item->failure_reason ?? 'Bank error' }}</small></span>
+            <span class="sla bad"><b>Failed</b>retry</span>
+          </a>
+          @endforeach
+        @endif
+      </div>
     </div>
   </div>
     </div>
   </main>
 </div>
+
 <div class="scrim" id="scrim"><div class="modal" id="modal" role="dialog" aria-modal="true"></div></div>
 <div class="toast" id="toast" role="status"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm45.66,85.66-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32Z"/></svg><span></span></div>
 
 <script src="/admin_desk/admin_desk.js"></script>
 <script>
-function drawLive() {
-  const box = document.getElementById('liveMap');
-  const svg = box.querySelector('svg');
-  if (!svg) return;
-  svg.setAttribute('preserveAspectRatio', 'xMidYMid slice');
-  const ns = 'http://www.w3.org/2000/svg', g = document.createElementNS(ns, 'g');
-  const rnd = (a, b) => a + Math.random() * (b - a);
-  for (let i = 0; i < 26; i++) g.insertAdjacentHTML('beforeend', `<circle cx="${rnd(60, 840)}" cy="${rnd(200, 1150)}" r="8" fill="#0F172A" stroke="#fff" stroke-width="3"/>`);
-  for (let i = 0; i < 5; i++) g.insertAdjacentHTML('beforeend', `<circle cx="${rnd(100, 800)}" cy="${rnd(250, 1100)}" r="9" fill="#F2A900" stroke="#fff" stroke-width="3"/>`);
-  [[445, 355], [660, 1070], [690, 1100], [640, 1040], [115, 545], [300, 720], [520, 900]].forEach(([x, y]) => g.insertAdjacentHTML('beforeend', `<circle cx="${x}" cy="${y}" r="26" fill="#FF5500" opacity=".16"><animate attributeName="r" values="14;34;14" dur="2.4s" repeatCount="indefinite"/></circle><circle cx="${x}" cy="${y}" r="9" fill="#FF5500" stroke="#fff" stroke-width="3"/>`));
-  svg.appendChild(g);
-  box.insertAdjacentHTML('beforeend', `<div class="zone-tag" style="right:16px;bottom:16px"><b style="color:var(--held-ink)">Faculty of Science: short</b>3 waiting · 1 runner nearby<br><a href="/desk/crew" class="btn b-line" style="margin-top:6px;height:28px;text-decoration:none;display:inline-flex;">Send Crew</a></div><div class="zone-tag" style="left:16px;top:16px"><b>Moremi Hall</b>Matched in 1:52 median</div>`);
-}
-drawLive();
+// ==========================================
+// 4-STAGE LIVE CAMPUS OPERATIONS RADAR ENGINE
+// ==========================================
 
+const activeCampus = @json($activeCampus);
+const campusPlaces = @json($campusPlaces);
+const activeTasks = @json($activeTasks);
+const realLiveRunners = @json($liveRunners);
+const ablyApiKey = @json($ablyApiKey);
+
+// STAGE 1: Campus Geography & Scope (Center & Geofence)
+const campusLat = parseFloat(activeCampus?.lat || 11.979200);
+const campusLng = parseFloat(activeCampus?.lng || 8.423100);
+const campusRadius = parseInt(activeCampus?.radius_meters || 2500);
+
+const map = L.map('campusRadarMap', {
+  center: [campusLat, campusLng],
+  zoom: 17,
+  zoomControl: true,
+  attributionControl: false
+});
+
+// Tile Layers: Street (OpenStreetMap) and Satellite (Esri World Imagery)
+const streetLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '&copy; OpenStreetMap contributors'
+});
+
+const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+  maxZoom: 19,
+  attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+});
+
+// Default to street view
+streetLayer.addTo(map);
+let isSatellite = false;
+
+function toggleSatelliteView() {
+  const btn = document.getElementById('btnToggleSatellite');
+  if (!isSatellite) {
+    map.removeLayer(streetLayer);
+    satelliteLayer.addTo(map);
+    isSatellite = true;
+    btn.innerHTML = '🗺️ Street View';
+    btn.classList.add('b-ink');
+    btn.classList.remove('b-line');
+  } else {
+    map.removeLayer(satelliteLayer);
+    streetLayer.addTo(map);
+    isSatellite = false;
+    btn.innerHTML = '🛰️ Satellite';
+    btn.classList.remove('b-ink');
+    btn.classList.add('b-line');
+  }
+}
+
+// Layer Groups
+const geofenceGroup = L.layerGroup().addTo(map);
+const placesGroup = L.layerGroup().addTo(map);
+const errandsGroup = L.layerGroup().addTo(map);
+const runnersGroup = L.layerGroup().addTo(map);
+
+// Draw Campus Geofence Circle
+const geofenceCircle = L.circle([campusLat, campusLng], {
+  radius: campusRadius,
+  color: '#FF5500',
+  weight: 2,
+  dashArray: '5, 8',
+  fillColor: '#FF5500',
+  fillOpacity: 0.05
+}).addTo(geofenceGroup);
+
+geofenceCircle.bindPopup(`
+  <div style="font-size:12.5px;">
+    <b style="color:var(--brand);font-size:13.5px;">🏫 ${activeCampus?.name || 'University Campus'}</b><br>
+    <span style="color:#64748B;">Operational Boundary:</span> <b>${campusRadius.toLocaleString()}m radius</b><br>
+    <span style="color:#64748B;">Center GPS:</span> ${campusLat.toFixed(4)}, ${campusLng.toFixed(4)}
+  </div>
+`);
+
+// Recenter / Fit All Buildings
+function recenterCampusMap() {
+  if (placesGroup.getLayers().length > 0) {
+    map.fitBounds(placesGroup.getBounds(), { padding: [35, 35], maxZoom: 17.5 });
+  } else {
+    map.flyTo([campusLat, campusLng], 17, { duration: 0.8 });
+  }
+}
+
+// STAGE 1: Confirmed Places / Exact Buildings
+const placeIcons = {
+  hostel: '🏠', faculty: '🎓', cafeteria: '🍲', gate: '🚪',
+  library: '📚', market: '🛒', bank: '🏧', sport: '⚽', landmark: '📍'
+};
+
+const buildingsLookup = {};
+let placesCount = 0;
+
+campusPlaces.forEach(p => {
+  const icon = placeIcons[p.kind] || '📍';
+  const markerHtml = `<div class="place-radar-pin" id="pin-${p.id}">${icon} <span>${p.name}</span></div>`;
+  const customIcon = L.divIcon({ html: markerHtml, className: '', iconAnchor: [12, 12] });
+  
+  const m = L.marker([parseFloat(p.lat), parseFloat(p.lng)], { icon: customIcon });
+  m.bindPopup(`
+    <div style="font-size:13px;min-width:200px;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+        <span style="font-size:16px;">${icon}</span>
+        <b style="font-size:14px;color:var(--ink1);">${p.name}</b>
+      </div>
+      <div style="color:#64748B;font-size:12px;line-height:1.5;">
+        <span style="display:inline-block;background:#F1F5F9;color:#334155;padding:1px 6px;border-radius:4px;font-weight:600;text-transform:capitalize;">${p.kind}</span>
+        ${p.note ? `<br><b>Hint:</b> ${p.note}` : ''}
+        ${p.aka ? `<br><b>aka:</b> ${Array.isArray(p.aka) ? p.aka.join(', ') : p.aka}` : ''}
+        <br><span style="color:#94A3B8;font-family:monospace;font-size:11px;">GPS: ${parseFloat(p.lat).toFixed(5)}, ${parseFloat(p.lng).toFixed(5)}</span>
+      </div>
+    </div>
+  `);
+  m.addTo(placesGroup);
+  buildingsLookup[p.id] = { place: p, marker: m };
+  placesCount++;
+});
+document.getElementById('lblPlacesCount').innerText = placesCount;
+
+// Jump to exact building function
+function focusOnBuilding(placeId) {
+  if (!placeId || !buildingsLookup[placeId]) {
+    recenterCampusMap();
+    return;
+  }
+  const item = buildingsLookup[placeId];
+  const p = item.place;
+  map.flyTo([parseFloat(p.lat), parseFloat(p.lng)], 18.5, {
+    duration: 1.1,
+    easeLinearity: 0.25
+  });
+  setTimeout(() => {
+    item.marker.openPopup();
+    const el = document.getElementById(`pin-${placeId}`);
+    if (el) {
+      el.classList.add('focused');
+      setTimeout(() => el.classList.remove('focused'), 3000);
+    }
+  }, 1150);
+}
+
+// Initial auto-fit: fill screen with campus buildings cluster if present
+if (placesGroup.getLayers().length > 0) {
+  map.fitBounds(placesGroup.getBounds(), { padding: [35, 35], maxZoom: 17.5 });
+}
+
+// STAGE 2: Waiting Errands on Radar
+let errandsCount = 0;
+activeTasks.forEach(t => {
+  const lat = parseFloat(t.pickup_lat || campusLat + (Math.random() - 0.5) * 0.008);
+  const lng = parseFloat(t.pickup_lng || campusLng + (Math.random() - 0.5) * 0.008);
+
+  const markerHtml = `<div class="errand-radar-pin">📦</div>`;
+  const customIcon = L.divIcon({ html: markerHtml, className: '', iconAnchor: [12, 12] });
+
+  const m = L.marker([lat, lng], { icon: customIcon });
+  m.bindPopup(`
+    <div style="font-size:12.5px;">
+      <b style="color:var(--brand);">📦 Errand WD-${t.id ? t.id.substring(0,4).toUpperCase() : 'NEW'}</b><br>
+      <b>${t.item}</b><br>
+      <span style="color:#64748B;">Pickup:</span> ${t.pickup_name || 'Campus Spot'}<br>
+      <span style="color:#64748B;">Dropoff:</span> ${t.dropoff_name || 'Hostel'}<br>
+      <span style="color:#64748B;">Bounty:</span> <b style="color:#10B981;">₦${Math.round((t.bounty_kobo || 0)/100).toLocaleString()}</b>
+      <br><small style="color:#F59E0B;font-weight:600;">Status: ${t.status}</small>
+    </div>
+  `);
+  m.addTo(errandsGroup);
+  errandsCount++;
+});
+document.getElementById('lblErrandsCount').innerText = errandsCount;
+
+// STAGE 2 & 3: Moving Runners Telemetry & Ably WebSockets
+const runnerMarkers = {};
+let runnerList = [];
+
+// Load real verified runners from database (if any exist)
+if (realLiveRunners && realLiveRunners.length > 0) {
+  runnerList = realLiveRunners.map((r, i) => ({
+    id: r.id,
+    name: r.name,
+    avatar: r.avatar_url,
+    phone: r.phone || '+234 800 000 0000',
+    rating: r.rating_avg || 4.9,
+    trips: r.trips_completed || 0,
+    lat: campusLat + (Math.sin(i * 1.3) * 0.003),
+    lng: campusLng + (Math.cos(i * 1.3) * 0.003),
+    heading: 0,
+    speed: 0,
+    battery: 100,
+    mission: 'Active on duty'
+  }));
+}
+
+document.getElementById('lblRunnersCount').innerText = runnerList.length;
+
+function renderOrUpdateRunner(r) {
+  const initials = r.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  const markerHtml = `
+    <div class="runner-radar-pin" style="transform: rotate(${r.heading || 0}deg);">
+      <div class="direction-arrow"></div>
+      <span style="transform: rotate(-${r.heading || 0}deg);">${initials}</span>
+    </div>
+  `;
+  const customIcon = L.divIcon({ html: markerHtml, className: '', iconAnchor: [16, 16] });
+
+  if (runnerMarkers[r.id]) {
+    runnerMarkers[r.id].setLatLng([r.lat, r.lng]);
+    runnerMarkers[r.id].setIcon(customIcon);
+  } else {
+    const m = L.marker([r.lat, r.lng], { icon: customIcon });
+    m.bindPopup(() => `
+      <div style="font-size:12.5px;min-width:180px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <b style="font-size:13.5px;color:var(--ink1);">${r.name}</b>
+          <span style="background:#ECFDF5;color:#065F46;font-size:10.5px;font-weight:700;padding:2px 6px;border-radius:4px;">✓ Verified</span>
+        </div>
+        <div style="color:#64748B;font-size:12px;line-height:1.6;">
+          ★ <b>${r.rating || 4.9}</b> · <b>${r.trips || 0}</b> trips<br>
+          📱 ${r.phone || 'Phone hidden'}<br>
+          🚶 Speed: <b>${(r.speed || 4.5).toFixed(1)} km/h</b><br>
+          🔋 Battery: <b>${r.battery || 85}%</b><br>
+          <div style="margin-top:6px;padding:4px 8px;border-radius:6px;background:#F8FAFC;border:1px solid #E2E8F0;font-size:11.5px;color:#0F172A;">
+            🎯 <b>Status:</b> ${r.mission || 'Active on Campus'}
+          </div>
+        </div>
+      </div>
+    `);
+    m.addTo(runnersGroup);
+    runnerMarkers[r.id] = m;
+    document.getElementById('lblRunnersCount').innerText = Object.keys(runnerMarkers).length;
+  }
+}
+
+// Initial render of runners (if any real runners are on duty)
+runnerList.forEach(renderOrUpdateRunner);
+
+// STAGE 3: Ably WebSockets Live Connection
+const isRealAblyKey = Boolean(ablyApiKey && !ablyApiKey.startsWith('ably_mock') && ablyApiKey.includes(':'));
+
+if (isRealAblyKey && typeof Ably !== 'undefined') {
+  try {
+    const ably = new Ably.Realtime({ key: ablyApiKey });
+    const channelName = `campus:${activeCampus?.id || 'buk-new-site'}:radar`;
+    const channel = ably.channels.get(channelName);
+
+    ably.connection.on('connected', () => {
+      document.getElementById('telemetryStatusBadge').className = 'chip c-paid';
+      document.getElementById('telemetryStatusBadge').querySelector('.dotlive').style.background = '#10B981';
+      document.getElementById('telemetryStatusText').innerText = 'Ably WebSockets Connected';
+    });
+
+    // Listen for live GPS coordinate streams from runner devices
+    channel.subscribe('runner:location', (message) => {
+      const data = message.data;
+      if (data && data.runner_id) {
+        renderOrUpdateRunner({
+          id: data.runner_id,
+          name: data.name || 'Runner',
+          phone: data.phone,
+          rating: data.rating,
+          trips: data.trips,
+          lat: parseFloat(data.lat),
+          lng: parseFloat(data.lng),
+          heading: parseFloat(data.heading || 0),
+          speed: parseFloat(data.speed || 4.5),
+          battery: parseInt(data.battery || 85),
+          mission: data.mission || 'On active errand'
+        });
+      }
+    });
+
+    // Listen for real-time errand creation
+    channel.subscribe('errand:created', (message) => {
+      const t = message.data;
+      if (t) {
+        const lat = parseFloat(t.pickup_lat || campusLat);
+        const lng = parseFloat(t.pickup_lng || campusLng);
+        const m = L.marker([lat, lng], {
+          icon: L.divIcon({ html: `<div class="errand-radar-pin">📦</div>`, className: '', iconAnchor: [12, 12] })
+        }).addTo(errandsGroup);
+        errandsCount++;
+        document.getElementById('lblErrandsCount').innerText = errandsCount;
+      }
+    });
+
+  } catch (err) {
+    console.warn('[Ably Radar Error]', err);
+  }
+}
+
+// STAGE 4: Radar Layer Toggles
+function toggleRadarLayer(layerName) {
+  if (layerName === 'runners') {
+    document.getElementById('chkRunners').checked ? map.addLayer(runnersGroup) : map.removeLayer(runnersGroup);
+  } else if (layerName === 'errands') {
+    document.getElementById('chkErrands').checked ? map.addLayer(errandsGroup) : map.removeLayer(errandsGroup);
+  } else if (layerName === 'places') {
+    document.getElementById('chkPlaces').checked ? map.addLayer(placesGroup) : map.removeLayer(placesGroup);
+  } else if (layerName === 'geofence') {
+    document.getElementById('chkGeofence').checked ? map.addLayer(geofenceGroup) : map.removeLayer(geofenceGroup);
+  }
+}
 </script>
 </body>
 </html>

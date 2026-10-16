@@ -1,68 +1,14 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Waydrop Desk: ID Checks & Verification Desk</title>
+<title>Waydrop Desk: ID Checks & KYC Review</title>
 <link rel="stylesheet" href="/admin_desk/admin_desk.css">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
-    <symbol id="map" viewBox="0 0 360 440" preserveAspectRatio="xMidYMid slice">
-      <rect width="360" height="440" fill="#E9EDF1"/>
-      <path d="M-10 300 Q120 250 200 290 T380 270 V460 H-10Z" fill="#D8EEDF"/>
-      <path d="M250 -10 Q300 60 380 70 V-10Z" fill="#D3E6F8"/>
-      <g fill="#DEE3E9">
-        <rect x="18" y="20" width="84" height="64" rx="8"/><rect x="128" y="20" width="96" height="64" rx="8"/>
-        <rect x="18" y="118" width="84" height="96" rx="8"/><rect x="128" y="118" width="46" height="96" rx="8"/><rect x="184" y="118" width="40" height="44" rx="8"/>
-        <rect x="252" y="118" width="96" height="96" rx="8"/><rect x="252" y="98" width="0" height="0"/>
-        <rect x="128" y="330" width="96" height="80" rx="8"/><rect x="252" y="330" width="96" height="80" rx="8"/>
-      </g>
-      <g stroke="#FFFFFF" stroke-linecap="round" fill="none">
-        <path d="M-10 100 H370" stroke-width="12"/><path d="M-10 236 H370" stroke-width="10"/>
-        <path d="M114 -10 V450" stroke-width="12"/><path d="M238 -10 V450" stroke-width="10"/>
-        <path d="M-10 316 H370" stroke-width="7"/><path d="M60 236 V450" stroke-width="6"/>
-      </g>
-      <g font-family="DM Sans, sans-serif" font-size="9" fill="#94A3B8" font-weight="500">
-        <text x="126" y="96">Library Rd</text><text x="250" y="232">Faculty Ave</text>
-      </g>
-    </symbol>
-
-    <symbol id="m-parcel" viewBox="0 0 120 120">
-      <rect x="16" y="30" width="88" height="74" rx="24" fill="#FF8A4C"/>
-      <path d="M16 54 Q60 60 104 54 V52 Q104 30 80 30 H40 Q16 30 16 52Z" fill="#FF9F6B"/>
-      <rect x="52" y="30" width="16" height="28" rx="4" fill="#FFD3B8"/>
-      <ellipse cx="45" cy="74" rx="4.5" ry="6" fill="#0F172A"/><ellipse cx="75" cy="74" rx="4.5" ry="6" fill="#0F172A"/>
-      <circle cx="46.5" cy="72" r="1.6" fill="#fff"/><circle cx="76.5" cy="72" r="1.6" fill="#fff"/>
-      <path d="M52 86 Q60 93 68 86" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" fill="none"/>
-      <circle cx="33" cy="84" r="6" fill="#FF4D6D" opacity=".32"/><circle cx="87" cy="84" r="6" fill="#FF4D6D" opacity=".32"/>
-    </symbol>
-    <symbol id="m-pin" viewBox="0 0 120 120">
-      <path d="M60 10C88 10 104 30 104 54C104 82 78 102 60 114C42 102 16 82 16 54C16 30 32 10 60 10Z" fill="#34D399"/>
-      <path d="M60 10C88 10 104 30 104 54C104 60 103 64 101 68C92 42 74 30 44 30C36 30 30 32 24 35C32 18 44 10 60 10Z" fill="#6EE7B7" opacity=".7"/>
-      <path d="M42 56 q6 -7 12 0" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" fill="none"/>
-      <path d="M66 56 q6 -7 12 0" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" fill="none"/>
-      <path d="M50 70 Q60 80 70 70" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" fill="none"/>
-      <circle cx="36" cy="66" r="6" fill="#FF4D6D" opacity=".28"/><circle cx="84" cy="66" r="6" fill="#FF4D6D" opacity=".28"/>
-    </symbol>
-    <symbol id="m-blob" viewBox="0 0 120 120">
-      <path d="M26 64C18 36 42 16 66 20C92 24 108 44 100 70C93 94 70 108 46 100C30 94 30 82 26 64Z" fill="#B9A6FF"/>
-      <path d="M40 34C52 24 72 24 86 34C78 30 62 30 50 38Z" fill="#fff" opacity=".5"/>
-      <ellipse cx="50" cy="62" rx="4.5" ry="6" fill="#0F172A"/><ellipse cx="76" cy="62" rx="4.5" ry="6" fill="#0F172A"/>
-      <circle cx="51.5" cy="60" r="1.6" fill="#fff"/><circle cx="77.5" cy="60" r="1.6" fill="#fff"/>
-      <ellipse cx="63" cy="78" rx="6" ry="4.5" fill="#0F172A"/>
-      <circle cx="38" cy="72" r="6" fill="#FF4D6D" opacity=".3"/><circle cx="88" cy="72" r="6" fill="#FF4D6D" opacity=".3"/>
-    </symbol>
-    <symbol id="m-coin" viewBox="0 0 120 120">
-      <circle cx="60" cy="62" r="44" fill="#FFC94A"/>
-      <circle cx="60" cy="62" r="34" fill="none" stroke="#F2A900" stroke-width="3.5"/>
-      <path d="M34 40 A34 34 0 0 1 72 30" stroke="#FFE7A3" stroke-width="5" stroke-linecap="round" fill="none"/>
-      <ellipse cx="48" cy="60" rx="4.5" ry="6" fill="#0F172A"/><ellipse cx="72" cy="60" rx="4.5" ry="6" fill="#0F172A"/>
-      <circle cx="49.5" cy="58" r="1.6" fill="#fff"/><circle cx="73.5" cy="58" r="1.6" fill="#fff"/>
-      <path d="M50 73 Q60 82 70 73" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" fill="none"/>
-      <circle cx="37" cy="71" r="5.5" fill="#FF4D6D" opacity=".3"/><circle cx="83" cy="71" r="5.5" fill="#FF4D6D" opacity=".3"/>
-    </symbol>
     <symbol id="logo" viewBox="0 0 40 40">
       <rect width="40" height="40" rx="12" fill="#0F172A"/>
       <path d="M8 31 C 12 31, 13 25, 18 25" stroke="#FF5500" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="1 4.2" fill="none"/>
@@ -75,16 +21,16 @@
 <nav aria-label="Desk">
   <div class="brand"><a href="/desk/today" style="text-decoration:none;display:flex;align-items:center;gap:10px;color:inherit;"><svg width="30" height="30" aria-hidden="true"><use href="#logo"/></svg><b>Waydrop</b><span>DESK</span></a></div>
   <a href="/desk/today" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M96,40l33.52,88H56Zm104,88H129.52L160,208Z" opacity="0.2"/><path d="M240,128a8,8,0,0,1-8,8H204.94l-37.78,75.58A8,8,0,0,1,160,216h-.4a8,8,0,0,1-7.08-5.14L95.35,60.76,63.28,131.31A8,8,0,0,1,56,136H24a8,8,0,0,1,0-16H50.85L88.72,36.69a8,8,0,0,1,14.76.46l57.51,151,31.85-63.71A8,8,0,0,1,200,120h32A8,8,0,0,1,240,128Z"/></svg> Today</a>
-  <a href="/desk/queue" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M216,48V160H179.31a8,8,0,0,0-5.66,2.34l-19.31,19.32a8,8,0,0,1-5.66,2.34H107.31a8,8,0,0,1-5.66-2.34L82.34,162.34A8,8,0,0,0,76.68,160H40V48a8,8,0,0,1,8-8H208A8,8,0,0,1,216,48Z" opacity="0.2"/><path d="M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32Zm0,16V152h-28.7A15.86,15.86,0,0,0,168,156.69L148.69,176H107.31L88,156.68A15.89,15.89,0,0,0,76.69,152H48V48Zm0,160H48V168H76.69L96,187.32A15.89,15.89,0,0,0,107.31,192h41.38A15.86,15.86,0,0,0,160,187.31L179.31,168H208v40Z"/></svg> All open <em class=" hot">11</em></a>
-  <a href="/desk/disputes" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M56,88l32,80c0,17.67-20,24-32,24s-32-6.33-32-24ZM200,56l-32,80c0,17.67,20,24,32,24s32-6.33,32-24Z" opacity="0.2"/><path d="M239.43,133l-32-80h0a8,8,0,0,0-9.16-4.84L136,62V40a8,8,0,0,0-16,0V65.58L54.26,80.19A8,8,0,0,0,48.57,85h0v.06L16.57,165a7.92,7.92,0,0,0-.57,3c0,23.31,24.54,32,40,32s40-8.69,40-32a7.92,7.92,0,0,0-.57-3L66.92,93.77,120,82V208H104a8,8,0,0,0,0,16h48a8,8,0,0,0,0-16H136V78.42L187,67.1,160.57,133a7.92,7.92,0,0,0-.57,3c0,23.31,24.54,32,40,32s40-8.69,40-32A7.92,7.92,0,0,0,239.43,133ZM56,184c-7.53,0-22.76-3.61-23.93-14.64L56,109.54l23.93,59.82C78.76,180.39,63.53,184,56,184Zm144-32c-7.53,0-22.76-3.61-23.93-14.64L200,77.54l23.93,59.82C222.76,148.39,207.53,152,200,152Z"/></svg> Disputes <em class="">3</em></a>
-  <a href="/desk/kyc" class="nlink on" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M216,48H40a8,8,0,0,0-8,8V200a8,8,0,0,0,8,8H216a8,8,0,0,0,8-8V56A8,8,0,0,0,216,48ZM96,144a24,24,0,1,1,24-24A24,24,0,0,1,96,144Z" opacity="0.2"/><path d="M200,112a8,8,0,0,1-8,8H152a8,8,0,0,1,0-16h40A8,8,0,0,1,200,112Zm-8,24H152a8,8,0,0,0,0,16h40a8,8,0,0,0,0-16Zm40-80V200a16,16,0,0,1-16,16H40a16,16,0,0,1-16-16V56A16,16,0,0,1,40,40H216A16,16,0,0,1,232,56ZM216,200V56H40V200H216Zm-80.26-34a8,8,0,1,1-15.5,4c-2.63-10.26-13.06-18-24.25-18s-21.61,7.74-24.25,18a8,8,0,1,1-15.5-4,39.84,39.84,0,0,1,17.19-23.34,32,32,0,1,1,45.12,0A39.76,39.76,0,0,1,135.75,166ZM96,136a16,16,0,1,0-16-16A16,16,0,0,0,96,136Z"/></svg> ID checks <em class="">5</em></a>
-  <a href="/desk/locked-handovers" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M208,88H48a8,8,0,0,0-8,8V208a8,8,0,0,0,8,8H208a8,8,0,0,0,8-8V96A8,8,0,0,0,208,88Zm-80,72a20,20,0,1,1,20-20A20,20,0,0,1,128,160Z" opacity="0.2"/><path d="M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Zm-80-96a28,28,0,0,0-8,54.83V184a8,8,0,0,0,16,0V166.83A28,28,0,0,0,128,112Zm0,40a12,12,0,1,1,12-12A12,12,0,0,1,128,152Z"/></svg> Locked handovers <em class="">1</em></a>
-  <a href="/desk/payouts" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232,96H24L128,32Z" opacity="0.2"/><path d="M24,104H48v64H32a8,8,0,0,0,0,16H224a8,8,0,0,0,0-16H208V104h24a8,8,0,0,0,4.19-14.81l-104-64a8,8,0,0,0-8.38,0l-104,64A8,8,0,0,0,24,104Zm40,0H96v64H64Zm80,0v64H112V104Zm48,64H160V104h32ZM128,41.39,203.74,88H52.26ZM248,208a8,8,0,0,1-8,8H16a8,8,0,0,1,0-16H240A8,8,0,0,1,248,208Z"/></svg> Failed payouts <em class="">2</em></a>
+  <a href="/desk/queue" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M216,48V160H179.31a8,8,0,0,0-5.66,2.34l-19.31,19.32a8,8,0,0,1-5.66,2.34H107.31a8,8,0,0,1-5.66-2.34L82.34,162.34A8,8,0,0,0,76.68,160H40V48a8,8,0,0,1,8-8H208A8,8,0,0,1,216,48Z" opacity="0.2"/><path d="M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32Zm0,16V152h-28.7A15.86,15.86,0,0,0,168,156.69L148.69,176H107.31L88,156.68A15.89,15.89,0,0,0,76.69,152H48V48Zm0,160H48V168H76.69L96,187.32A15.89,15.89,0,0,0,107.31,192h41.38A15.86,15.86,0,0,0,160,187.31L179.31,168H208v40Z"/></svg> All open <em class="{{ ($deskBadges['openErrands'] ?? 0) > 0 ? ' hot' : '' }}">{{ $deskBadges['openErrands'] ?? 0 }}</em></a>
+  <a href="/desk/disputes" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M56,88l32,80c0,17.67-20,24-32,24s-32-6.33-32-24ZM200,56l-32,80c0,17.67,20,24,32,24s32-6.33,32-24Z" opacity="0.2"/><path d="M239.43,133l-32-80h0a8,8,0,0,0-9.16-4.84L136,62V40a8,8,0,0,0-16,0V65.58L54.26,80.19A8,8,0,0,0,48.57,85h0v.06L16.57,165a7.92,7.92,0,0,0-.57,3c0,23.31,24.54,32,40,32s40-8.69,40-32a7.92,7.92,0,0,0-.57-3L66.92,93.77,120,82V208H104a8,8,0,0,0,0,16h48a8,8,0,0,0,0-16H136V78.42L187,67.1,160.57,133a7.92,7.92,0,0,0-.57,3c0,23.31,24.54,32,40,32s40-8.69,40-32A7.92,7.92,0,0,0,239.43,133ZM56,184c-7.53,0-22.76-3.61-23.93-14.64L56,109.54l23.93,59.82C78.76,180.39,63.53,184,56,184Zm144-32c-7.53,0-22.76-3.61-23.93-14.64L200,77.54l23.93,59.82C222.76,148.39,207.53,152,200,152Z"/></svg> Disputes <em class="{{ ($deskBadges['disputes'] ?? 0) > 0 ? ' hot' : '' }}">{{ $deskBadges['disputes'] ?? 0 }}</em></a>
+  <a href="/desk/kyc" class="nlink on" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M216,48H40a8,8,0,0,0-8,8V200a8,8,0,0,0,8,8H216a8,8,0,0,0,8-8V56A8,8,0,0,0,216,48ZM96,144a24,24,0,1,1,24-24A24,24,0,0,1,96,144Z" opacity="0.2"/><path d="M200,112a8,8,0,0,1-8,8H152a8,8,0,0,1,0-16h40A8,8,0,0,1,200,112Zm-8,24H152a8,8,0,0,0,0,16h40a8,8,0,0,0,0-16Zm40-80V200a16,16,0,0,1-16,16H40a16,16,0,0,1-16-16V56A16,16,0,0,1,40,40H216A16,16,0,0,1,232,56ZM216,200V56H40V200H216Zm-80.26-34a8,8,0,1,1-15.5,4c-2.63-10.26-13.06-18-24.25-18s-21.61,7.74-24.25,18a8,8,0,1,1-15.5-4,39.84,39.84,0,0,1,17.19-23.34,32,32,0,1,1,45.12,0A39.76,39.76,0,0,1,135.75,166ZM96,136a16,16,0,1,0-16-16A16,16,0,0,0,96,136Z"/></svg> ID checks <em class="{{ ($deskBadges['kyc'] ?? 0) > 0 ? ' hot' : '' }}">{{ $deskBadges['kyc'] ?? 0 }}</em></a>
+  <a href="/desk/locked-handovers" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M208,88H48a8,8,0,0,0-8,8V208a8,8,0,0,0,8,8H208a8,8,0,0,0,8-8V96A8,8,0,0,0,208,88Zm-80,72a20,20,0,1,1,20-20A20,20,0,0,1,128,160Z" opacity="0.2"/><path d="M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Zm-80-96a28,28,0,0,0-8,54.83V184a8,8,0,0,0,16,0V166.83A28,28,0,0,0,128,112Zm0,40a12,12,0,1,1,12-12A12,12,0,0,1,128,152Z"/></svg> Locked handovers <em class="{{ ($deskBadges['locked'] ?? 0) > 0 ? ' hot' : '' }}">{{ $deskBadges['locked'] ?? 0 }}</em></a>
+  <a href="/desk/payouts" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232,96H24L128,32Z" opacity="0.2"/><path d="M24,104H48v64H32a8,8,0,0,0,0,16H224a8,8,0,0,0,0-16H208V104h24a8,8,0,0,0,4.19-14.81l-104-64a8,8,0,0,0-8.38,0l-104,64A8,8,0,0,0,24,104Zm40,0H96v64H64Zm80,0v64H112V104Zm48,64H160V104h32ZM128,41.39,203.74,88H52.26ZM248,208a8,8,0,0,1-8,8H16a8,8,0,0,1,0-16H240A8,8,0,0,1,248,208Z"/></svg> Failed payouts <em class="{{ ($deskBadges['failedPayouts'] ?? 0) > 0 ? ' hot' : '' }}">{{ $deskBadges['failedPayouts'] ?? 0 }}</em></a>
   <div class="ngrp">Look up</div>
-  <a href="/desk/locked-handovers" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,129.09V232a8,8,0,0,1-3.84-1l-88-48.18a8,8,0,0,1-4.16-7V80.18a8,8,0,0,1,.7-3.25Z" opacity="0.2"/><path d="M223.68,66.15,135.68,18a15.88,15.88,0,0,0-15.36,0l-88,48.17a16,16,0,0,0-8.32,14v95.64a16,16,0,0,0,8.32,14l88,48.17a15.88,15.88,0,0,0,15.36,0l88-48.17a16,16,0,0,0,8.32-14V80.18A16,16,0,0,0,223.68,66.15ZM128,32l80.34,44-29.77,16.3-80.35-44ZM128,120,47.66,76l33.9-18.56,80.34,44ZM40,90l80,43.78v85.79L40,175.82Zm176,85.78h0l-80,43.79V133.82l32-17.51V152a8,8,0,0,0,16,0V107.55L216,90v85.77Z"/></svg> Errands</a>
+  <a href="/desk/queue" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,129.09V232a8,8,0,0,1-3.84-1l-88-48.18a8,8,0,0,1-4.16-7V80.18a8,8,0,0,1,.7-3.25Z" opacity="0.2"/><path d="M223.68,66.15,135.68,18a15.88,15.88,0,0,0-15.36,0l-88,48.17a16,16,0,0,0-8.32,14v95.64a16,16,0,0,0,8.32,14l88,48.17a15.88,15.88,0,0,0,15.36,0l88-48.17a16,16,0,0,0,8.32-14V80.18A16,16,0,0,0,223.68,66.15ZM128,32l80.34,44-29.77,16.3-80.35-44ZM128,120,47.66,76l33.9-18.56,80.34,44ZM40,90l80,43.78v85.79L40,175.82Zm176,85.78h0l-80,43.79V133.82l32-17.51V152a8,8,0,0,0,16,0V107.55L216,90v85.77Z"/></svg> Errands</a>
   <a href="/desk/people" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M224,128a95.76,95.76,0,0,1-31.8,71.37A72,72,0,0,0,128,160a40,40,0,1,0-40-40,40,40,0,0,0,40,40,72,72,0,0,0-64.2,39.37h0A96,96,0,1,1,224,128Z" opacity="0.2"/><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24ZM74.08,197.5a64,64,0,0,1,107.84,0,87.83,87.83,0,0,1-107.84,0ZM96,120a32,32,0,1,1,32,32A32,32,0,0,1,96,120Zm97.76,66.41a79.66,79.66,0,0,0-36.06-28.75,48,48,0,1,0-59.4,0,79.66,79.66,0,0,0-36.06,28.75,88,88,0,1,1,131.52,0Z"/></svg> People</a>
   <div class="ngrp">Campus</div>
-  <a href="/desk/places" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M184,80c0,56-56,88-56,88S72,136,72,80a56,56,0,0,1,112,0Z" opacity="0.2"/><path d="M112,80a16,16,0,1,1,16,16A16,16,0,0,1,112,80ZM64,80a64,64,0,0,1,128,0c0,59.95-57.58,93.54-60,94.95a8,8,0,0,1-7.94,0C121.58,173.54,64,140,64,80Zm16,0c0,42.2,35.84,70.21,48,78.5,12.15-8.28,48-36.3,48-78.5a48,48,0,0,0-96,0Zm122.77,67.63a8,8,0,0,0-5.54,15C213.74,168.74,224,176.92,224,184c0,13.36-36.52,32-96,32s-96-18.64-96-32c0-7.08,10.26-15.26,26.77-21.36a8,8,0,0,0-5.54-15C29.22,156.49,16,169.41,16,184c0,31.18,57.71,48,112,48s112-16.82,112-48C240,169.41,226.78,156.49,202.77,147.63Z"/></svg> Places <em class="">4</em></a>
+  <a href="/desk/places" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M184,80c0,56-56,88-56,88S72,136,72,80a56,56,0,0,1,112,0Z" opacity="0.2"/><path d="M112,80a16,16,0,1,1,16,16A16,16,0,0,1,112,80ZM64,80a64,64,0,0,1,128,0c0,59.95-57.58,93.54-60,94.95a8,8,0,0,1-7.94,0C121.58,173.54,64,140,64,80Zm16,0c0,42.2,35.84,70.21,48,78.5,12.15-8.28,48-36.3,48-78.5a48,48,0,0,0-96,0Zm122.77,67.63a8,8,0,0,0-5.54,15C213.74,168.74,224,176.92,224,184c0,13.36-36.52,32-96,32s-96-18.64-96-32c0-7.08,10.26-15.26,26.77-21.36a8,8,0,0,0-5.54-15C29.22,156.49,16,169.41,16,184c0,31.18,57.71,48,112,48s112-16.82,112-48C240,169.41,226.78,156.49,202.77,147.63Z"/></svg> Places <em class="{{ ($deskBadges['pendingPlaces'] ?? 0) > 0 ? ' hot' : '' }}">{{ $deskBadges['pendingPlaces'] ?? 0 }}</em></a>
   <a href="/desk/crew" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M168,144a40,40,0,1,1-40-40A40,40,0,0,1,168,144ZM64,56A32,32,0,1,0,96,88,32,32,0,0,0,64,56Zm128,0a32,32,0,1,0,32,32A32,32,0,0,0,192,56Z" opacity="0.2"/><path d="M244.8,150.4a8,8,0,0,1-11.2-1.6A51.6,51.6,0,0,0,192,128a8,8,0,0,1,0-16,24,24,0,1,0-23.24-30,8,8,0,1,1-15.5-4A40,40,0,1,1,219,117.51a67.94,67.94,0,0,1,27.43,21.68A8,8,0,0,1,244.8,150.4ZM190.92,212a8,8,0,1,1-13.85,8,57,57,0,0,0-98.15,0,8,8,0,1,1-13.84-8,72.06,72.06,0,0,1,33.74-29.92,48,48,0,1,1,58.36,0A72.06,72.06,0,0,1,190.92,212ZM128,176a32,32,0,1,0-32-32A32,32,0,0,0,128,176ZM72,120a8,8,0,0,0-8-8A24,24,0,1,1,87.24,82a8,8,0,1,0,15.5-4A40,40,0,1,0,37,117.51,67.94,67.94,0,0,0,9.6,139.19a8,8,0,1,0,12.8,9.61A51.6,51.6,0,0,1,64,128,8,8,0,0,0,72,120Z"/></svg> Crew and routines</a>
   <div class="ngrp">Control</div>
   <a href="/desk/rules" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,80a24,24,0,1,1-24-24A24,24,0,0,1,128,80Zm40,72a24,24,0,1,0,24,24A24,24,0,0,0,168,152Z" opacity="0.2"/><path d="M40,88H73a32,32,0,0,0,62,0h81a8,8,0,0,0,0-16H135a32,32,0,0,0-62,0H40a8,8,0,0,0,0,16Zm64-24A16,16,0,1,1,88,80,16,16,0,0,1,104,64ZM216,168H199a32,32,0,0,0-62,0H40a8,8,0,0,0,0,16h97a32,32,0,0,0,62,0h17a8,8,0,0,0,0-16Zm-48,24a16,16,0,1,1,16-16A16,16,0,0,1,168,192Z"/></svg> Rules</a>
@@ -116,39 +62,116 @@
       <div style="margin-left:auto;font-size:12px;color:var(--ink3)" id="clock"></div>
     </div>
     <div class="page">
-<div class="ph"><div><a href="/desk/queue" class="btn b-line" style="margin-bottom:10px;text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M228,128a12,12,0,0,1-12,12H69l51.52,51.51a12,12,0,0,1-17,17l-72-72a12,12,0,0,1,0-17l72-72a12,12,0,0,1,17,17L69,116H216A12,12,0,0,1,228,128Z"/></svg> Queue</a><h1>ID check: Ifeoma Chukwu</h1><p>The provider wasn't sure (score 0.71). Everything else passed. You decide.</p></div><span class="chip c-held">22 min left</span></div>
-<div class="kyc">
-  <div class="sheet"><div class="sh-h"><b>Student ID</b><small>Front, uploaded 9:18 PM</small></div><div class="idimg"><div class="idcard"><div class="st">UNIVERSITY OF LAGOS · STUDENT</div><div class="ph2"></div><div class="ln2"><b>CHUKWU, Ifeoma N.</b><span>Mat. No. 200805417</span><span>Faculty of Engineering</span><span>Valid to 07/2027</span></div></div></div></div>
-  <div class="sheet"><div class="sh-h"><b>Selfie</b><small>Liveness passed: turned head, blinked</small></div><div class="idimg"><div class="selfie"><div class="face"></div></div></div></div>
-  <div class="sheet"><div class="sh-h"><b>Checks</b></div><div style="padding:4px 16px 16px">
-    <table class="cmp"><tr><td>Name on account</td><td>Ifeoma Chukwu</td></tr><tr><td>Name on ID</td><td>Chukwu, Ifeoma N.</td></tr><tr><td>Match</td><td class="ok-i">Same name, order swapped</td></tr><tr><td>Face match</td><td class="ok-i">0.94</td></tr><tr><td>Liveness</td><td class="ok-i">Passed</td></tr><tr><td>Age (18+)</td><td class="ok-i">21</td></tr><tr><td>ID expiry</td><td class="ok-i">07/2027</td></tr><tr><td>Same ID used before</td><td class="ok-i">No</td></tr></table>
-    <p class="note">Why it was flagged: the name order on the card differs from the account. That's normal on Nigerian student IDs.</p>
-    <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
-      <button class="btn b-paid" id="approve" style="justify-content:center;height:40px"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232.49,80.49l-128,128a12,12,0,0,1-17,0l-56-56a12,12,0,1,1,17-17L96,183,215.51,63.51a12,12,0,0,1,17,17Z"/></svg> Approve runner</button>
-      <button class="btn b-line" id="redo" style="justify-content:center">Ask to redo one step</button>
-      <button class="btn b-fault" id="reject" style="justify-content:center">Reject</button>
-    </div></div></div>
-</div>
+      @if(session('success'))
+        <div style="background:#ECFDF5;border:1px solid #A7F3D0;color:#065F46;padding:12px 16px;border-radius:10px;font-size:13.5px;margin-bottom:16px;">
+          ✓ {{ session('success') }}
+        </div>
+      @endif
+
+      @if($verifications->count() > 1)
+        <div style="margin-bottom:14px;display:flex;align-items:center;gap:10px;">
+          <span style="font-size:12px;color:var(--ink3);font-weight:600;">SWITCH APPLICANT:</span>
+          <select onchange="location.href='/desk/kyc?id='+this.value" style="padding:6px 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--sheet);color:var(--ink1);">
+            @foreach($verifications as $v)
+              <option value="{{ $v->id }}" {{ ($selectedKyc?->id === $v->id) ? 'selected' : '' }}>
+                {{ $v->user?->name }} ({{ $v->matric_number ?? $v->status }})
+              </option>
+            @endforeach
+          </select>
+        </div>
+      @endif
+
+      @if(!$selectedKyc)
+        <div class="sheet" style="padding:60px 20px;text-align:center;">
+          <div style="font-size:36px;margin-bottom:12px;">🪪</div>
+          <h2>No Pending ID Checks</h2>
+          <p style="color:var(--ink2);margin-top:6px;">All runner KYC submissions for this campus have been reviewed.</p>
+          <a href="/desk/queue" class="btn b-line" style="display:inline-flex;margin-top:16px;text-decoration:none;">Return to Queue</a>
+        </div>
+      @else
+        <div class="ph">
+          <div>
+            <a href="/desk/queue" class="btn b-line" style="margin-bottom:10px;text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M228,128a12,12,0,0,1-12,12H69l51.52,51.51a12,12,0,0,1-17,17l-72-72a12,12,0,0,1,0-17l72-72a12,12,0,0,1,17,17L69,116H216A12,12,0,0,1,228,128Z"/></svg> Queue</a>
+            <h1>ID check: {{ $selectedKyc->user?->name ?? 'Applicant' }}</h1>
+            <p>Biometric confidence: <b>{{ $selectedKyc->biometric_confidence ?? 92 }}%</b> · Provider: {{ ucfirst($selectedKyc->biometric_provider ?? 'Smile ID') }} · Campus: {{ $selectedKyc->campus?->name ?? 'Campus' }}</p>
+          </div>
+          <span class="chip {{ $selectedKyc->status === 'approved' ? 'c-paid' : 'c-held' }}">{{ ucfirst($selectedKyc->status) }}</span>
+        </div>
+
+        <div class="kyc">
+          {{-- Student ID Card --}}
+          <div class="sheet">
+            <div class="sh-h"><b>Student ID Document</b><small>Uploaded {{ $selectedKyc->created_at?->diffForHumans() ?? 'recently' }}</small></div>
+            <div class="idimg">
+              <div class="idcard">
+                <div class="st">{{ strtoupper($selectedKyc->campus?->name ?? 'UNIVERSITY OF LAGOS') }} · STUDENT</div>
+                <div class="ph2"></div>
+                <div class="ln2">
+                  <b>{{ strtoupper($selectedKyc->user?->name ?? 'STUDENT NAME') }}</b>
+                  <span>Mat. No: {{ $selectedKyc->matric_number ?? 'N/A' }}</span>
+                  <span>{{ $selectedKyc->faculty ?? 'Faculty' }} · {{ $selectedKyc->department ?? 'Dept' }}</span>
+                  <span>Status: {{ ucfirst($selectedKyc->status) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {{-- Selfie Card --}}
+          <div class="sheet">
+            <div class="sh-h"><b>Live Facial Match</b><small>{{ $selectedKyc->biometric_liveness_passed ? 'Liveness passed' : 'Liveness check pending' }}</small></div>
+            <div class="idimg">
+              <div class="selfie">
+                <div class="face"></div>
+              </div>
+            </div>
+          </div>
+
+          {{-- Verification Checks & Decision --}}
+          <div class="sheet">
+            <div class="sh-h"><b>Automated Checks</b></div>
+            <div style="padding:4px 16px 16px">
+              <table class="cmp">
+                <tr><td>Name on account</td><td>{{ $selectedKyc->user?->name }}</td></tr>
+                <tr><td>Name on payout bank</td><td>{{ $selectedKyc->payout_account_name ?? $selectedKyc->user?->name }}</td></tr>
+                <tr><td>Matric number</td><td class="ok-i">{{ $selectedKyc->matric_number ?? 'Verified' }}</td></tr>
+                <tr><td>Biometric provider</td><td class="ok-i">{{ ucfirst($selectedKyc->biometric_provider ?? 'Smile ID') }}</td></tr>
+                <tr><td>Face match confidence</td><td class="ok-i">{{ $selectedKyc->biometric_confidence ?? 95 }}%</td></tr>
+                <tr><td>Liveness check</td><td class="ok-i">{{ $selectedKyc->biometric_liveness_passed ? 'Passed ✓' : 'Flagged' }}</td></tr>
+                <tr><td>Campus geofence</td><td class="ok-i">{{ $selectedKyc->campus?->name ?? 'Verified' }}</td></tr>
+              </table>
+
+              @if($selectedKyc->rejection_reason)
+                <p class="note" style="color:var(--fault-ink);background:var(--fault-wash);padding:8px 12px;border-radius:6px;margin-top:10px;">
+                  Previous note: {{ $selectedKyc->rejection_reason }}
+                </p>
+              @endif
+
+              <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px">
+                <form method="POST" action="{{ route('desk.kyc.review', $selectedKyc->id) }}">
+                  @csrf
+                  <input type="hidden" name="decision" value="approve">
+                  <button type="submit" class="btn b-paid" style="justify-content:center;height:40px;width:100%;">
+                    <svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232.49,80.49l-128,128a12,12,0,0,1-17,0l-56-56a12,12,0,1,1,17-17L96,183,215.51,63.51a12,12,0,0,1,17,17Z"/></svg> Approve Runner
+                  </button>
+                </form>
+
+                <form method="POST" action="{{ route('desk.kyc.review', $selectedKyc->id) }}">
+                  @csrf
+                  <input type="hidden" name="decision" value="reject">
+                  <input type="text" name="rejection_reason" placeholder="Reason to reject (shown to student in app)" required style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;margin-bottom:8px;">
+                  <button type="submit" class="btn b-fault" style="justify-content:center;width:100%;">
+                    Reject Applicant
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      @endif
     </div>
   </main>
 </div>
-<div class="scrim" id="scrim"><div class="modal" id="modal" role="dialog" aria-modal="true"></div></div>
-<div class="toast" id="toast" role="status"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm45.66,85.66-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32Z"/></svg><span></span></div>
 
 <script src="/admin_desk/admin_desk.js"></script>
-<script>
-$('#approve').onclick = () => {
-  toast('Approved. Ifeoma can earn on her routes now.');
-  setTimeout(() => location.href = '/desk/queue', 1000);
-};
-$('#redo').onclick = () => reasonModal('Ask Ifeoma to redo a step', 'Only the step you pick is redone. Everything else is kept.', ['ID photo is blurry or cut off', 'Selfie too dark', 'Use a different ID'], 'Send request', () => {
-  toast('Request sent to Ifeoma.');
-  setTimeout(() => location.href = '/desk/queue', 1000);
-});
-$('#reject').onclick = () => reasonModal('Reject Ifeoma check', 'She can appeal once. Pick the reason she will see.', ['Face does not match the ID', 'ID looks edited or fake', 'Under 18', 'Same ID used on another account'], 'Reject', () => {
-  toast('Rejected. Ifeoma was told why.');
-  setTimeout(() => location.href = '/desk/queue', 1000);
-}, true);
-</script>
 </body>
 </html>

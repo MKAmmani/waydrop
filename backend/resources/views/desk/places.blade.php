@@ -1,68 +1,128 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Waydrop Desk: Campus Places & Landmarks</title>
 <link rel="stylesheet" href="/admin_desk/admin_desk.css">
+<style>
+  :root {
+    --brand: #FF5500;
+  }
+  .drawer-scrim {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(2px);
+    display: none;
+    z-index: 100;
+  }
+  .drawer-scrim.open {
+    display: block;
+  }
+  .drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 480px;
+    max-width: 95vw;
+    background: #FFFFFF;
+    box-shadow: -10px 0 35px rgba(15, 23, 42, 0.2);
+    display: flex;
+    flex-direction: column;
+    z-index: 101;
+    transform: translateX(100%);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .drawer.open {
+    transform: translateX(0);
+  }
+  .drawer-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--rule-soft, #EEF2F6);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .drawer-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  .drawer-section {
+    margin-bottom: 22px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--rule-soft, #EEF2F6);
+  }
+  .drawer-section:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .field {
+    margin-bottom: 12px;
+  }
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink2);
+    margin-bottom: 5px;
+  }
+  .field input, .field select, .field textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-family: inherit;
+    background: #FFFFFF;
+    color: #0F172A;
+    box-sizing: border-box;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    outline: none;
+    border-color: #FF5500;
+    box-shadow: 0 0 0 3px rgba(255, 85, 0, 0.12);
+  }
+  .btn-action {
+    background: #0F172A;
+    color: #FFFFFF !important;
+    border: none;
+    padding: 11px 22px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    margin-top: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.25);
+    transition: background 0.15s, transform 0.05s;
+    width: 100%;
+  }
+  .btn-action:hover {
+    background: #1E293B;
+  }
+  .btn-action:active {
+    transform: scale(0.98);
+  }
+</style>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
-    <symbol id="map" viewBox="0 0 360 440" preserveAspectRatio="xMidYMid slice">
-      <rect width="360" height="440" fill="#E9EDF1"/>
-      <path d="M-10 300 Q120 250 200 290 T380 270 V460 H-10Z" fill="#D8EEDF"/>
-      <path d="M250 -10 Q300 60 380 70 V-10Z" fill="#D3E6F8"/>
-      <g fill="#DEE3E9">
-        <rect x="18" y="20" width="84" height="64" rx="8"/><rect x="128" y="20" width="96" height="64" rx="8"/>
-        <rect x="18" y="118" width="84" height="96" rx="8"/><rect x="128" y="118" width="46" height="96" rx="8"/><rect x="184" y="118" width="40" height="44" rx="8"/>
-        <rect x="252" y="118" width="96" height="96" rx="8"/><rect x="252" y="98" width="0" height="0"/>
-        <rect x="128" y="330" width="96" height="80" rx="8"/><rect x="252" y="330" width="96" height="80" rx="8"/>
-      </g>
-      <g stroke="#FFFFFF" stroke-linecap="round" fill="none">
-        <path d="M-10 100 H370" stroke-width="12"/><path d="M-10 236 H370" stroke-width="10"/>
-        <path d="M114 -10 V450" stroke-width="12"/><path d="M238 -10 V450" stroke-width="10"/>
-        <path d="M-10 316 H370" stroke-width="7"/><path d="M60 236 V450" stroke-width="6"/>
-      </g>
-      <g font-family="DM Sans, sans-serif" font-size="9" fill="#94A3B8" font-weight="500">
-        <text x="126" y="96">Library Rd</text><text x="250" y="232">Faculty Ave</text>
-      </g>
-    </symbol>
-
-    <symbol id="m-parcel" viewBox="0 0 120 120">
-      <rect x="16" y="30" width="88" height="74" rx="24" fill="#FF8A4C"/>
-      <path d="M16 54 Q60 60 104 54 V52 Q104 30 80 30 H40 Q16 30 16 52Z" fill="#FF9F6B"/>
-      <rect x="52" y="30" width="16" height="28" rx="4" fill="#FFD3B8"/>
-      <ellipse cx="45" cy="74" rx="4.5" ry="6" fill="#0F172A"/><ellipse cx="75" cy="74" rx="4.5" ry="6" fill="#0F172A"/>
-      <circle cx="46.5" cy="72" r="1.6" fill="#fff"/><circle cx="76.5" cy="72" r="1.6" fill="#fff"/>
-      <path d="M52 86 Q60 93 68 86" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" fill="none"/>
-      <circle cx="33" cy="84" r="6" fill="#FF4D6D" opacity=".32"/><circle cx="87" cy="84" r="6" fill="#FF4D6D" opacity=".32"/>
-    </symbol>
-    <symbol id="m-pin" viewBox="0 0 120 120">
-      <path d="M60 10C88 10 104 30 104 54C104 82 78 102 60 114C42 102 16 82 16 54C16 30 32 10 60 10Z" fill="#34D399"/>
-      <path d="M60 10C88 10 104 30 104 54C104 60 103 64 101 68C92 42 74 30 44 30C36 30 30 32 24 35C32 18 44 10 60 10Z" fill="#6EE7B7" opacity=".7"/>
-      <path d="M42 56 q6 -7 12 0" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" fill="none"/>
-      <path d="M66 56 q6 -7 12 0" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" fill="none"/>
-      <path d="M50 70 Q60 80 70 70" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" fill="none"/>
-      <circle cx="36" cy="66" r="6" fill="#FF4D6D" opacity=".28"/><circle cx="84" cy="66" r="6" fill="#FF4D6D" opacity=".28"/>
-    </symbol>
-    <symbol id="m-blob" viewBox="0 0 120 120">
-      <path d="M26 64C18 36 42 16 66 20C92 24 108 44 100 70C93 94 70 108 46 100C30 94 30 82 26 64Z" fill="#B9A6FF"/>
-      <path d="M40 34C52 24 72 24 86 34C78 30 62 30 50 38Z" fill="#fff" opacity=".5"/>
-      <ellipse cx="50" cy="62" rx="4.5" ry="6" fill="#0F172A"/><ellipse cx="76" cy="62" rx="4.5" ry="6" fill="#0F172A"/>
-      <circle cx="51.5" cy="60" r="1.6" fill="#fff"/><circle cx="77.5" cy="60" r="1.6" fill="#fff"/>
-      <ellipse cx="63" cy="78" rx="6" ry="4.5" fill="#0F172A"/>
-      <circle cx="38" cy="72" r="6" fill="#FF4D6D" opacity=".3"/><circle cx="88" cy="72" r="6" fill="#FF4D6D" opacity=".3"/>
-    </symbol>
-    <symbol id="m-coin" viewBox="0 0 120 120">
-      <circle cx="60" cy="62" r="44" fill="#FFC94A"/>
-      <circle cx="60" cy="62" r="34" fill="none" stroke="#F2A900" stroke-width="3.5"/>
-      <path d="M34 40 A34 34 0 0 1 72 30" stroke="#FFE7A3" stroke-width="5" stroke-linecap="round" fill="none"/>
-      <ellipse cx="48" cy="60" rx="4.5" ry="6" fill="#0F172A"/><ellipse cx="72" cy="60" rx="4.5" ry="6" fill="#0F172A"/>
-      <circle cx="49.5" cy="58" r="1.6" fill="#fff"/><circle cx="73.5" cy="58" r="1.6" fill="#fff"/>
-      <path d="M50 73 Q60 82 70 73" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" fill="none"/>
-      <circle cx="37" cy="71" r="5.5" fill="#FF4D6D" opacity=".3"/><circle cx="83" cy="71" r="5.5" fill="#FF4D6D" opacity=".3"/>
-    </symbol>
     <symbol id="logo" viewBox="0 0 40 40">
       <rect width="40" height="40" rx="12" fill="#0F172A"/>
       <path d="M8 31 C 12 31, 13 25, 18 25" stroke="#FF5500" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="1 4.2" fill="none"/>
@@ -75,16 +135,16 @@
 <nav aria-label="Desk">
   <div class="brand"><a href="/desk/today" style="text-decoration:none;display:flex;align-items:center;gap:10px;color:inherit;"><svg width="30" height="30" aria-hidden="true"><use href="#logo"/></svg><b>Waydrop</b><span>DESK</span></a></div>
   <a href="/desk/today" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M96,40l33.52,88H56Zm104,88H129.52L160,208Z" opacity="0.2"/><path d="M240,128a8,8,0,0,1-8,8H204.94l-37.78,75.58A8,8,0,0,1,160,216h-.4a8,8,0,0,1-7.08-5.14L95.35,60.76,63.28,131.31A8,8,0,0,1,56,136H24a8,8,0,0,1,0-16H50.85L88.72,36.69a8,8,0,0,1,14.76.46l57.51,151,31.85-63.71A8,8,0,0,1,200,120h32A8,8,0,0,1,240,128Z"/></svg> Today</a>
-  <a href="/desk/queue" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M216,48V160H179.31a8,8,0,0,0-5.66,2.34l-19.31,19.32a8,8,0,0,1-5.66,2.34H107.31a8,8,0,0,1-5.66-2.34L82.34,162.34A8,8,0,0,0,76.68,160H40V48a8,8,0,0,1,8-8H208A8,8,0,0,1,216,48Z" opacity="0.2"/><path d="M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32Zm0,16V152h-28.7A15.86,15.86,0,0,0,168,156.69L148.69,176H107.31L88,156.68A15.89,15.89,0,0,0,76.69,152H48V48Zm0,160H48V168H76.69L96,187.32A15.89,15.89,0,0,0,107.31,192h41.38A15.86,15.86,0,0,0,160,187.31L179.31,168H208v40Z"/></svg> All open <em class=" hot">11</em></a>
-  <a href="/desk/disputes" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M56,88l32,80c0,17.67-20,24-32,24s-32-6.33-32-24ZM200,56l-32,80c0,17.67,20,24,32,24s32-6.33,32-24Z" opacity="0.2"/><path d="M239.43,133l-32-80h0a8,8,0,0,0-9.16-4.84L136,62V40a8,8,0,0,0-16,0V65.58L54.26,80.19A8,8,0,0,0,48.57,85h0v.06L16.57,165a7.92,7.92,0,0,0-.57,3c0,23.31,24.54,32,40,32s40-8.69,40-32a7.92,7.92,0,0,0-.57-3L66.92,93.77,120,82V208H104a8,8,0,0,0,0,16h48a8,8,0,0,0,0-16H136V78.42L187,67.1,160.57,133a7.92,7.92,0,0,0-.57,3c0,23.31,24.54,32,40,32s40-8.69,40-32A7.92,7.92,0,0,0,239.43,133ZM56,184c-7.53,0-22.76-3.61-23.93-14.64L56,109.54l23.93,59.82C78.76,180.39,63.53,184,56,184Zm144-32c-7.53,0-22.76-3.61-23.93-14.64L200,77.54l23.93,59.82C222.76,148.39,207.53,152,200,152Z"/></svg> Disputes <em class="">3</em></a>
-  <a href="/desk/kyc" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M216,48H40a8,8,0,0,0-8,8V200a8,8,0,0,0,8,8H216a8,8,0,0,0,8-8V56A8,8,0,0,0,216,48ZM96,144a24,24,0,1,1,24-24A24,24,0,0,1,96,144Z" opacity="0.2"/><path d="M200,112a8,8,0,0,1-8,8H152a8,8,0,0,1,0-16h40A8,8,0,0,1,200,112Zm-8,24H152a8,8,0,0,0,0,16h40a8,8,0,0,0,0-16Zm40-80V200a16,16,0,0,1-16,16H40a16,16,0,0,1-16-16V56A16,16,0,0,1,40,40H216A16,16,0,0,1,232,56ZM216,200V56H40V200H216Zm-80.26-34a8,8,0,1,1-15.5,4c-2.63-10.26-13.06-18-24.25-18s-21.61,7.74-24.25,18a8,8,0,1,1-15.5-4,39.84,39.84,0,0,1,17.19-23.34,32,32,0,1,1,45.12,0A39.76,39.76,0,0,1,135.75,166ZM96,136a16,16,0,1,0-16-16A16,16,0,0,0,96,136Z"/></svg> ID checks <em class="">5</em></a>
-  <a href="/desk/locked-handovers" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M208,88H48a8,8,0,0,0-8,8V208a8,8,0,0,0,8,8H208a8,8,0,0,0,8-8V96A8,8,0,0,0,208,88Zm-80,72a20,20,0,1,1,20-20A20,20,0,0,1,128,160Z" opacity="0.2"/><path d="M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Zm-80-96a28,28,0,0,0-8,54.83V184a8,8,0,0,0,16,0V166.83A28,28,0,0,0,128,112Zm0,40a12,12,0,1,1,12-12A12,12,0,0,1,128,152Z"/></svg> Locked handovers <em class="">1</em></a>
-  <a href="/desk/payouts" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232,96H24L128,32Z" opacity="0.2"/><path d="M24,104H48v64H32a8,8,0,0,0,0,16H224a8,8,0,0,0,0-16H208V104h24a8,8,0,0,0,4.19-14.81l-104-64a8,8,0,0,0-8.38,0l-104,64A8,8,0,0,0,24,104Zm40,0H96v64H64Zm80,0v64H112V104Zm48,64H160V104h32ZM128,41.39,203.74,88H52.26ZM248,208a8,8,0,0,1-8,8H16a8,8,0,0,1,0-16H240A8,8,0,0,1,248,208Z"/></svg> Failed payouts <em class="">2</em></a>
+  <a href="/desk/queue" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M216,48V160H179.31a8,8,0,0,0-5.66,2.34l-19.31,19.32a8,8,0,0,1-5.66,2.34H107.31a8,8,0,0,1-5.66-2.34L82.34,162.34A8,8,0,0,0,76.68,160H40V48a8,8,0,0,1,8-8H208A8,8,0,0,1,216,48Z" opacity="0.2"/><path d="M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32Zm0,16V152h-28.7A15.86,15.86,0,0,0,168,156.69L148.69,176H107.31L88,156.68A15.89,15.89,0,0,0,76.69,152H48V48Zm0,160H48V168H76.69L96,187.32A15.89,15.89,0,0,0,107.31,192h41.38A15.86,15.86,0,0,0,160,187.31L179.31,168H208v40Z"/></svg> All open <em class="{{ ($deskBadges['openErrands'] ?? 0) > 0 ? ' hot' : '' }}">{{ $deskBadges['openErrands'] ?? 0 }}</em></a>
+  <a href="/desk/disputes" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M56,88l32,80c0,17.67-20,24-32,24s-32-6.33-32-24ZM200,56l-32,80c0,17.67,20,24,32,24s32-6.33,32-24Z" opacity="0.2"/><path d="M239.43,133l-32-80h0a8,8,0,0,0-9.16-4.84L136,62V40a8,8,0,0,0-16,0V65.58L54.26,80.19A8,8,0,0,0,48.57,85h0v.06L16.57,165a7.92,7.92,0,0,0-.57,3c0,23.31,24.54,32,40,32s40-8.69,40-32a7.92,7.92,0,0,0-.57-3L66.92,93.77,120,82V208H104a8,8,0,0,0,0,16h48a8,8,0,0,0,0-16H136V78.42L187,67.1,160.57,133a7.92,7.92,0,0,0-.57,3c0,23.31,24.54,32,40,32s40-8.69,40-32A7.92,7.92,0,0,0,239.43,133ZM56,184c-7.53,0-22.76-3.61-23.93-14.64L56,109.54l23.93,59.82C78.76,180.39,63.53,184,56,184Zm144-32c-7.53,0-22.76-3.61-23.93-14.64L200,77.54l23.93,59.82C222.76,148.39,207.53,152,200,152Z"/></svg> Disputes <em class="{{ ($deskBadges['disputes'] ?? 0) > 0 ? ' hot' : '' }}">{{ $deskBadges['disputes'] ?? 0 }}</em></a>
+  <a href="/desk/kyc" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M216,48H40a8,8,0,0,0-8,8V200a8,8,0,0,0,8,8H216a8,8,0,0,0,8-8V56A8,8,0,0,0,216,48ZM96,144a24,24,0,1,1,24-24A24,24,0,0,1,96,144Z" opacity="0.2"/><path d="M200,112a8,8,0,0,1-8,8H152a8,8,0,0,1,0-16h40A8,8,0,0,1,200,112Zm-8,24H152a8,8,0,0,0,0,16h40a8,8,0,0,0,0-16Zm40-80V200a16,16,0,0,1-16,16H40a16,16,0,0,1-16-16V56A16,16,0,0,1,40,40H216A16,16,0,0,1,232,56ZM216,200V56H40V200H216Zm-80.26-34a8,8,0,1,1-15.5,4c-2.63-10.26-13.06-18-24.25-18s-21.61,7.74-24.25,18a8,8,0,1,1-15.5-4,39.84,39.84,0,0,1,17.19-23.34,32,32,0,1,1,45.12,0A39.76,39.76,0,0,1,135.75,166ZM96,136a16,16,0,1,0-16-16A16,16,0,0,0,96,136Z"/></svg> ID checks <em class="{{ ($deskBadges['kyc'] ?? 0) > 0 ? ' hot' : '' }}">{{ $deskBadges['kyc'] ?? 0 }}</em></a>
+  <a href="/desk/locked-handovers" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M208,88H48a8,8,0,0,0-8,8V208a8,8,0,0,0,8,8H208a8,8,0,0,0,8-8V96A8,8,0,0,0,208,88Zm-80,72a20,20,0,1,1,20-20A20,20,0,0,1,128,160Z" opacity="0.2"/><path d="M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Zm-80-96a28,28,0,0,0-8,54.83V184a8,8,0,0,0,16,0V166.83A28,28,0,0,0,128,112Zm0,40a12,12,0,1,1,12-12A12,12,0,0,1,128,152Z"/></svg> Locked handovers <em class="{{ ($deskBadges['locked'] ?? 0) > 0 ? ' hot' : '' }}">{{ $deskBadges['locked'] ?? 0 }}</em></a>
+  <a href="/desk/payouts" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232,96H24L128,32Z" opacity="0.2"/><path d="M24,104H48v64H32a8,8,0,0,0,0,16H224a8,8,0,0,0,0-16H208V104h24a8,8,0,0,0,4.19-14.81l-104-64a8,8,0,0,0-8.38,0l-104,64A8,8,0,0,0,24,104Zm40,0H96v64H64Zm80,0v64H112V104Zm48,64H160V104h32ZM128,41.39,203.74,88H52.26ZM248,208a8,8,0,0,1-8,8H16a8,8,0,0,1,0-16H240A8,8,0,0,1,248,208Z"/></svg> Failed payouts <em class="{{ ($deskBadges['failedPayouts'] ?? 0) > 0 ? ' hot' : '' }}">{{ $deskBadges['failedPayouts'] ?? 0 }}</em></a>
   <div class="ngrp">Look up</div>
-  <a href="/desk/locked-handovers" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,129.09V232a8,8,0,0,1-3.84-1l-88-48.18a8,8,0,0,1-4.16-7V80.18a8,8,0,0,1,.7-3.25Z" opacity="0.2"/><path d="M223.68,66.15,135.68,18a15.88,15.88,0,0,0-15.36,0l-88,48.17a16,16,0,0,0-8.32,14v95.64a16,16,0,0,0,8.32,14l88,48.17a15.88,15.88,0,0,0,15.36,0l88-48.17a16,16,0,0,0,8.32-14V80.18A16,16,0,0,0,223.68,66.15ZM128,32l80.34,44-29.77,16.3-80.35-44ZM128,120,47.66,76l33.9-18.56,80.34,44ZM40,90l80,43.78v85.79L40,175.82Zm176,85.78h0l-80,43.79V133.82l32-17.51V152a8,8,0,0,0,16,0V107.55L216,90v85.77Z"/></svg> Errands</a>
+  <a href="/desk/queue" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,129.09V232a8,8,0,0,1-3.84-1l-88-48.18a8,8,0,0,1-4.16-7V80.18a8,8,0,0,1,.7-3.25Z" opacity="0.2"/><path d="M223.68,66.15,135.68,18a15.88,15.88,0,0,0-15.36,0l-88,48.17a16,16,0,0,0-8.32,14v95.64a16,16,0,0,0,8.32,14l88,48.17a15.88,15.88,0,0,0,15.36,0l88-48.17a16,16,0,0,0,8.32-14V80.18A16,16,0,0,0,223.68,66.15ZM128,32l80.34,44-29.77,16.3-80.35-44ZM128,120,47.66,76l33.9-18.56,80.34,44ZM40,90l80,43.78v85.79L40,175.82Zm176,85.78h0l-80,43.79V133.82l32-17.51V152a8,8,0,0,0,16,0V107.55L216,90v85.77Z"/></svg> Errands</a>
   <a href="/desk/people" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M224,128a95.76,95.76,0,0,1-31.8,71.37A72,72,0,0,0,128,160a40,40,0,1,0-40-40,40,40,0,0,0,40,40,72,72,0,0,0-64.2,39.37h0A96,96,0,1,1,224,128Z" opacity="0.2"/><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24ZM74.08,197.5a64,64,0,0,1,107.84,0,87.83,87.83,0,0,1-107.84,0ZM96,120a32,32,0,1,1,32,32A32,32,0,0,1,96,120Zm97.76,66.41a79.66,79.66,0,0,0-36.06-28.75,48,48,0,1,0-59.4,0,79.66,79.66,0,0,0-36.06,28.75,88,88,0,1,1,131.52,0Z"/></svg> People</a>
   <div class="ngrp">Campus</div>
-  <a href="/desk/places" class="nlink on" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M184,80c0,56-56,88-56,88S72,136,72,80a56,56,0,0,1,112,0Z" opacity="0.2"/><path d="M112,80a16,16,0,1,1,16,16A16,16,0,0,1,112,80ZM64,80a64,64,0,0,1,128,0c0,59.95-57.58,93.54-60,94.95a8,8,0,0,1-7.94,0C121.58,173.54,64,140,64,80Zm16,0c0,42.2,35.84,70.21,48,78.5,12.15-8.28,48-36.3,48-78.5a48,48,0,0,0-96,0Zm122.77,67.63a8,8,0,0,0-5.54,15C213.74,168.74,224,176.92,224,184c0,13.36-36.52,32-96,32s-96-18.64-96-32c0-7.08,10.26-15.26,26.77-21.36a8,8,0,0,0-5.54-15C29.22,156.49,16,169.41,16,184c0,31.18,57.71,48,112,48s112-16.82,112-48C240,169.41,226.78,156.49,202.77,147.63Z"/></svg> Places <em class="">4</em></a>
+  <a href="/desk/places" class="nlink on" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M184,80c0,56-56,88-56,88S72,136,72,80a56,56,0,0,1,112,0Z" opacity="0.2"/><path d="M112,80a16,16,0,1,1,16,16A16,16,0,0,1,112,80ZM64,80a64,64,0,0,1,128,0c0,59.95-57.58,93.54-60,94.95a8,8,0,0,1-7.94,0C121.58,173.54,64,140,64,80Zm16,0c0,42.2,35.84,70.21,48,78.5,12.15-8.28,48-36.3,48-78.5a48,48,0,0,0-96,0Zm122.77,67.63a8,8,0,0,0-5.54,15C213.74,168.74,224,176.92,224,184c0,13.36-36.52,32-96,32s-96-18.64-96-32c0-7.08,10.26-15.26,26.77-21.36a8,8,0,0,0-5.54-15C29.22,156.49,16,169.41,16,184c0,31.18,57.71,48,112,48s112-16.82,112-48C240,169.41,226.78,156.49,202.77,147.63Z"/></svg> Places <em class="{{ ($deskBadges['pendingPlaces'] ?? 0) > 0 ? ' hot' : '' }}">{{ $deskBadges['pendingPlaces'] ?? 0 }}</em></a>
   <a href="/desk/crew" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M168,144a40,40,0,1,1-40-40A40,40,0,0,1,168,144ZM64,56A32,32,0,1,0,96,88,32,32,0,0,0,64,56Zm128,0a32,32,0,1,0,32,32A32,32,0,0,0,192,56Z" opacity="0.2"/><path d="M244.8,150.4a8,8,0,0,1-11.2-1.6A51.6,51.6,0,0,0,192,128a8,8,0,0,1,0-16,24,24,0,1,0-23.24-30,8,8,0,1,1-15.5-4A40,40,0,1,1,219,117.51a67.94,67.94,0,0,1,27.43,21.68A8,8,0,0,1,244.8,150.4ZM190.92,212a8,8,0,1,1-13.85,8,57,57,0,0,0-98.15,0,8,8,0,1,1-13.84-8,72.06,72.06,0,0,1,33.74-29.92,48,48,0,1,1,58.36,0A72.06,72.06,0,0,1,190.92,212ZM128,176a32,32,0,1,0-32-32A32,32,0,0,0,128,176ZM72,120a8,8,0,0,0-8-8A24,24,0,1,1,87.24,82a8,8,0,1,0,15.5-4A40,40,0,1,0,37,117.51,67.94,67.94,0,0,0,9.6,139.19a8,8,0,1,0,12.8,9.61A51.6,51.6,0,0,1,64,128,8,8,0,0,0,72,120Z"/></svg> Crew and routines</a>
   <div class="ngrp">Control</div>
   <a href="/desk/rules" class="nlink" style="text-decoration:none;"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,80a24,24,0,1,1-24-24A24,24,0,0,1,128,80Zm40,72a24,24,0,1,0,24,24A24,24,0,0,0,168,152Z" opacity="0.2"/><path d="M40,88H73a32,32,0,0,0,62,0h81a8,8,0,0,0,0-16H135a32,32,0,0,0-62,0H40a8,8,0,0,0,0,16Zm64-24A16,16,0,1,1,88,80,16,16,0,0,1,104,64ZM216,168H199a32,32,0,0,0-62,0H40a8,8,0,0,0,0,16h97a32,32,0,0,0,62,0h17a8,8,0,0,0,0-16Zm-48,24a16,16,0,1,1,16-16A16,16,0,0,1,168,192Z"/></svg> Rules</a>
@@ -116,63 +176,294 @@
       <div style="margin-left:auto;font-size:12px;color:var(--ink3)" id="clock"></div>
     </div>
     <div class="page">
-<div class="ph"><div><h1>Campus places</h1><p>Names students gave to dropped pins. Approve the good ones and Waydrop knows UNILAG better than any map. People who name a place get ₦50 when it's approved.</p></div></div>
-<div class="grid2"><div class="sheet"><div class="sh-h"><b>Waiting for approval</b><small>Most used first</small></div><table><tbody>
-  <tr><td><b>Back gate of Jaja Hall</b><br><small style="color:var(--ink3)">New name · used by 4 people</small></td><td class="r" style="white-space:nowrap"><button class="btn b-paid" onclick="toast('Approved. ₦50 sent to student.'); this.closest('tr').remove();"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232.49,80.49l-128,128a12,12,0,0,1-17,0l-56-56a12,12,0,1,1,17-17L96,183,215.51,63.51a12,12,0,0,1,17,17Z"/></svg> Approve</button> <button class="btn b-line" onclick="toast('Rename modal opened.');">✏️</button> <button class="btn b-line" onclick="toast('Pick existing place to merge.');">🔀</button></td></tr>
-  <tr><td><b>Moremi junction</b><br><small style="color:var(--ink3)">Possible duplicate of 'Moremi Hall gate' · used by 9 people</small></td><td class="r" style="white-space:nowrap"><button class="btn b-paid" onclick="toast('Approved. ₦50 sent to student.'); this.closest('tr').remove();"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232.49,80.49l-128,128a12,12,0,0,1-17,0l-56-56a12,12,0,1,1,17-17L96,183,215.51,63.51a12,12,0,0,1,17,17Z"/></svg> Approve</button> <button class="btn b-line" onclick="toast('Rename modal opened.');">✏️</button> <button class="btn b-line" onclick="toast('Pick existing place to merge.');">🔀</button></td></tr>
-  <tr><td><b>Mama Put behind Sports Centre</b><br><small style="color:var(--ink3)">New name · used by 3 people</small></td><td class="r" style="white-space:nowrap"><button class="btn b-paid" onclick="toast('Approved. ₦50 sent to student.'); this.closest('tr').remove();"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232.49,80.49l-128,128a12,12,0,0,1-17,0l-56-56a12,12,0,1,1,17-17L96,183,215.51,63.51a12,12,0,0,1,17,17Z"/></svg> Approve</button> <button class="btn b-line" onclick="toast('Rename modal opened.');">✏️</button> <button class="btn b-line" onclick="toast('Pick existing place to merge.');">🔀</button></td></tr>
-</tbody></table></div>
-<div class="sheet"><div class="sh-h"><b>Where they are</b></div><div class="place-map"><svg viewBox="0 0 900 1300" aria-hidden="true">
-            <rect width="900" height="1300" fill="#EDF0F3"/>
-            <path d="M540 60 C 640 20, 780 60, 800 150 C 820 240, 700 290, 610 260 C 530 235, 470 130, 540 60Z" fill="#CFE3F7"/>
-            <text x="640" y="170" font-family="DM Sans" font-size="13" font-weight="500" fill="#7C9CC0" text-anchor="middle">Campus Lake</text>
-            <path d="M40 1010 C 120 960, 260 980, 300 1060 C 330 1120, 200 1170, 110 1150 C 40 1130, 0 1060, 40 1010Z" fill="#D8EEDF"/>
-            <path d="M560 700 H760 V900 H560Z" rx="20" fill="#D8EEDF"/>
-            <g fill="#DFE4EA">
-              <rect x="30" y="30" width="170" height="210" rx="10"/><rect x="240" y="30" width="110" height="100" rx="10"/><rect x="240" y="150" width="110" height="90" rx="10"/>
-              <rect x="390" y="30" width="110" height="210" rx="10"/>
-              <rect x="30" y="280" width="170" height="140" rx="10"/><rect x="240" y="280" width="110" height="140" rx="10"/><rect x="390" y="280" width="110" height="140" rx="10"/>
-              <rect x="560" y="300" width="200" height="120" rx="10"/><rect x="800" y="300" width="80" height="300" rx="10"/>
-              <rect x="30" y="460" width="170" height="140" rx="10"/><rect x="240" y="460" width="110" height="140" rx="10"/><rect x="390" y="460" width="110" height="140" rx="10"/><rect x="560" y="460" width="200" height="140" rx="10"/>
-              <rect x="30" y="640" width="170" height="160" rx="10"/><rect x="240" y="640" width="110" height="150" rx="10"/><rect x="390" y="640" width="110" height="320" rx="10"/>
-              <rect x="30" y="830" width="170" height="130" rx="10"/><rect x="240" y="820" width="110" height="140" rx="10"/><rect x="800" y="640" width="80" height="320" rx="10"/>
-              <rect x="390" y="1010" width="110" height="130" rx="10"/><rect x="560" y="1010" width="200" height="110" rx="10"/><rect x="800" y="1010" width="80" height="140" rx="10"/>
-            </g>
-            <g stroke="#fff" stroke-linecap="round" fill="none">
-              <path d="M0 260 H900" stroke-width="18"/><path d="M0 620 H900" stroke-width="18"/><path d="M0 985 H900" stroke-width="16"/>
-              <path d="M220 0 V1300" stroke-width="16"/><path d="M530 0 V1300" stroke-width="18"/><path d="M780 260 V1300" stroke-width="14"/>
-              <path d="M370 260 V985" stroke-width="9"/><path d="M220 440 H780" stroke-width="9"/><path d="M0 810 H530" stroke-width="9"/>
-              <path d="M0 1230 Q450 1150 900 1250" stroke-width="14"/>
-            </g>
-            <g font-family="DM Sans" font-size="12" font-weight="500" fill="#94A3B8">
-              <text x="600" y="614">University Rd</text><text x="30" y="254">Library Rd</text>
-              <text x="524" y="560" transform="rotate(-90 524 560)">Faculty Ave</text>
-            </g>
-            <g font-family="DM Sans" font-size="13" font-weight="600" fill="#64748B" text-anchor="middle">
-              <text x="115" y="545">Moremi Hall</text><text x="445" y="355">Main Library</text><text x="660" y="535">LT3</text>
-              <text x="660" y="805">Sports Field</text><text x="295" y="718">Musa's Kitchen</text><text x="115" y="895">Ramat Hall</text><text x="660" y="1070">Faculty of Science</text>
-            </g>
-            <!-- Other people walking: ambient life -->
-            <g class="layer" id="walkers">
-              <g><circle r="9" fill="#fff"/><circle r="6" fill="#0F172A"/><animateMotion dur="70s" repeatCount="indefinite" path="M220 0 V1300"/></g>
-              <g><circle r="9" fill="#fff"/><circle r="6" fill="#0F172A"/><animateMotion dur="58s" repeatCount="indefinite" path="M900 620 H0"/></g>
-              <g><circle r="9" fill="#fff"/><circle r="6" fill="#0F172A"/><animateMotion dur="80s" repeatCount="indefinite" path="M530 1300 V0"/></g>
-              <g><circle r="9" fill="#fff"/><circle r="6" fill="#0F172A"/><animateMotion dur="64s" repeatCount="indefinite" path="M0 260 H900"/></g>
-              <g><circle r="9" fill="#fff"/><circle r="6" fill="#0F172A"/><animateMotion dur="44s" repeatCount="indefinite" path="M370 260 V985 V260"/></g>
-              <g><circle r="9" fill="#fff"/><circle r="6" fill="#0F172A"/><animateMotion dur="52s" repeatCount="indefinite" path="M220 440 H780 H220"/></g>
-              <g><circle r="9" fill="#fff"/><circle r="6" fill="#0F172A"/><animateMotion dur="90s" repeatCount="indefinite" path="M0 1230 Q450 1150 900 1250"/></g>
-            </g>
-          </svg></div>
-  <p class="note" style="padding:0 16px 16px">Approved places appear in everyone's search on this campus within a minute.</p></div></div>
+      @if(session('success'))
+        <div style="background:#ECFDF5;border:1px solid #A7F3D0;color:#065F46;padding:12px 16px;border-radius:10px;font-size:13.5px;margin-bottom:16px;">
+          ✓ {{ session('success') }}
+        </div>
+      @endif
+
+      @if(isset($errors) && $errors->any())
+        <div style="background:#FEF2F2;border:1px solid #FCA5A5;color:#991B1B;padding:12px 16px;border-radius:10px;font-size:13.5px;margin-bottom:16px;">
+          @foreach($errors->all() as $err)
+            <div>• {{ $err }}</div>
+          @endforeach
+        </div>
+      @endif
+
+      <div class="ph">
+        <div>
+          <h1>Campus Places & Landmarks</h1>
+          <p>Two-way campus landmark ecosystem: Student suggestions with ₦50 discovery bounties, plus direct administrator landmark provisioning.</p>
+        </div>
+        <div>
+          <button type="button" class="btn b-ink" onclick="openNewPlaceDrawer()">
+            <svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"/></svg>
+            Add Landmark
+          </button>
+        </div>
+      </div>
+
+      <div class="grid2">
+        {{-- Pending Places --}}
+        <div class="sheet">
+          <div class="sh-h">
+            <b>Pending Student Suggestions ({{ $pendingPlaces->count() }})</b>
+            <small>Student landmark bounty: ₦50</small>
+          </div>
+          @if($pendingPlaces->isEmpty())
+            <div style="padding:40px 16px;text-align:center;color:var(--ink3);">
+              🎉 All suggested places on this campus have been reviewed!
+            </div>
+          @else
+            <table>
+              <tbody>
+                @foreach($pendingPlaces as $place)
+                  <tr>
+                    <td>
+                      <b>{{ $place->name }}</b>
+                      <br>
+                      <small style="color:var(--ink3)">
+                        {{ ucfirst($place->kind) }} · {{ $place->area?->name }} · {{ $place->note ?? 'New landmark suggestion' }}
+                        @if($place->suggestedBy)
+                          · By <b>{{ $place->suggestedBy->name }}</b>
+                        @endif
+                      </small>
+                    </td>
+                    <td class="r" style="white-space:nowrap">
+                      <form method="POST" action="{{ route('desk.places.approve', $place->id) }}" style="display:inline-flex;margin:0;">
+                        @csrf
+                        <button type="submit" class="btn b-paid" style="height:30px;font-size:12px;">
+                          <svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M232.49,80.49l-128,128a12,12,0,0,1-17,0l-56-56a12,12,0,1,1,17-17L96,183,215.51,63.51a12,12,0,0,1,17,17Z"/></svg>
+                          Approve (+₦50)
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                @endforeach
+              </tbody>
+            </table>
+          @endif
+        </div>
+
+        {{-- Confirmed Places --}}
+        <div class="sheet">
+          <div class="sh-h">
+            <b>Verified Places ({{ $confirmedPlaces->count() }})</b>
+            <small>Active in student search</small>
+          </div>
+          @if($confirmedPlaces->isEmpty())
+            <div style="padding:40px 16px;text-align:center;color:var(--ink3);">
+              No confirmed landmarks yet for this campus. Click <b>Add Landmark</b> above to create one.
+            </div>
+          @else
+            <div style="max-height:480px;overflow-y:auto;">
+              <table class="tbl">
+                <thead>
+                  <tr>
+                    <th>Landmark</th>
+                    <th>Category</th>
+                    <th>Campus</th>
+                    <th class="r">Coordinates</th>
+                    <th class="r">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @foreach($confirmedPlaces as $place)
+                    <tr>
+                      <td>
+                        <b>{{ $place->name }}</b>
+                        @if(!empty($place->aka))
+                          <br><small style="color:var(--ink3)">aka: {{ is_array($place->aka) ? implode(', ', $place->aka) : $place->aka }}</small>
+                        @endif
+                      </td>
+                      <td><span class="chip c-paid">{{ ucfirst($place->kind) }}</span></td>
+                      <td><small style="color:var(--ink2);">{{ $place->area?->name ?? $place->area_id }}</small></td>
+                      <td class="r num" style="font-size:12px;color:var(--ink2);">
+                        {{ number_format($place->lat, 4) }}, {{ number_format($place->lng, 4) }}
+                      </td>
+                      <td class="r">
+                        <button type="button" class="btn b-line" style="height:26px;padding:0 8px;font-size:11.5px;" onclick='openManagePlaceDrawer(@json($place))'>
+                          <svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor" style="font-size:13px;"><path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm88-29.84q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.6,107.6,0,0,0-10.88-26.25,8,8,0,0,0-6-4.22L192,68.22a96.69,96.69,0,0,0-7.48-7.48L183.07,37.2a8,8,0,0,0-4.22-6A107.6,107.6,0,0,0,152.6,20.32a8,8,0,0,0-7.06,1.48L126.9,36.72q-2.16-.06-4.32,0L103.94,21.8a8,8,0,0,0-7.06-1.48A107.6,107.6,0,0,0,70.63,31.2a8,8,0,0,0-4.22,6L64.93,60.74a96.69,96.69,0,0,0-7.48,7.48L34.1,69.67a8,8,0,0,0-6,4.22A107.6,107.6,0,0,0,17.22,100.14a8,8,0,0,0,1.48,7.06L33.62,125.84q-.06,2.16,0,4.32L18.7,148.8a8,8,0,0,0-1.48,7.06,107.6,107.6,0,0,0,10.88,26.25,8,8,0,0,0,6,4.22l23.35,1.45a96.69,96.69,0,0,0,7.48,7.48l1.45,23.35a8,8,0,0,0,4.22,6,107.6,107.6,0,0,0,26.25,10.88,8,8,0,0,0,7.06-1.48l18.64-14.92q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.48,107.6,107.6,0,0,0,26.25-10.88,8,8,0,0,0,4.22-6l1.45-23.35a96.69,96.69,0,0,0,7.48-7.48l23.35-1.45a8,8,0,0,0,6-4.22,107.6,107.6,0,0,0,10.88-26.25,8,8,0,0,0-1.48-7.06ZM204,136.66l-19.16,3.61a8,8,0,0,0-6.19,6.19l-3.61,19.16a81.16,81.16,0,0,1-13.78,13.78l-19.16-3.61a8,8,0,0,0-7.85,2.44L128,194.59l-6.25-16.36a8,8,0,0,0-7.85-2.44L94.74,179.4a81.16,81.16,0,0,1-13.78-13.78l-3.61-19.16a8,8,0,0,0-6.19-6.19L52,136.66a81.16,81.16,0,0,1,0-17.32L71.16,115.73a8,8,0,0,0,6.19-6.19l3.61-19.16A81.16,81.16,0,0,1,94.74,76.6l19.16,3.61a8,8,0,0,0,7.85-2.44L128,61.41l6.25,16.36a8,8,0,0,0,7.85,2.44l19.16-3.61a81.16,81.16,0,0,1,13.78,13.78l3.61,19.16a8,8,0,0,0,6.19,6.19L204,119.34A81.16,81.16,0,0,1,204,136.66Z"/></svg>
+                          Manage
+                        </button>
+                      </td>
+                    </tr>
+                  @endforeach
+                </tbody>
+              </table>
+            </div>
+          @endif
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide-over Drawer Backdrop & Panel -->
+    <div class="drawer-scrim" id="drawerScrim" onclick="closePlaceDrawer()"></div>
+    <div class="drawer" id="placeDrawer" aria-modal="true" role="dialog">
+      <div class="drawer-header">
+        <div>
+          <h3 id="pDrawerTitle" style="font-size:17px;font-weight:700;margin:0;color:var(--ink1);">Add New Landmark</h3>
+          <p id="pDrawerSubtitle" style="font-size:12px;color:var(--ink3);margin:2px 0 0 0;">Direct administrator landmark provisioning.</p>
+        </div>
+        <button type="button" onclick="closePlaceDrawer()" class="btn b-line" style="width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:15px;line-height:1;">✕</button>
+      </div>
+
+      <div class="drawer-body">
+        <form id="placeForm" method="POST" action="{{ route('desk.places.store') }}">
+          @csrf
+          <div class="field">
+            <label>Landmark Name <span style="color:var(--fault-ink, #E11D48)">*</span></label>
+            <input type="text" name="name" id="pInputName" placeholder="e.g. Faculty of Law Quadrangle" required>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label>Category / Kind <span style="color:var(--fault-ink, #E11D48)">*</span></label>
+              <select name="kind" id="pSelectKind" required>
+                <option value="hostel">🏠 Hostel / Hall of Residence</option>
+                <option value="faculty">🎓 Faculty / Department</option>
+                <option value="cafeteria">🍲 Cafeteria / Food Kiosk</option>
+                <option value="gate">🚪 Campus Gate / Entrance</option>
+                <option value="library">📚 Library / Reading Room</option>
+                <option value="market">🛒 Campus Market / Shop</option>
+                <option value="bank">🏧 Bank / ATM Gallery</option>
+                <option value="sport">⚽ Sports Complex / Field</option>
+                <option value="landmark">📍 General Landmark / Junction</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Campus University <span style="color:var(--fault-ink, #E11D48)">*</span></label>
+              <select name="area_id" id="pSelectArea" required>
+                @foreach($areas as $area)
+                  <option value="{{ $area->id }}" {{ (session('active_campus_id') === $area->id || auth()->user()?->area_id === $area->id) ? 'selected' : '' }}>
+                    {{ $area->name }}
+                  </option>
+                @endforeach
+              </select>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label>Latitude (Lat) <span style="color:var(--fault-ink, #E11D48)">*</span></label>
+              <input type="text" name="lat" id="pInputLat" placeholder="e.g. 11.979200" required>
+            </div>
+            <div class="field">
+              <label>Longitude (Lng) <span style="color:var(--fault-ink, #E11D48)">*</span></label>
+              <input type="text" name="lng" id="pInputLng" placeholder="e.g. 8.423100" required>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Aliases & Slang Names <small style="font-weight:normal;color:var(--ink3);">(comma-separated)</small></label>
+            <input type="text" name="aka" id="pInputAka" placeholder="e.g. Law Basement, Moot Court, Block D">
+          </div>
+
+          <div class="field">
+            <label>Pickup / Dropoff Note <small style="font-weight:normal;color:var(--ink3);">(optional hint for runners)</small></label>
+            <textarea name="note" id="pInputNote" rows="2" placeholder="e.g. Near the main entrance staircase"></textarea>
+          </div>
+
+          <button type="submit" id="pSubmitBtn" class="btn-action">
+            Save Campus Landmark
+          </button>
+        </form>
+
+        {{-- Danger Zone for Edit Mode --}}
+        <div id="pDeleteSection" class="drawer-section" style="margin-top:24px;display:none;">
+          <b style="font-size:13px;color:var(--fault-ink, #E11D48);">Delete Landmark</b>
+          <div id="pDeleteNotice" style="margin:8px 0 12px 0;font-size:12px;line-height:1.45;padding:10px 12px;border-radius:8px;">
+          </div>
+          <form id="deletePlaceForm" method="POST" action="" onsubmit="return confirm('Are you sure you want to permanently delete this landmark? This cannot be undone.')">
+            @csrf
+            <button type="submit" id="pDeleteBtn" class="btn b-fault" style="width:100%;height:38px;justify-content:center;border-radius:8px;font-weight:600;">
+              🗑 Delete Landmark
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   </main>
 </div>
-<div class="scrim" id="scrim"><div class="modal" id="modal" role="dialog" aria-modal="true"></div></div>
-<div class="toast" id="toast" role="status"><svg class="ic" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm45.66,85.66-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35a8,8,0,0,1,11.32,11.32Z"/></svg><span></span></div>
 
 <script src="/admin_desk/admin_desk.js"></script>
 <script>
+function openNewPlaceDrawer() {
+  document.getElementById('pDrawerTitle').innerText = 'Add New Landmark';
+  document.getElementById('pDrawerSubtitle').innerText = 'Direct administrator landmark provisioning. Saved as verified.';
+  document.getElementById('placeForm').action = "{{ route('desk.places.store') }}";
+  document.getElementById('pInputName').value = '';
+  document.getElementById('pSelectKind').value = 'landmark';
+  document.getElementById('pInputLat').value = '';
+  document.getElementById('pInputLng').value = '';
+  document.getElementById('pInputAka').value = '';
+  document.getElementById('pInputNote').value = '';
+  document.getElementById('pSubmitBtn').innerText = 'Save & Verify Landmark';
+  document.getElementById('pDeleteSection').style.display = 'none';
 
+  document.getElementById('drawerScrim').classList.add('open');
+  document.getElementById('placeDrawer').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function openManagePlaceDrawer(place) {
+  const attachedTasks = (place.pickup_tasks_count || 0) + (place.dropoff_tasks_count || 0);
+
+  document.getElementById('pDrawerTitle').innerText = 'Manage Landmark';
+  document.getElementById('pDrawerSubtitle').innerText = 'ID: ' + place.id;
+  document.getElementById('placeForm').action = '/desk/places/' + encodeURIComponent(place.id) + '/update';
+
+  document.getElementById('pInputName').value = place.name;
+  document.getElementById('pSelectKind').value = place.kind;
+  document.getElementById('pSelectArea').value = place.area_id;
+  document.getElementById('pInputLat').value = place.lat;
+  document.getElementById('pInputLng').value = place.lng;
+  document.getElementById('pInputAka').value = Array.isArray(place.aka) ? place.aka.join(', ') : (place.aka || '');
+  document.getElementById('pInputNote').value = place.note || '';
+  document.getElementById('pSubmitBtn').innerText = 'Save Changes';
+
+  // Deletion logic
+  const deleteSection = document.getElementById('pDeleteSection');
+  const deleteNotice = document.getElementById('pDeleteNotice');
+  const deleteBtn = document.getElementById('pDeleteBtn');
+  deleteSection.style.display = 'block';
+  document.getElementById('deletePlaceForm').action = '/desk/places/' + encodeURIComponent(place.id) + '/delete';
+
+  if (attachedTasks > 0) {
+    deleteNotice.style.background = '#FFFBEB';
+    deleteNotice.style.border = '1px solid #FDE68A';
+    deleteNotice.style.color = '#92400E';
+    deleteNotice.innerHTML = `⚠️ <b>Deletion Protected:</b> This landmark has been used in <b>${attachedTasks}</b> errand(s). It cannot be deleted to preserve order history.`;
+    deleteBtn.disabled = true;
+    deleteBtn.style.opacity = '0.35';
+    deleteBtn.style.cursor = 'not-allowed';
+  } else {
+    deleteNotice.style.background = '#FEF2F2';
+    deleteNotice.style.border = '1px solid #FECDD3';
+    deleteNotice.style.color = '#991B1B';
+    deleteNotice.innerHTML = '✓ <b>Safe to Delete:</b> 0 errands have been dispatched to/from this landmark. Permanent deletion is allowed.';
+    deleteBtn.disabled = false;
+    deleteBtn.style.opacity = '1';
+    deleteBtn.style.cursor = 'pointer';
+  }
+
+  document.getElementById('drawerScrim').classList.add('open');
+  document.getElementById('placeDrawer').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closePlaceDrawer() {
+  document.getElementById('drawerScrim').classList.remove('open');
+  document.getElementById('placeDrawer').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// Close on Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closePlaceDrawer();
+  }
+});
 </script>
 </body>
 </html>

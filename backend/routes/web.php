@@ -35,9 +35,22 @@ Route::prefix('desk')->name('desk.')->middleware('auth')->group(function () {
     Route::post('/tasks/{id}/unlock-pin', [AdminDeskController::class, 'unlockPin'])->name('tasks.unlock_pin');
     Route::post('/payouts/{id}/retry', [AdminDeskController::class, 'retryPayout'])->name('payouts.retry');
     Route::post('/places/{id}/approve', [AdminDeskController::class, 'approvePlace'])->name('places.approve');
+    Route::post('/places', [AdminDeskController::class, 'createPlace'])->name('places.store');
+    Route::post('/places/{id}/update', [AdminDeskController::class, 'updatePlace'])->name('places.update');
+    Route::post('/places/{id}/delete', [AdminDeskController::class, 'deletePlace'])->name('places.destroy');
+    Route::post('/rules', [AdminDeskController::class, 'updateRules'])->name('rules.update');
+    Route::post('/rules/new', [AdminDeskController::class, 'createRule'])->name('rules.store');
+    Route::post('/users/{id}/status', [AdminDeskController::class, 'updateUserStatus'])->name('users.status');
+    Route::post('/telemetry/broadcast', [AdminDeskController::class, 'broadcastRunnerTelemetry'])->name('telemetry.broadcast');
 
     // Super Admin Exclusive Actions
     Route::post('/campuses', [AdminDeskController::class, 'createCampus'])->name('campuses.store');
+    Route::post('/campuses/{id}/update', [AdminDeskController::class, 'updateCampus'])->name('campuses.update');
+    Route::post('/campuses/{id}/toggle-status', [AdminDeskController::class, 'toggleCampusStatus'])->name('campuses.toggle');
+    Route::post('/campuses/{id}/delete', [AdminDeskController::class, 'deleteCampus'])->name('campuses.destroy');
     Route::post('/admins', [AdminDeskController::class, 'createCampusAdmin'])->name('admins.store');
+    Route::post('/admins/{id}/update', [AdminDeskController::class, 'updateCampusAdmin'])->name('admins.update');
+    Route::post('/admins/{id}/toggle-status', [AdminDeskController::class, 'toggleCampusAdminStatus'])->name('admins.toggle');
+    Route::post('/admins/{id}/delete', [AdminDeskController::class, 'deleteCampusAdmin'])->name('admins.destroy');
     Route::post('/campus/switch', [AdminDeskController::class, 'switchCampus'])->name('campus.switch');
 });

@@ -137,6 +137,22 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * Tasks requested by this user (relationship alias).
+     */
+    public function tasksAsRequester(): HasMany
+    {
+        return $this->hasMany(Task::class, 'requester_id');
+    }
+
+    /**
+     * Tasks accepted/delivered by this user as a runner (relationship alias).
+     */
+    public function tasksAsRunner(): HasMany
+    {
+        return $this->hasMany(Task::class, 'runner_id');
+    }
+
+    /**
      * Runner student verification profile.
      */
     public function runnerVerification(): HasOne
