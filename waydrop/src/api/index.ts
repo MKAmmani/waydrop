@@ -9,16 +9,47 @@ import { mock } from './mock';
 export { ApiError };
 
 export type Tokens = { access_token: string; refresh_token: string };
-export type Me = { id: string; phone: string | null; first_name: string | null; last_name: string | null; photo_url: string | null; area_id: string | null; runner_status: 'unverified' | 'pending' | 'verified' | 'rejected' };
-export type Area = { id: string; name: string; subtitle: string; lat: number; lng: number };
+export type Area = { id: string; name: string; subtitle: string; lat: number; lng: number; distance_km?: number; runners_active?: number };
+export type WalletInfo = {
+  balance_kobo: number;
+  escrow_kobo: number;
+  virtual_bank_name?: string | null;
+  virtual_account_nuban?: string | null;
+};
+
+export type Me = {
+  id: string;
+  phone: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  photo_url: string | null;
+  area_id: string | null;
+  area?: Area | null;
+  runner_status: 'unverified' | 'pending' | 'verified' | 'rejected';
+  rating?: number | null;
+  trips_count?: number;
+  wallet?: WalletInfo | null;
+  referral_code?: string;
+};
 export type LatLng = { lat: number; lng: number };
 export type HomeData = {
   site_id: string;
+  area?: Area | null;
   balance: number; // kobo
+  escrow?: number; // kobo held for errands
+  wallet?: WalletInfo | null;
+  profile?: {
+    rating: number | null;
+    trips_count: number;
+    runner_status: string;
+    referral_code: string;
+  };
   unread: number;
   runners_nearby: number;
   runners: LatLng[]; // rounded positions, for the map only
   busy_spots: { lat: number; lng: number; count: number; label: string }[];
+  routes?: { from: string; to: string; path: LatLng[]; kind?: string }[];
+  roads?: { id?: string; name: string; position?: string }[];
   send_again: { id: string; item: string; from: string; to: string; price: number }[];
   saved_places: { id: string; label: string; name: string }[];
   earn: { today: number; week: number; week_errands: number; rating: number };
@@ -28,9 +59,10 @@ export interface Api {
   requestOtp(phone: string): Promise<{ expires_in: number; resend_after: number }>;
   verifyOtp(phone: string, code: string): Promise<Tokens & { is_new_user: boolean; me: Me }>;
   oauth(provider: 'google' | 'apple', id_token: string): Promise<Tokens & { needs_phone: boolean; me: Me }>;
+  getMe(): Promise<Me>;
   updateMe(patch: Partial<Pick<Me, 'first_name' | 'last_name' | 'area_id'>>): Promise<Me>;
   uploadPhoto(uri: string): Promise<{ photo_url: string }>;
-  nearbyArea(lat: number, lng: number): Promise<{ area: Area | null; runners_active: number }>;
+  nearbyArea(lat: number, lng: number): Promise<{ area: Area | null; runners_active: number; nearby_areas?: Area[] }>;
   searchAreas(q: string): Promise<Area[]>;
   registerDevice(push_token: string, platform: 'ios' | 'android' | 'web', locale: string): Promise<void>;
   home(site_id: string, mode: 'request' | 'earn'): Promise<HomeData>;
@@ -39,6 +71,8 @@ export interface Api {
   getTask(id: string): Promise<Task>;
   raiseBounty(id: string, bounty: number): Promise<Task>;
   cancelTask(id: string): Promise<Task>;
+  verifyRunner(data: { matric_number: string; faculty?: string; department?: string; document_type?: string }): Promise<Me>;
+  unverifyRunner(): Promise<Me>;
 }
 
 export type Quote = { distance_m: number; duration_s: number; suggested_min: number; suggested_max: number; fee_rate: number; runners_nearby: number };
@@ -55,6 +89,7 @@ const real: Api = {
   requestOtp: (phone) => http('POST', '/auth/otp/request', { phone }),
   verifyOtp: (phone, code) => http('POST', '/auth/otp/verify', { phone, code }),
   oauth: (provider, id_token) => http('POST', '/auth/oauth', { provider, id_token }),
+  getMe: () => http('GET', '/me'),
   updateMe: (patch) => http('PATCH', '/me', patch),
   uploadPhoto: (uri) => http('POST', '/me/photo', { uri }, { multipartFile: uri }),
   nearbyArea: (lat, lng) => http('GET', `/areas/nearby?lat=${lat}&lng=${lng}`),
@@ -66,6 +101,8 @@ const real: Api = {
   getTask: (id) => http('GET', `/tasks/${id}`),
   raiseBounty: (id, bounty) => http('POST', `/tasks/${id}/bounty`, { bounty }, { idempotent: true }),
   cancelTask: (id) => http('POST', `/tasks/${id}/cancel`, {}, { idempotent: true }),
+  verifyRunner: (data) => http('POST', '/runners/verify', data),
+  unverifyRunner: () => http('POST', '/runners/unverify', {}),
 };
 
 export const usingMock = !process.env.EXPO_PUBLIC_API_BASE_URL;

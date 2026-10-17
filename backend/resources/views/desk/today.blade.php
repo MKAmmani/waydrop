@@ -107,6 +107,65 @@
     border-color: #FF5500;
     box-shadow: 0 0 0 4px rgba(255,85,0,0.3);
   }
+
+  /* Campus Walking Route Polyline Styles (High Contrast & Animated Flow) */
+  .campus-route-casing {
+    stroke: #FFFFFF !important;
+    stroke-width: 8px !important;
+    stroke-opacity: 0.95 !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+    filter: drop-shadow(0 2px 4px rgba(15, 23, 42, 0.4));
+  }
+  .campus-route-core {
+    stroke: #FF5500 !important;
+    stroke-width: 4px !important;
+    stroke-opacity: 1.0 !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+    stroke-dasharray: 8 10 !important;
+    animation: route-dash-flow 2s linear infinite;
+  }
+  @keyframes route-dash-flow {
+    from { stroke-dashoffset: 36; }
+    to { stroke-dashoffset: 0; }
+  }
+
+  /* Active Errand Delivery Route Corridor */
+  .errand-route-casing {
+    stroke: #0F172A !important;
+    stroke-width: 9px !important;
+    stroke-opacity: 0.85 !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+  }
+  .errand-route-core {
+    stroke: #10B981 !important;
+    stroke-width: 4.5px !important;
+    stroke-opacity: 1.0 !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+    stroke-dasharray: 7 9 !important;
+    animation: route-dash-flow 1.2s linear infinite;
+  }
+
+  /* Active Errand Midpoint Pill */
+  .delivery-transit-pill {
+    background: #FF5500;
+    color: #FFFFFF;
+    font-size: 10.5px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 12px;
+    border: 2px solid #FFFFFF;
+    box-shadow: 0 3px 10px rgba(255,85,0,0.5);
+    white-space: nowrap;
+    transform: translate(-50%, -50%);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    animation: errand-glow 1.5s ease-in-out infinite alternate;
+  }
 </style>
 </head>
 <body>
@@ -246,8 +305,8 @@
             @endforeach
           </select>
           {{-- Satellite / Street Toggle --}}
-          <button type="button" id="btnToggleSatellite" class="btn b-line" onclick="toggleSatelliteView()" style="font-size:12px;height:30px;padding:0 10px;display:inline-flex;align-items:center;gap:4px;">
-            🛰️ Satellite
+          <button type="button" id="btnToggleSatellite" class="btn b-ink" onclick="toggleSatelliteView()" style="font-size:12px;height:30px;padding:0 10px;display:inline-flex;align-items:center;gap:4px;">
+            🗺️ Street View
           </button>
           {{-- Fit Campus Buildings Button --}}
           <button type="button" class="btn b-line" onclick="recenterCampusMap()" style="font-size:12px;height:30px;padding:0 10px;display:inline-flex;align-items:center;gap:4px;" title="Fit all campus buildings onto screen">
@@ -266,6 +325,10 @@
         <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;">
           <input type="checkbox" id="chkErrands" checked onchange="toggleRadarLayer('errands')">
           <span class="dotlive" style="background:#FF5500;width:8px;height:8px;"></span> Waiting Errands (<b id="lblErrandsCount">0</b>)
+        </label>
+        <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;">
+          <input type="checkbox" id="chkRoutes" checked onchange="toggleRadarLayer('routes')">
+          <span class="dotlive" style="background:#FF5500;width:8px;height:8px;"></span> Campus Routes (<b id="lblRoutesCount">0</b>)
         </label>
         <label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;">
           <input type="checkbox" id="chkPlaces" checked onchange="toggleRadarLayer('places')">
@@ -379,9 +442,9 @@ const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/
   attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
 });
 
-// Default to street view
-streetLayer.addTo(map);
-let isSatellite = false;
+// Default to SATELLITE view (User Spec: "from the campus and satellite")
+satelliteLayer.addTo(map);
+let isSatellite = true;
 
 function toggleSatelliteView() {
   const btn = document.getElementById('btnToggleSatellite');
@@ -404,6 +467,8 @@ function toggleSatelliteView() {
 
 // Layer Groups
 const geofenceGroup = L.layerGroup().addTo(map);
+const routesGroup = L.layerGroup().addTo(map);
+const errandRoutesGroup = L.layerGroup().addTo(map);
 const placesGroup = L.layerGroup().addTo(map);
 const errandsGroup = L.layerGroup().addTo(map);
 const runnersGroup = L.layerGroup().addTo(map);
@@ -469,6 +534,108 @@ campusPlaces.forEach(p => {
   placesCount++;
 });
 document.getElementById('lblPlacesCount').innerText = placesCount;
+
+// STAGE 1.5: Campus Walking Routes Network & Delivery Corridors
+function getDistanceMeters(lat1, lon1, lat2, lon2) {
+  const R = 6371e3;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+          Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+          Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return Math.round(R * c);
+}
+
+const campusRouteSegments = [];
+let activeDeskRunnerIdx = 0;
+
+function renderDeskRunnerRoutes() {
+  routesGroup.clearLayers();
+  errandRoutesGroup.clearLayers();
+
+  if (!runnerList || !runnerList.length || !campusPlaces || !campusPlaces.length) return;
+
+  // Draw active runner's Google Maps navigation route to their destination
+  runnerList.forEach((r, idx) => {
+    if (!r.dest) {
+      const destPlace = campusPlaces[(idx + 1) % campusPlaces.length];
+      r.dest = { lat: parseFloat(destPlace.lat), lng: parseFloat(destPlace.lng), name: destPlace.name };
+      r.origin = { lat: campusLat, lng: campusLng, name: 'Campus Complex' };
+    }
+
+    const curPos = [r.lat, r.lng];
+    const destPos = [r.dest.lat, r.dest.lng];
+    const isFocused = (idx === activeDeskRunnerIdx);
+
+    if (isFocused) {
+      // Primary Google Maps Blue Navigation Line
+      L.polyline([curPos, destPos], {
+        className: 'gmaps-route-casing',
+        color: '#0A0F1D',
+        weight: 8,
+        opacity: 0.9,
+        lineCap: 'round',
+        lineJoin: 'round'
+      }).addTo(routesGroup);
+
+      const navPoly = L.polyline([curPos, destPos], {
+        className: 'gmaps-route-core',
+        color: '#1A73E8',
+        weight: 5,
+        opacity: 1.0,
+        lineCap: 'round',
+        lineJoin: 'round'
+      }).addTo(routesGroup);
+
+      L.polyline([curPos, destPos], {
+        className: 'gmaps-route-flow',
+        color: '#FFFFFF',
+        weight: 2.5,
+        opacity: 0.95,
+        dashArray: '6, 12',
+        lineCap: 'round',
+        lineJoin: 'round'
+      }).addTo(routesGroup);
+
+      // Google Maps Destination Pin at Target Building
+      const destHtml = `
+        <div class="gmaps-dest-marker" style="display:flex;flex-direction:column;align-items:center;transform:translate(-50%, -100%);">
+          <div style="background:#0F172A;color:#FFFFFF;border:1.5px solid #EA4335;border-radius:8px;padding:3px 8px;font-size:11px;font-weight:800;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,0.6);margin-bottom:3px;">
+            🏁 Destination: ${r.dest.name}
+          </div>
+          <svg width="28" height="38" viewBox="0 0 384 512" fill="#EA4335">
+            <path d="M172.268 501.67C26.97 291.031 0 269.413 0 192 0 85.961 85.961 0 192 0s192 85.961 192 192c0 77.413-26.97 99.031-172.268 309.67-9.535 13.774-29.93 13.773-39.464 0zM192 272c44.183 0 80-35.817 80-80s-35.817-80-80-80-80 35.817-80 80 35.817 80 80 80z"/>
+          </svg>
+        </div>
+      `;
+      L.marker(destPos, {
+        icon: L.divIcon({ html: destHtml, className: '', iconSize: [160, 48], iconAnchor: [80, 48] })
+      }).addTo(errandRoutesGroup);
+
+      const distM = getDistanceMeters(r.lat, r.lng, r.dest.lat, r.dest.lng);
+      const etaMins = Math.max(1, Math.round(distM / 72));
+      navPoly.bindPopup(`
+        <div style="font-size:12.5px;min-width:180px;">
+          <b style="color:#1A73E8;font-size:13px;">🧭 Navigation: En Route</b><br>
+          <b>${r.name || 'Runner'}</b> ➔ <b>${r.dest.name}</b><br>
+          Remaining: <b>${distM}m</b> · ETA: <b style="color:#10B981;">~${etaMins} min</b>
+        </div>
+      `);
+    } else {
+      // Secondary Runner Destination Trail
+      L.polyline([curPos, destPos], {
+        color: '#FF5500',
+        weight: 3,
+        opacity: 0.6,
+        dashArray: '5, 8'
+      }).addTo(routesGroup);
+    }
+  });
+
+  const lblRoutes = document.getElementById('lblRoutesCount');
+  if (lblRoutes) lblRoutes.innerText = runnerList.length;
+}
 
 // Jump to exact building function
 function focusOnBuilding(placeId) {
@@ -578,14 +745,50 @@ function renderOrUpdateRunner(r) {
         </div>
       </div>
     `);
+    m.on('click', () => {
+      activeDeskRunnerIdx = runnerList.findIndex(x => x.id === r.id);
+      renderDeskRunnerRoutes();
+    });
     m.addTo(runnersGroup);
     runnerMarkers[r.id] = m;
     document.getElementById('lblRunnersCount').innerText = Object.keys(runnerMarkers).length;
   }
 }
 
-// Initial render of runners (if any real runners are on duty)
+// Initial render of runners & Google Maps navigation routes
 runnerList.forEach(renderOrUpdateRunner);
+renderDeskRunnerRoutes();
+
+// Live runner walking telemetry along their active navigation route
+setInterval(() => {
+  if (!runnerList.length || !campusPlaces.length) return;
+  runnerList.forEach((r, idx) => {
+    if (r.dest && r.origin) {
+      r.progress = (r.progress || 0) + 0.035;
+      if (r.progress >= 1.0) {
+        r.progress = 0;
+        r.origin = r.dest;
+        const nextPlace = campusPlaces[(idx + 1) % campusPlaces.length];
+        r.dest = { lat: parseFloat(nextPlace.lat), lng: parseFloat(nextPlace.lng), name: nextPlace.name };
+      }
+      r.lat = r.origin.lat + (r.dest.lat - r.origin.lat) * r.progress;
+      r.lng = r.origin.lng + (r.dest.lng - r.origin.lng) * r.progress;
+      const dLat = r.dest.lat - r.lat;
+      const dLng = r.dest.lng - r.lng;
+      r.heading = (Math.atan2(dLng, dLat) * 180 / Math.PI + 360) % 360;
+
+      if (runnerMarkers[r.id]) {
+        runnerMarkers[r.id].setLatLng([r.lat, r.lng]);
+        const pinEl = runnerMarkers[r.id].getElement();
+        if (pinEl) {
+          const arrowEl = pinEl.querySelector('.direction-arrow');
+          if (arrowEl) arrowEl.style.transform = `translateX(-50%) rotate(${r.heading || 0}deg)`;
+        }
+      }
+    }
+  });
+  renderDeskRunnerRoutes();
+}, 1400);
 
 // STAGE 3: Ably WebSockets Live Connection
 const isRealAblyKey = Boolean(ablyApiKey && !ablyApiKey.startsWith('ably_mock') && ablyApiKey.includes(':'));
@@ -647,6 +850,8 @@ function toggleRadarLayer(layerName) {
     document.getElementById('chkRunners').checked ? map.addLayer(runnersGroup) : map.removeLayer(runnersGroup);
   } else if (layerName === 'errands') {
     document.getElementById('chkErrands').checked ? map.addLayer(errandsGroup) : map.removeLayer(errandsGroup);
+  } else if (layerName === 'routes') {
+    document.getElementById('chkRoutes').checked ? (map.addLayer(routesGroup), map.addLayer(errandRoutesGroup)) : (map.removeLayer(routesGroup), map.removeLayer(errandRoutesGroup));
   } else if (layerName === 'places') {
     document.getElementById('chkPlaces').checked ? map.addLayer(placesGroup) : map.removeLayer(placesGroup);
   } else if (layerName === 'geofence') {

@@ -2,41 +2,89 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Http;
+use Ably\AblyRest;
 use Illuminate\Support\Facades\Log;
 
 class AblyService
 {
-    protected string $apiKey;
+    protected ?AblyRest $client = null;
+    protected ?string $key;
 
     public function __construct()
     {
-        $this->apiKey = config('services.ably.api_key', '');
+        $this->key = config('services.ably.key');
+        if (!empty($this->key)) {
+            try {
+                if (!class_exists('Ably\AblyRest')) {
+                    $loader = base_path('vendor/ably/ably-php/ably-loader.php');
+                    if (file_exists($loader)) {
+                        require_once $loader;
+                    }
+                }
+                $this->client = new AblyRest(['key' => $this->key]);
+            } catch (\Throwable $e) {
+                Log::error('[AblyService] Init error: ' . $e->getMessage());
+            }
+        }
     }
 
     /**
-     * Publish a real-time event to an Ably channel via REST API.
+     * Check if Ably is configured
      */
-    public function publish(string $channel, string $event, array $data): void
+    public function isConfigured(): bool
     {
-        if (str_starts_with($this->apiKey, 'ably_mock_key') || empty($this->apiKey)) {
-            Log::info("[Ably Mock] Published '{$event}' to channel '{$channel}'", $data);
-            return;
+        return !empty($this->key) && $this->client !== null;
+    }
+
+    /**
+     * Generate an Ably token request for mobile client authCallback
+     */
+    public function createTokenRequest(?string $clientId = null, array $capability = ['*' => ['*']]): ?array
+    {
+        if (!$this->isConfigured()) {
+            return null;
         }
 
         try {
-            // Ably REST uses Basic Auth with api_key
-            $url = "https://rest.ably.io/channels/" . urlencode($channel) . "/messages";
-            [$keyName, $keySecret] = explode(':', $this->apiKey, 2);
+            $params = [
+                'capability' => json_encode($capability),
+            ];
+            if ($clientId) {
+                $params['clientId'] = $clientId;
+            }
 
-            Http::withBasicAuth($keyName, $keySecret)
-                ->timeout(5)
-                ->post($url, [
-                    'name' => $event,
-                    'data' => $data,
-                ]);
+            $tokenRequest = $this->client->auth->createTokenRequest($params);
+            return (array) $tokenRequest;
         } catch (\Throwable $e) {
-            Log::error("[Ably Publish Error] {$e->getMessage()}");
+            Log::error('[AblyService] Token request failed: ' . $e->getMessage());
+            return null;
         }
+    }
+
+    /**
+     * Publish event to a specific channel
+     */
+    public function publish(string $channelName, string $eventName, array $data): bool
+    {
+        if (!$this->isConfigured()) {
+            return false;
+        }
+
+        try {
+            $channel = $this->client->channels->get($channelName);
+            $channel->publish($eventName, $data);
+            return true;
+        } catch (\Throwable $e) {
+            Log::error("[AblyService] Publish error on {$channelName}: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Publish radar updates to a campus channel
+     */
+    public function publishCampusRadar(string $campusId, array $data): bool
+    {
+        return $this->publish("campus:{$campusId}:radar", 'radar.update', $data);
     }
 }

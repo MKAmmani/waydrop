@@ -23,46 +23,27 @@ class CampusDatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Campus Areas
-        $bukNew = Area::create([
-            'id' => 'buk-new',
-            'name' => 'BUK New Site',
-            'subtitle' => 'Main campus, Gwarzo Road',
-            'lat' => 11.980560,
-            'lng' => 8.479440,
-            'radius_meters' => 3500,
-            'is_active' => true,
-        ]);
+        // 1. Campus & Community Areas
+        $areas = [
+            ['id' => 'buk-new', 'name' => 'BUK New Site', 'subtitle' => 'Main campus, Gwarzo Road, Kano', 'lat' => 11.980560, 'lng' => 8.479440, 'radius_meters' => 3500, 'is_active' => true],
+            ['id' => 'buk-old', 'name' => 'BUK Old Site', 'subtitle' => 'BUK Road, by Kabuga gate, Kano', 'lat' => 11.995500, 'lng' => 8.517000, 'radius_meters' => 2500, 'is_active' => true],
+            ['id' => 'buk-akth', 'name' => 'AKTH', 'subtitle' => 'Aminu Kano Teaching Hospital (medical students)', 'lat' => 11.975000, 'lng' => 8.530000, 'radius_meters' => 1500, 'is_active' => true],
+            ['id' => 'unilag', 'name' => 'UNILAG Akoka', 'subtitle' => 'Main Campus, Akoka, Yaba, Lagos', 'lat' => 6.517300, 'lng' => 3.387100, 'radius_meters' => 3000, 'is_active' => true],
+            ['id' => 'oau', 'name' => 'Obafemi Awolowo University', 'subtitle' => 'Ile-Ife, Osun', 'lat' => 7.518500, 'lng' => 4.526300, 'radius_meters' => 3500, 'is_active' => true],
+            ['id' => 'ui', 'name' => 'University of Ibadan', 'subtitle' => 'Ibadan, Oyo', 'lat' => 7.444300, 'lng' => 3.899600, 'radius_meters' => 3000, 'is_active' => true],
+            ['id' => 'abu', 'name' => 'Ahmadu Bello University', 'subtitle' => 'Samaru, Zaria, Kaduna', 'lat' => 11.151400, 'lng' => 7.654300, 'radius_meters' => 4000, 'is_active' => true],
+            ['id' => 'unn', 'name' => 'University of Nigeria', 'subtitle' => 'Nsukka, Enugu', 'lat' => 6.867500, 'lng' => 7.408500, 'radius_meters' => 3500, 'is_active' => true],
+            ['id' => 'cu', 'name' => 'Covenant University', 'subtitle' => 'Ota, Ogun', 'lat' => 6.671800, 'lng' => 3.158000, 'radius_meters' => 2500, 'is_active' => true],
+            ['id' => 'unilorin', 'name' => 'University of Ilorin', 'subtitle' => 'Ilorin, Kwara', 'lat' => 8.479900, 'lng' => 4.673900, 'radius_meters' => 3500, 'is_active' => true],
+            ['id' => 'yaba', 'name' => 'Yaba', 'subtitle' => 'Lagos Mainland', 'lat' => 6.509500, 'lng' => 3.371100, 'radius_meters' => 2000, 'is_active' => true],
+            ['id' => 'lekki', 'name' => 'Lekki Phase 1', 'subtitle' => 'Eti-Osa, Lagos', 'lat' => 6.447400, 'lng' => 3.472300, 'radius_meters' => 2500, 'is_active' => true],
+            ['id' => 'wuse', 'name' => 'Wuse 2', 'subtitle' => 'Abuja', 'lat' => 9.076500, 'lng' => 7.476600, 'radius_meters' => 2500, 'is_active' => true],
+            ['id' => 'bodija', 'name' => 'Bodija', 'subtitle' => 'Ibadan, Oyo', 'lat' => 7.426900, 'lng' => 3.911600, 'radius_meters' => 2000, 'is_active' => true],
+        ];
 
-        $bukOld = Area::create([
-            'id' => 'buk-old',
-            'name' => 'BUK Old Site',
-            'subtitle' => 'BUK Road, by Kabuga gate',
-            'lat' => 11.995500,
-            'lng' => 8.517000,
-            'radius_meters' => 2500,
-            'is_active' => true,
-        ]);
-
-        $unilag = Area::create([
-            'id' => 'unilag',
-            'name' => 'UNILAG Akoka',
-            'subtitle' => 'Main Campus, Akoka, Yaba, Lagos',
-            'lat' => 6.517300,
-            'lng' => 3.387100,
-            'radius_meters' => 3000,
-            'is_active' => true,
-        ]);
-
-        Area::create([
-            'id' => 'buk-akth',
-            'name' => 'AKTH',
-            'subtitle' => 'Aminu Kano Teaching Hospital (medical students)',
-            'lat' => 11.975000,
-            'lng' => 8.530000,
-            'radius_meters' => 1500,
-            'is_active' => true,
-        ]);
+        foreach ($areas as $a) {
+            Area::firstOrCreate(['id' => $a['id']], $a);
+        }
 
         // 2. Campus Places & Landmarks
         $places = [

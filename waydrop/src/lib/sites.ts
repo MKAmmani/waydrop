@@ -5,11 +5,14 @@
  * another site, it quietly changes and tells you once.
  */
 import { useEffect, useRef, useState } from 'react';
+import { AppState } from 'react-native';
 import * as Location from 'expo-location';
 import { BUK_SITES } from '@/data/campuses/buk';
 import { useSession } from '@/store/session';
 
-export type SiteId = 'buk-new' | 'buk-old';
+import type { Area } from '@/api';
+
+export type SiteId = string;
 export type Site = { id: SiteId; name: string; short: string; center: { lat: number; lng: number }; radiusM: number };
 
 /**
@@ -33,9 +36,24 @@ export function siteAt(p: { lat: number; lng: number }): Site | null {
   return hits[0]?.s ?? null;
 }
 
-/** The site you picked in onboarding: used when location is off or you're off campus. */
-function homeSite(areaId?: string | null): Site {
-  return SITES.find((s) => s.id === areaId) ?? SITES[0];
+/** Converts user's selected campus area into an active map site */
+export function siteFromArea(area?: Area | null, areaId?: string | null): Site {
+  if (area) {
+    const known = SITES.find((s) => s.id === area.id);
+    if (known) return known;
+    return {
+      id: area.id,
+      name: area.name,
+      short: area.name.length > 20 ? area.name.slice(0, 18) + '…' : area.name,
+      center: { lat: area.lat, lng: area.lng },
+      radiusM: 2000,
+    };
+  }
+  if (areaId) {
+    const known = SITES.find((s) => s.id === areaId);
+    if (known) return known;
+  }
+  return SITES[0];
 }
 
 export type SiteState = {
@@ -50,8 +68,9 @@ export type SiteState = {
 };
 
 export function useSite(): SiteState {
+  const area = useSession((s) => s.area);
   const areaId = useSession((s) => s.me?.area_id ?? s.area?.id ?? null);
-  const [site, setSite] = useState<Site>(homeSite(areaId));
+  const [site, setSite] = useState<Site>(() => siteFromArea(area, areaId));
   const [you, setYou] = useState<{ lat: number; lng: number } | null>(null);
   const [source, setSource] = useState<'live' | 'home'>('home');
   const [changedTo, setChangedTo] = useState<Site | null>(null);
@@ -59,32 +78,81 @@ export function useSite(): SiteState {
   const current = useRef(site.id);
 
   useEffect(() => {
+    const active = siteFromArea(area, areaId);
+    if (active.id !== current.current) {
+      current.current = active.id;
+      setSite(active);
+    }
+  }, [area?.id, areaId]);
+
+  useEffect(() => {
     let sub: Location.LocationSubscription | null = null;
     let alive = true;
-    (async () => {
-      const perm = await Location.getForegroundPermissionsAsync().catch(() => null);
-      if (!perm?.granted) { if (alive) { setLocationOff(true); setSource('home'); } return; }
-      const apply = (lat: number, lng: number) => {
-        if (!alive) return;
-        setYou({ lat, lng });
-        const here = siteAt({ lat, lng });
-        if (here) {
-          setSource('live');
-          if (here.id !== current.current) { current.current = here.id; setSite(here); setChangedTo(here); }
-        }
-      };
+
+    const checkAndStartLocation = async () => {
       try {
-        const first = await Location.getLastKnownPositionAsync() ?? await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+        const servicesEnabled = await Location.hasServicesEnabledAsync().catch(() => true);
+        const perm = await Location.getForegroundPermissionsAsync().catch(() => null);
+
+        if (!servicesEnabled || !perm?.granted) {
+          if (alive) {
+            setLocationOff(true);
+            setSource('home');
+          }
+          if (sub) {
+            sub.remove();
+            sub = null;
+          }
+          return;
+        }
+
+        if (alive) {
+          setLocationOff(false);
+        }
+
+        const apply = (lat: number, lng: number) => {
+          if (!alive) return;
+          setYou({ lat, lng });
+          setSource('live');
+          if (area || areaId) return;
+          const here = siteAt({ lat, lng });
+          if (here && here.id !== current.current) {
+            current.current = here.id;
+            setSite(here);
+            setChangedTo(here);
+          }
+        };
+
+        const first = (await Location.getLastKnownPositionAsync()) ?? (await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }));
         if (first) apply(first.coords.latitude, first.coords.longitude);
-        // Start-up should not announce a "change", only real moves after that.
         setChangedTo(null);
-        sub = await Location.watchPositionAsync({ accuracy: Location.Accuracy.Balanced, distanceInterval: 40, timeInterval: 15000 }, (p) => apply(p.coords.latitude, p.coords.longitude));
+
+        if (!sub) {
+          sub = await Location.watchPositionAsync(
+            { accuracy: Location.Accuracy.Balanced, distanceInterval: 40, timeInterval: 15000 },
+            (p) => apply(p.coords.latitude, p.coords.longitude)
+          );
+        }
       } catch {
         if (alive) setSource('home');
       }
-    })();
-    return () => { alive = false; sub?.remove(); };
-  }, []);
+    };
+
+    checkAndStartLocation();
+
+    // Auto-detect when user returns from settings or turns location on/off
+    const appStateSub = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') {
+        checkAndStartLocation();
+      }
+    });
+
+    return () => {
+      alive = false;
+      sub?.remove();
+      appStateSub.remove();
+    };
+  }, [area?.id, areaId]);
 
   return { site, you, source, changedTo, clearChange: () => setChangedTo(null), locationOff };
 }

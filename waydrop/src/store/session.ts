@@ -27,6 +27,7 @@ type Actions = {
   set(patch: Partial<State>): void;
   signIn(t: Tokens, me: Me): Promise<void>;
   signOut(): Promise<void>;
+  resetAll(): Promise<void>;
 };
 
 const KEY = 'waydrop.session.v1';
@@ -58,6 +59,11 @@ export const useSession = create<State & Actions>((set, get) => ({
     await secure.del(TOKEN_KEY);
     await plain.removeItem(KEY);
     set({ ...initial, hydrated: true, seenIntro: true });
+  },
+  async resetAll() {
+    await secure.del(TOKEN_KEY);
+    await plain.removeItem(KEY);
+    set({ ...initial, hydrated: true, seenIntro: false });
   },
 }));
 

@@ -14,8 +14,8 @@ class TermiiService
     public function __construct()
     {
         $this->apiKey = config('services.termii.api_key', '');
-        $this->senderId = config('services.termii.sender_id', 'Waydrop');
-        $this->baseUrl = rtrim(config('services.termii.base_url', 'https://api.ng.termii.com'), '/');
+        $this->senderId = config('services.termii.sender_id') ?: 'N-Alert';
+        $this->baseUrl = rtrim(config('services.termii.base_url') ?: 'https://api.ng.termii.com', '/');
     }
 
     /**
@@ -23,7 +23,7 @@ class TermiiService
      */
     public function sendOtp(string $phone, string $pin): array
     {
-        // Sanitize phone to E.164 without '+'
+        // Sanitize phone to E.164 with country code (e.g. 2348012345678)
         $cleanPhone = preg_replace('/\D/', '', $phone);
 
         if (str_starts_with($this->apiKey, 'mock_') || empty($this->apiKey)) {
@@ -39,13 +39,16 @@ class TermiiService
             $response = Http::timeout(10)->post("{$this->baseUrl}/api/sms/send", [
                 'to' => $cleanPhone,
                 'from' => $this->senderId,
-                'sms' => "Your Waydrop verification code is {$pin}. Valid for 5 minutes. Do not share.",
+                'sms' => "Your Waydrop code is {$pin}. Valid for 5 minutes. Do not share.",
                 'type' => 'plain',
-                'channel' => 'generic',
+                'channel' => 'dnd', // DND bypass channel for guaranteed Nigerian delivery
                 'api_key' => $this->apiKey,
             ]);
 
-            return $response->json();
+            $json = $response->json();
+            Log::info("[Termii Live Response] " . json_encode($json));
+
+            return $json ?? ['status' => 'sent'];
         } catch (\Throwable $e) {
             Log::error("[Termii Error] Failed to send SMS to {$cleanPhone}: " . $e->getMessage());
             return [

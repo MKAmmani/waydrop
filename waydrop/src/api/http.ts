@@ -25,10 +25,14 @@ export async function http<T>(method: string, path: string, body?: unknown, opts
     payload = JSON.stringify(body);
   }
   let res: Response;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 12000);
   try {
-    res = await fetch(BASE + path, { method, headers, body: payload });
+    res = await fetch(BASE + path, { method, headers, body: payload, signal: controller.signal });
   } catch {
     throw new ApiError(0, "NETWORK", "No internet connection. Check your data or Wi-Fi and try again.");
+  } finally {
+    clearTimeout(timeoutId);
   }
   const json = res.status === 204 ? null : await res.json().catch(() => null);
   if (!res.ok) {

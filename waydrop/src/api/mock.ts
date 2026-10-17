@@ -65,6 +65,10 @@ export const mock: Api = {
     me = { ...me, first_name: me.first_name ?? 'Adaeze', last_name: me.last_name ?? 'Okafor' };
     return { ...tokens(), needs_phone: !me.phone, me };
   },
+  async getMe() {
+    await wait(100);
+    return { ...me };
+  },
   async updateMe(patch) {
     await jitter(300);
     me = { ...me, ...patch };
@@ -77,10 +81,9 @@ export const mock: Api = {
   },
   async nearbyArea(lat, lng) {
     await jitter(900);
-    const best = AREAS.map((a) => ({ a, d: km(lat, lng, a.lat, a.lng) })).sort((x, y) => x.d - y.d)[0];
-    // Outside every named area Waydrop still works; we just don't have a name for the place.
-    if (!best || best.d > 25) return { area: null, runners_active: 4 };
-    return { area: best.a, runners_active: 12 + Math.round(30 / Math.max(1, best.d)) };
+    const mapped = AREAS.map((a) => ({ ...a, distance_km: Math.round(km(lat, lng, a.lat, a.lng) * 10) / 10 })).sort((x, y) => (x.distance_km ?? 0) - (y.distance_km ?? 0));
+    const best = mapped[0];
+    return { area: best ?? null, runners_active: 12 + Math.round(30 / Math.max(1, best?.distance_km ?? 1)), nearby_areas: mapped };
   },
   async searchAreas(q) {
     await wait(150);
@@ -162,5 +165,15 @@ export const mock: Api = {
     if (t.status === 'accepted') throw new ApiError(409, 'ALREADY_ACCEPTED', 'A runner already accepted. Get help from support to cancel now.');
     balance += t.bounty; t.status = 'cancelled'; t.balance_after = balance;
     return { ...t };
+  },
+  async verifyRunner(data) {
+    await jitter(400);
+    me = { ...me, runner_status: 'verified' };
+    return { ...me };
+  },
+  async unverifyRunner() {
+    await jitter(300);
+    me = { ...me, runner_status: 'unverified' };
+    return { ...me };
   },
 };

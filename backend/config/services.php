@@ -37,7 +37,7 @@ return [
     // Termii (SMS OTP - Nigeria DND bypass)
     'termii' => [
         'api_key' => env('TERMII_API_KEY'),
-        'sender_id' => env('TERMII_SENDER_ID', 'Waydrop'),
+        'sender_id' => env('TERMII_SENDER_ID', 'N-Alert'),
         'base_url' => env('TERMII_BASE_URL', 'https://api.ng.termii.com'),
     ],
 
@@ -72,7 +72,8 @@ return [
 
     // Ably (Real-Time Pub/Sub & Map Radar)
     'ably' => [
-        'api_key' => env('ABLY_API_KEY'),
+        'key' => env('ABLY_API_KEY', env('ABLY_KEY')),
+        'api_key' => env('ABLY_API_KEY', env('ABLY_KEY')),
     ],
 
     // Agora.io (In-App VoIP Encrypted Calling)
