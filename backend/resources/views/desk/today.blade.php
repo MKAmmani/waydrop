@@ -400,6 +400,86 @@
       </div>
     </div>
   </div>
+
+  @if($isSuperAdmin)
+  <div class="sheet" style="margin-top:16px;padding:0;overflow:hidden;">
+    <div class="sh-h" style="padding:14px 18px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <b>Platform revenue</b>
+        <span class="chip c-paid">Super admin only</span>
+      </div>
+      <button type="button" class="btn b-ink" onclick="document.getElementById('revenueWithdrawPanel').style.display='block'">Withdraw funds</button>
+    </div>
+
+    <div class="kv">
+      <div><small>Available balance</small><b class="num">₦{{ number_format($platformRevenueKobo / 100, 2) }}</b></div>
+      <div><small>Commission booked</small><b class="num">₦{{ number_format($platformFeeTotalKobo / 100, 2) }}</b></div>
+      <div><small>Fee entries</small><b class="num">{{ $platformFeeCount }}</b></div>
+      <div><small>Withdrawn to date</small><b class="num">₦{{ number_format($platformWithdrawnKobo / 100, 2) }}</b></div>
+    </div>
+
+    @if(session('success'))
+      <div style="margin:12px 18px 0;background:#ECFDF5;border:1px solid #A7F3D0;color:#065F46;padding:10px 14px;border-radius:9px;font-size:13px;">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+      <div style="margin:12px 18px 0;background:#FEF2F2;border:1px solid #FECACA;color:#991B1B;padding:10px 14px;border-radius:9px;font-size:13px;">{{ session('error') }}</div>
+    @endif
+
+    <div id="revenueWithdrawPanel" style="display:{{ $errors->any() ? 'block' : 'none' }};padding:16px 18px;border-top:1px solid var(--rule-soft);background:#F8FAFC;">
+      <form method="POST" action="{{ route('desk.revenue.withdraw') }}" onsubmit="return confirm('Send this withdrawal to the bank account?');">
+        @csrf
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;">
+          <div class="fld"><label for="revAmount">Amount (₦)</label><input id="revAmount" name="amount" type="number" min="100" step="1" value="{{ old('amount') }}" placeholder="10000" required></div>
+          <div class="fld"><label for="revBankName">Bank name</label><input id="revBankName" name="bank_name" type="text" value="{{ old('bank_name') }}" placeholder="GTBank" required></div>
+          <div class="fld"><label for="revBankCode">Bank code</label><input id="revBankCode" name="bank_code" type="text" value="{{ old('bank_code') }}" placeholder="058" required></div>
+          <div class="fld"><label for="revAccountNumber">Account number</label><input id="revAccountNumber" name="account_number" type="text" inputmode="numeric" maxlength="10" value="{{ old('account_number') }}" placeholder="0123456789" required></div>
+          <div class="fld"><label for="revAccountName">Account name</label><input id="revAccountName" name="account_name" type="text" value="{{ old('account_name') }}" placeholder="Waydrop Technologies" required></div>
+        </div>
+
+        @if($errors->any())
+          <div style="margin-top:10px;color:var(--fault-ink);font-size:12.5px;">{{ $errors->first() }}</div>
+        @endif
+
+        <div style="margin-top:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <button type="submit" class="btn b-ink">Send withdrawal</button>
+          <button type="button" class="btn b-line" onclick="document.getElementById('revenueWithdrawPanel').style.display='none'">Cancel</button>
+          <span class="note" style="margin:0;">Available: ₦{{ number_format($platformRevenueKobo / 100, 2) }}</span>
+        </div>
+      </form>
+    </div>
+
+    <div style="padding:16px 18px;">
+      <div class="sh-h" style="padding:0 0 10px;"><b>Recent platform ledger</b><span class="chip c-held">Last 10</span></div>
+      @if($platformTransactions->isEmpty())
+        <div class="note">No commission or withdrawal entries yet.</div>
+      @else
+        <div class="ledger">
+          <div class="lh"><span>Entry</span><span>Amount</span></div>
+          @foreach($platformTransactions as $entry)
+            <div class="ln">
+              <span>
+                @if($entry->type === 'fee')
+                  Commission · {{ $entry->task_id ?? '—' }} · {{ $entry->created_at?->format('d M, H:i') }}
+                @else
+                  Withdrawal · {{ data_get($entry->metadata, 'bank_name', 'Bank') }}
+                  @php($accountNumber = data_get($entry->metadata, 'account_number'))
+                  @if($accountNumber)
+                    ••••{{ substr($accountNumber, -4) }}
+                  @endif
+                  · {{ $entry->created_at?->format('d M, H:i') }}
+                @endif
+              </span>
+              <span class="{{ $entry->type === 'fee' ? 'plus' : 'minus' }}">
+                {{ $entry->type === 'fee' ? '+' : '−' }}₦{{ number_format($entry->amount_kobo / 100, 2) }}
+              </span>
+            </div>
+          @endforeach
+          <div class="sum">Available balance: ₦{{ number_format($platformRevenueKobo / 100, 2) }}</div>
+        </div>
+      @endif
+    </div>
+  </div>
+  @endif
     </div>
   </main>
 </div>

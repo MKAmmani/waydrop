@@ -103,7 +103,7 @@ function LiveRunnerMarker({ targetX, targetY, initials }: LiveRunnerProps) {
 }
 
 export const CampusMap = forwardRef<CampusMapHandle, CampusMapProps>(function CampusMap(
-  { center, you, runners = [], busy = [], routes, roads, mode = 'request', bottomInset = 290 },
+  { center, you, runners = [], busy = [], places = [], routes, roads, mode = 'request', bottomInset = 290 },
   ref
 ) {
   const { width: screenW, height: screenH } = useWindowDimensions();
@@ -162,13 +162,53 @@ export const CampusMap = forwardRef<CampusMapHandle, CampusMapProps>(function Ca
     };
   }, [center.lat, center.lng, span]);
 
+  // Saved campus places plus any pending pickups that are not saved yet
+  const mapPlaces = useMemo(() => {
+    const merged = new Map<string, { label: string; lat: number; lng: number; kind?: string; count: number }>();
+
+    for (const place of places) {
+      merged.set(`place:${place.id ?? place.name}`, {
+        label: place.name,
+        lat: place.lat,
+        lng: place.lng,
+        kind: place.kind,
+        count: 0,
+      });
+    }
+
+    for (const spot of busy) {
+      const byId = spot.place_id ? merged.get(`place:${spot.place_id}`) : undefined;
+      if (byId) {
+        byId.count += spot.count;
+        continue;
+      }
+
+      const name = spot.label.trim().toLowerCase();
+      const byName = Array.from(merged.values()).find((place) => place.label.trim().toLowerCase() === name);
+      if (byName) {
+        byName.count += spot.count;
+        continue;
+      }
+
+      merged.set(`spot:${name}:${spot.lat}:${spot.lng}`, {
+        label: spot.label,
+        lat: spot.lat,
+        lng: spot.lng,
+        kind: spot.kind,
+        count: spot.count,
+      });
+    }
+
+    return Array.from(merged.values());
+  }, [busy, places]);
+
   // Relate real campus places fetched from backend to the map template
   const realPlaces = useMemo(() => {
-    if (!busy || !busy.length) return [];
+    if (!mapPlaces.length) return [];
 
     const assignedSlots = new Set<string>();
 
-    return busy.map((p, idx) => {
+    return mapPlaces.map((p, idx) => {
       const placeName = p.label || 'Campus Place';
       const cleanName = placeName.toLowerCase();
       const rawPt = projectGeoToTemplate(p.lat, p.lng);
@@ -216,7 +256,7 @@ export const CampusMap = forwardRef<CampusMapHandle, CampusMapProps>(function Ca
           y: bestSlot.y,
           label: placeName,
           kind: p.kind || bestSlot.defaultKind,
-          count: p.count || 2 + (idx % 3),
+          count: p.count,
         };
       }
 
@@ -227,10 +267,10 @@ export const CampusMap = forwardRef<CampusMapHandle, CampusMapProps>(function Ca
         y: rawPt.y,
         label: placeName,
         kind: p.kind || 'landmark',
-        count: p.count || 2 + (idx % 3),
+        count: p.count,
       };
     });
-  }, [busy, center.lat, center.lng, projectGeoToTemplate, span]);
+  }, [mapPlaces, center.lat, center.lng, projectGeoToTemplate, span]);
 
   // Projected User location on template
   const userPoint = useMemo(() => {

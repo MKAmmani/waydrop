@@ -15,7 +15,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable implements FilamentUser
 {
-    use HasApiTokens, HasFactory, Notifiable, HasUuids;
+    use HasApiTokens, HasFactory, HasUuids, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -175,6 +175,14 @@ class User extends Authenticatable implements FilamentUser
     public function payouts(): HasMany
     {
         return $this->hasMany(Payout::class);
+    }
+
+    /**
+     * In-app notifications for this user.
+     */
+    public function userNotifications(): HasMany
+    {
+        return $this->hasMany(UserNotification::class);
     }
 
     /**

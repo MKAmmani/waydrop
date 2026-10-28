@@ -8,7 +8,9 @@ use Illuminate\Support\Facades\Log;
 class SmileIdService
 {
     protected string $partnerId;
+
     protected string $apiKey;
+
     protected string $serverUrl;
 
     public function __construct()
@@ -27,20 +29,20 @@ class SmileIdService
             // Mock AI verification with high confidence
             return [
                 'success' => true,
-                'job_id' => 'JOB_SM_' . rand(100000, 999999),
+                'job_id' => 'JOB_SM_'.rand(100000, 999999),
                 'confidence' => 97.40,
                 'liveness_passed' => true,
                 'raw' => [
                     'ResultCode' => '1012',
                     'ResultText' => 'Exact Match and Liveness Passed',
-                    'SmileJobID' => 'SM_MOCK_' . uniqid(),
+                    'SmileJobID' => 'SM_MOCK_'.uniqid(),
                 ],
             ];
         }
 
         try {
             $timestamp = now()->toIso8601String();
-            $signature = base64_encode(hash_hmac('sha256', $timestamp . $this->partnerId . 'job_status', $this->apiKey, true));
+            $signature = base64_encode(hash_hmac('sha256', $timestamp.$this->partnerId.'job_status', $this->apiKey, true));
 
             $response = Http::timeout(20)->post("{$this->serverUrl}/biometric_kyc", [
                 'partner_id' => $this->partnerId,
@@ -65,6 +67,7 @@ class SmileIdService
             ];
         } catch (\Throwable $e) {
             Log::error("[Smile ID Error] {$e->getMessage()}");
+
             return [
                 'success' => false,
                 'confidence' => 0.0,

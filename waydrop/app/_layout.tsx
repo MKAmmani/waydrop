@@ -52,9 +52,8 @@ export default function RootLayout() {
           }}
         >
           <Stack.Screen name="index" options={{ animation: 'fade' }} />
-          <Stack.Screen name="(onboarding)/intro" options={{ animation: 'fade', gestureEnabled: false }} />
-          <Stack.Screen name="(onboarding)/welcome" options={{ animation: 'fade', gestureEnabled: false }} />
-          <Stack.Screen name="(app)/home" options={{ animation: 'fade', gestureEnabled: false }} />
+          <Stack.Screen name="(onboarding)" options={{ animation: 'fade', gestureEnabled: false }} />
+          <Stack.Screen name="(app)" options={{ animation: 'fade', gestureEnabled: false }} />
         </Stack>
       </SafeAreaProvider>
     </GestureHandlerRootView>

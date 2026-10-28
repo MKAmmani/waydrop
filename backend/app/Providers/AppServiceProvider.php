@@ -2,6 +2,12 @@
 
 namespace App\Providers;
 
+use App\Models\Dispute;
+use App\Models\Payout;
+use App\Models\Place;
+use App\Models\RunnerVerification;
+use App\Models\Task;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,7 +25,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        \Illuminate\Support\Facades\View::composer('desk.*', function ($view) {
+        View::composer('desk.*', function ($view) {
             try {
                 $user = auth()->user();
                 $campusId = null;
@@ -27,18 +33,21 @@ class AppServiceProvider extends ServiceProvider
                     $campusId = $user->isSuperAdmin() ? session('active_campus_id') : $user->area_id;
                 }
 
-                $openErrandsQuery = \App\Models\Task::whereIn('status', ['pending', 'accepted', 'picked_up']);
-                $disputesQuery = \App\Models\Dispute::where('status', 'open');
-                $kycQuery = \App\Models\RunnerVerification::whereIn('status', ['pending', 'ai_verified', 'flagged']);
-                $lockedQuery = \App\Models\Task::where(function ($q) {
+                $openErrandsQuery = Task::whereIn('status', ['pending', 'accepted', 'picked_up']);
+                $disputesQuery = Dispute::where('status', 'open');
+                $kycQuery = RunnerVerification::whereIn('status', ['pending', 'ai_verified', 'flagged']);
+                $lockedQuery = Task::where(function ($q) {
                     $q->where('status', 'disputed')->orWhere('pin_attempts', '>=', 3);
                 });
-                $payoutsQuery = \App\Models\Payout::where('status', 'failed');
-                $placesQuery = \App\Models\Place::where('confirmed', false);
+                $payoutsQuery = Payout::where('status', 'failed');
+                if (! ($user?->isSuperAdmin() ?? false)) {
+                    $payoutsQuery->whereHas('user', fn ($q) => $q->where('role', '!=', 'platform'));
+                }
+                $placesQuery = Place::where('confirmed', false);
 
                 if ($campusId && $campusId !== 'all') {
                     $openErrandsQuery->where('area_id', $campusId);
-                    $disputesQuery->whereHas('task', fn($q) => $q->where('area_id', $campusId));
+                    $disputesQuery->whereHas('task', fn ($q) => $q->where('area_id', $campusId));
                     $lockedQuery->where('area_id', $campusId);
                     $placesQuery->where('area_id', $campusId);
                     $kycQuery->where('campus_id', $campusId);

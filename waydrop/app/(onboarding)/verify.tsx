@@ -40,7 +40,14 @@ export default function Verify() {
       success();
       // If they came via Google, the server links this phone to that account and returns the same user.
       await signIn({ access_token: res.access_token, refresh_token: res.refresh_token }, res.me);
-      if (!res.is_new_user) setSession({ firstAction: 'send' }); // returning users skip "What first?"
+      if (!res.is_new_user || flow === 'login') {
+        setSession({ flow: 'login', firstAction: 'send', notificationsAsked: true, seenIntro: true });
+        // If returning user already has a complete profile, send them straight to the home page!
+        if (res.me?.first_name && res.me?.area_id) {
+          setTimeout(() => router.replace('/home'), 500);
+          return;
+        }
+      }
       setTimeout(() => router.replace(nextOnboardingRoute(useSession.getState()) as never), 650);
     } catch (e) {
       setState('bad');
@@ -69,7 +76,7 @@ export default function Verify() {
         lede={
           <Text variant="body" tone="ink2">
             Sent to <Text variant="body" style={{ fontFamily: 'DMSans_600SemiBold' }}>{pretty(digits)}</Text>.{' '}
-            <Text variant="body" tone="tangerineInk" style={{ fontFamily: 'DMSans_600SemiBold' }} onPress={() => router.back()} accessibilityRole="link">Change</Text>
+            <Text variant="body" tone="tangerineInk" style={{ fontFamily: 'DMSans_600SemiBold' }} onPress={() => (router.canGoBack() ? router.back() : router.replace('/phone'))} accessibilityRole="link">Change</Text>
           </Text>
         }
       >

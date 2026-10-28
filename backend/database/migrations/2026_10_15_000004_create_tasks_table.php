@@ -18,12 +18,12 @@ return new class extends Migration
             $table->string('area_id', 50);
             $table->string('item', 255);
             $table->text('note')->nullable();
-            
+
             $table->string('pickup_place_id', 50)->nullable();
             $table->string('pickup_name', 100);
             $table->decimal('pickup_lat', 9, 6)->nullable();
             $table->decimal('pickup_lng', 9, 6)->nullable();
-            
+
             $table->string('dropoff_place_id', 50)->nullable();
             $table->string('dropoff_name', 100);
             $table->decimal('dropoff_lat', 9, 6)->nullable();

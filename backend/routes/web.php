@@ -44,6 +44,7 @@ Route::prefix('desk')->name('desk.')->middleware('auth')->group(function () {
     Route::post('/telemetry/broadcast', [AdminDeskController::class, 'broadcastRunnerTelemetry'])->name('telemetry.broadcast');
 
     // Super Admin Exclusive Actions
+    Route::post('/revenue/withdraw', [AdminDeskController::class, 'withdrawRevenue'])->name('revenue.withdraw');
     Route::post('/campuses', [AdminDeskController::class, 'createCampus'])->name('campuses.store');
     Route::post('/campuses/{id}/update', [AdminDeskController::class, 'updateCampus'])->name('campuses.update');
     Route::post('/campuses/{id}/toggle-status', [AdminDeskController::class, 'toggleCampusStatus'])->name('campuses.toggle');

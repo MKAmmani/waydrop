@@ -13,15 +13,20 @@ class Task extends Model
     use HasFactory;
 
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [
         'id',
+        'type',
         'requester_id',
         'runner_id',
         'area_id',
         'item',
         'note',
+        'items',
+        'source',
+        'rules',
         'pickup_place_id',
         'pickup_name',
         'pickup_lat',
@@ -31,6 +36,9 @@ class Task extends Model
         'dropoff_lat',
         'dropoff_lng',
         'bounty_kobo',
+        'budget_kobo',
+        'spent_kobo',
+        'refund_kobo',
         'suggested_min_kobo',
         'platform_fee_kobo',
         'pin_code',
@@ -39,10 +47,22 @@ class Task extends Model
         'cancellation_reason',
         'pickup_photo_url',
         'dropoff_photo_url',
+        'seat_photo_url',
+        'live_share',
+        'beacon_active',
+        'vendor_payment',
+        'cash_purchase',
+        'active_ask',
         'accepted_at',
         'picked_up_at',
+        'arrived_at',
         'completed_at',
         'cancelled_at',
+        'rating',
+        'rating_tags',
+        'rating_note',
+        'tip_kobo',
+        'is_late',
     ];
 
     /**
@@ -57,15 +77,31 @@ class Task extends Model
         return [
             'pin_code' => 'encrypted',
             'bounty_kobo' => 'integer',
+            'budget_kobo' => 'integer',
+            'spent_kobo' => 'integer',
+            'refund_kobo' => 'integer',
+            'items' => 'array',
+            'source' => 'array',
+            'rules' => 'array',
+            'live_share' => 'boolean',
+            'beacon_active' => 'boolean',
+            'vendor_payment' => 'array',
+            'cash_purchase' => 'array',
+            'active_ask' => 'array',
             'suggested_min_kobo' => 'integer',
             'platform_fee_kobo' => 'integer',
+            'tip_kobo' => 'integer',
             'pin_attempts' => 'integer',
+            'rating' => 'integer',
+            'rating_tags' => 'array',
+            'is_late' => 'boolean',
             'pickup_lat' => 'decimal:6',
             'pickup_lng' => 'decimal:6',
             'dropoff_lat' => 'decimal:6',
             'dropoff_lng' => 'decimal:6',
             'accepted_at' => 'datetime',
             'picked_up_at' => 'datetime',
+            'arrived_at' => 'datetime',
             'completed_at' => 'datetime',
             'cancelled_at' => 'datetime',
         ];
@@ -116,11 +152,19 @@ class Task extends Model
         return $this->hasMany(CallSession::class);
     }
 
+    public function messages(): HasMany
+    {
+        return $this->hasMany(TaskMessage::class);
+    }
+
     /**
      * Calculate net payout to the runner in kobo.
      */
     public function getRunnerPayoutKoboAttribute(): int
     {
-        return max(0, $this->bounty_kobo - $this->platform_fee_kobo);
+        $bounty = (int) ($this->bounty_kobo ?? 0);
+        $platformFee = (int) ($this->platform_fee_kobo ?: round($bounty * 0.10));
+
+        return max(0, $bounty - $platformFee);
     }
 }

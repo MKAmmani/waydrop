@@ -36,8 +36,9 @@ class AuthController extends Controller
             $user = Auth::user();
 
             // Restrict access strictly to super_admin, admin, and staff
-            if (!$user->isStaffOrAdmin()) {
+            if (! $user->isStaffOrAdmin()) {
                 Auth::logout();
+
                 return back()->withErrors([
                     'email' => 'Access restricted: Only administrative and campus desk staff accounts can access Waydrop Desk.',
                 ])->withInput($request->only('email'));
@@ -45,8 +46,9 @@ class AuthController extends Controller
 
             if ($user->is_blocked) {
                 Auth::logout();
+
                 return back()->withErrors([
-                    'email' => 'Your staff account has been suspended: ' . ($user->block_reason ?? 'Please contact platform security.'),
+                    'email' => 'Your staff account has been suspended: '.($user->block_reason ?? 'Please contact platform security.'),
                 ]);
             }
 

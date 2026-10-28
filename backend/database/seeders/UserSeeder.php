@@ -98,5 +98,33 @@ class UserSeeder extends Seeder
                 'virtual_account_nuban' => '8019994821',
             ]
         );
+
+        // 5. Star Verified Campus Runner (Tobi Adeyemi)
+        $tobi = User::firstOrCreate(
+            ['phone' => '+2348022233445'],
+            [
+                'name' => 'Tobi Adeyemi',
+                'first_name' => 'Tobi',
+                'last_name' => 'Adeyemi',
+                'email' => 'tobi.adeyemi@waydrop.ng',
+                'role' => 'runner',
+                'runner_status' => 'verified',
+                'rating' => 4.90,
+                'trips_count' => 212,
+                'password' => Hash::make('password123'),
+                'area_id' => 'buk-new',
+                'phone_verified_at' => now(),
+            ]
+        );
+
+        Wallet::firstOrCreate(
+            ['user_id' => $tobi->id],
+            [
+                'balance_kobo' => 450000,
+                'escrow_kobo' => 0,
+                'virtual_bank_name' => 'Kuda Bank',
+                'virtual_account_nuban' => '2001928374',
+            ]
+        );
     }
 }

@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Area;
+use App\Models\RunnerVerification;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
@@ -16,18 +18,18 @@ class UserController extends Controller
     public function me(Request $request): JsonResponse
     {
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             return response()->json(['message' => 'Unauthenticated.'], 401);
         }
 
         $areaModel = $user->area;
         $wallet = $user->wallet;
-        if (!$wallet) {
+        if (! $wallet) {
             $wallet = $user->wallet()->create([
-                'balance_kobo' => 485000,
-                'escrow_kobo' => 50000,
-                'virtual_bank_name' => 'Wema Bank',
-                'virtual_account_nuban' => '9948123011',
+                'balance_kobo' => 0,
+                'escrow_kobo' => 0,
+                'virtual_bank_name' => 'Squad GTCO Escrow',
+                'virtual_account_nuban' => '801'.random_int(1000000, 9999999),
             ]);
         }
 
@@ -54,7 +56,7 @@ class UserController extends Controller
                 'virtual_bank_name' => $wallet->virtual_bank_name ?? 'Wema Bank',
                 'virtual_account_nuban' => $wallet->virtual_account_nuban ?? '9948123011',
             ],
-            'referral_code' => 'WAY-' . strtoupper(substr($user->first_name ?? 'VIP', 0, 3)) . '-' . substr($user->id, 0, 4),
+            'referral_code' => 'WAY-'.strtoupper(substr($user->first_name ?? 'VIP', 0, 3)).'-'.substr($user->id, 0, 4),
         ]);
     }
 
@@ -90,7 +92,7 @@ class UserController extends Controller
 
         $user->save();
 
-        $areaModel = $user->area_id ? \App\Models\Area::find($user->area_id) : null;
+        $areaModel = $user->area_id ? Area::find($user->area_id) : null;
 
         return response()->json([
             'id' => (string) $user->id,
@@ -125,7 +127,7 @@ class UserController extends Controller
 
         // Store file in public avatars disk
         $path = $file->store('avatars', 'public');
-        $photoUrl = asset('storage/' . $path);
+        $photoUrl = asset('storage/'.$path);
 
         $user->photo_url = $photoUrl;
         $user->save();
@@ -151,7 +153,7 @@ class UserController extends Controller
         $user = $request->user();
 
         // Update or create runner verification record
-        \App\Models\RunnerVerification::updateOrCreate(
+        RunnerVerification::updateOrCreate(
             ['user_id' => $user->id],
             [
                 'campus_id' => $user->area_id ?? 'buk-new',
@@ -159,8 +161,8 @@ class UserController extends Controller
                 'department' => $request->department ?? 'Software Engineering',
                 'matric_number' => $request->matric_number,
                 'document_type' => $request->document_type ?? 'student_id_card',
-                'document_url' => 'https://storage.waydrop.ng/kyc/docs/' . $user->id . '.jpg',
-                'selfie_url' => 'https://storage.waydrop.ng/kyc/selfies/' . $user->id . '.jpg',
+                'document_url' => 'https://storage.waydrop.ng/kyc/docs/'.$user->id.'.jpg',
+                'selfie_url' => 'https://storage.waydrop.ng/kyc/selfies/'.$user->id.'.jpg',
                 'payout_bank_code' => '035',
                 'payout_account_number' => $user->wallet?->virtual_account_nuban ?? '9948123011',
                 'payout_account_name' => "{$user->first_name} {$user->last_name}",
@@ -172,6 +174,14 @@ class UserController extends Controller
         $user->runner_status = 'verified';
         $user->role = 'runner';
         $user->save();
+
+        app(NotificationService::class)->send(
+            $user,
+            'errand',
+            "You're verified to earn",
+            'Your student ID was approved. Start accepting errands on the map.',
+            ['runner_status' => 'verified']
+        );
 
         return $this->me($request);
     }

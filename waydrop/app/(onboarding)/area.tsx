@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Linking, StyleSheet, View } from 'react-native';
+import { Linking, Platform, StyleSheet, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as Location from 'expo-location';
 import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withDelay, withRepeat, withTiming, Easing } from 'react-native-reanimated';
@@ -288,7 +288,11 @@ function AreaSearch({
               variant="label"
               tone="tangerineInk"
               style={{ fontFamily: 'DMSans_700Bold', marginTop: 8 }}
-              onPress={() => Linking.openSettings()}
+              onPress={() => {
+                if (Platform.OS !== 'web' && typeof Linking.openSettings === 'function') {
+                  Linking.openSettings().catch(() => {});
+                }
+              }}
               accessibilityRole="link"
             >
               Open Settings

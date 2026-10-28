@@ -13,7 +13,7 @@ import { PressableScale } from '@/components/ui/PressableScale';
 import { Text } from '@/components/ui/Text';
 import { api, ApiError } from '@/api';
 import { signInWithGoogle, signInWithApple } from '@/lib/social';
-import { useSession } from '@/store/session';
+import { nextOnboardingRoute, useSession } from '@/store/session';
 import { color, radius, shadow, space } from '@/theme/tokens';
 
 /** Real errands people send. The pill types them out so the product explains itself. */
@@ -42,8 +42,18 @@ export default function Welcome() {
       if (!idToken) return; // cancelled: stay put, no error
       const res = await api.oauth(provider, idToken);
       await signIn({ access_token: res.access_token, refresh_token: res.refresh_token }, res.me);
-      setSession({ flow: 'signup' });
-      router.push(res.needs_phone ? '/phone' : '/profile');
+      if (res.needs_phone) {
+        setSession({ flow: 'signup' });
+        router.push('/phone');
+      } else {
+        // Returning user with Google OAuth: bypass tutorials and go straight home
+        setSession({ flow: 'login', firstAction: 'send', notificationsAsked: true, seenIntro: true });
+        if (res.me?.first_name && res.me?.area_id) {
+          router.replace('/home');
+        } else {
+          router.replace(nextOnboardingRoute(useSession.getState()) as never);
+        }
+      }
     } catch (e) {
       Alert.alert(`Couldn't sign in with ${provider === 'google' ? 'Google' : 'Apple'}`, e instanceof ApiError ? e.message : 'Try again, or continue with your phone number.');
     } finally {

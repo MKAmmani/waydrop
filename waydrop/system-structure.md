@@ -62,9 +62,8 @@ waydrop/
 │
 ├── src/
 │   ├── api/                       # API network and data layer
-│   │   ├── index.ts               # Public typed API interface and backend switch
-│   │   ├── mock.ts                # In-app mock backend (OTP, tasks, quotes, nearby runners)
-│   │   └── http.ts                # HTTP client for production backend (token injection, error handling)
+│   │   ├── index.ts               # Public typed API interface
+│   │   └── http.ts                # HTTP client for backend (token injection, error handling)
 │   ├── components/                # Reusable UI & presentation components
 │   │   ├── ui/                    # Design system primitives (Button, Text, PressableScale, Layout, Toast)
 │   │   ├── art/                   # Custom vector brand graphics, badges, and animated paper props
@@ -106,12 +105,10 @@ waydrop/
   - If user dropped out during onboarding, it inspects what has been completed (`seenIntro`, `tokens`, `me.first_name`, `hasLocation`, `me.area_id`, `hasNotifications`, `firstAction`) and routes directly to the exact pending screen.
   - Reopening the app immediately resumes where the user left off.
 
-### 4.2 Dual-Mode API Facade
-- Located in `src/api/index.ts`.
-- Components interact only with the `api` export.
-- When `EXPO_PUBLIC_API_BASE_URL` is unset, `api` routes calls to `src/api/mock.ts`.
-  - The mock backend simulates the exact API contract: OTP verification, user creation, quote calculation, and runner matching lifecycle.
-- When `EXPO_PUBLIC_API_BASE_URL` is defined, `src/api/http.ts` executes real HTTP requests to the remote backend with automatic authorization header injection and refresh token handling.
+### 4.2 API Client & Network Layer
+- Located in `src/api/index.ts` and `src/api/http.ts`.
+- Components interact with the strongly-typed `api` export.
+- `src/api/http.ts` executes real HTTP requests to the backend with automatic bearer authorization header injection and refresh token handling.
 
 ### 4.3 Natural Language Errand Parsing
 - Located in `src/lib/parseErrand.ts`.

@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\OtpRequest;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Services\TermiiService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
@@ -21,18 +23,18 @@ class AuthController extends Controller
         $digits = preg_replace('/\D+/', '', $phone);
 
         if (str_starts_with($digits, '234') && strlen($digits) === 13) {
-            return '+' . $digits;
+            return '+'.$digits;
         }
 
         if (str_starts_with($digits, '0') && strlen($digits) === 11) {
-            return '+234' . substr($digits, 1);
+            return '+234'.substr($digits, 1);
         }
 
         if (strlen($digits) === 10) {
-            return '+234' . $digits;
+            return '+234'.$digits;
         }
 
-        return '+' . $digits;
+        return '+'.$digits;
     }
 
     /**
@@ -79,9 +81,9 @@ class AuthController extends Controller
 
         // Dispatch OTP SMS via Termii
         try {
-            app(\App\Services\TermiiService::class)->sendOtp($phone, $code);
+            app(TermiiService::class)->sendOtp($phone, $code);
         } catch (\Throwable $e) {
-            Log::warning("[Termii Dispatch Warning] " . $e->getMessage());
+            Log::warning('[Termii Dispatch Warning] '.$e->getMessage());
         }
 
         return response()->json([
@@ -162,7 +164,7 @@ class AuthController extends Controller
             $codeMatches = true;
         }
 
-        if (!$codeMatches) {
+        if (! $codeMatches) {
             return response()->json([
                 'error' => [
                     'code' => 'INVALID_CODE',
@@ -171,12 +173,38 @@ class AuthController extends Controller
             ], 422);
         }
 
+        // Check if an existing authenticated session token was passed (e.g. Google OAuth linking phone)
+        $authUser = null;
+        if ($bearer = $request->bearerToken()) {
+            $tokenModel = PersonalAccessToken::findToken($bearer);
+            if ($tokenModel && $tokenModel->tokenable) {
+                $authUser = $tokenModel->tokenable;
+            }
+        }
+
         // Find or create User
         $user = User::where('phone', $phone)->first();
         $isNewUser = false;
 
-        if (!$user) {
-            $isNewUser = true;
+        if ($authUser && empty($authUser->phone)) {
+            if ($user && $user->id !== $authUser->id) {
+                // An existing user with this phone already exists: link Google/Apple ID to that existing record
+                $user->update([
+                    'google_id' => $authUser->google_id ?? $user->google_id,
+                    'apple_id' => $authUser->apple_id ?? $user->apple_id,
+                    'email' => $user->email ?? $authUser->email,
+                    'phone_verified_at' => now(),
+                ]);
+                $authUser->tokens()->delete();
+                $authUser->delete();
+            } else {
+                $authUser->update([
+                    'phone' => $phone,
+                    'phone_verified_at' => now(),
+                ]);
+                $user = $authUser;
+            }
+        } elseif (! $user) {
             $user = User::create([
                 'phone' => $phone,
                 'role' => 'user',
@@ -191,23 +219,28 @@ class AuthController extends Controller
                     'balance_kobo' => 0,
                     'escrow_kobo' => 0,
                     'virtual_bank_name' => 'Squad GTCO Escrow',
-                    'virtual_account_nuban' => '801' . random_int(1000000, 9999999),
+                    'virtual_account_nuban' => '801'.random_int(1000000, 9999999),
                 ]
             );
         } else {
             // Update phone verified timestamp if needed
-            if (!$user->phone_verified_at) {
+            if (! $user->phone_verified_at) {
                 $user->update(['phone_verified_at' => now()]);
             }
         }
 
-        // Issue Sanctum Personal Access Tokens
-        $accessToken = $user->createToken('mobile_access')->plainTextToken;
-        $refreshToken = $user->createToken('mobile_refresh')->plainTextToken;
+        // If user already has first_name and campus area setup, they are a returning user
+        $isNewUser = empty($user->first_name) || empty($user->area_id);
+
+        // Issue Sanctum Personal Access Tokens with 4-hour expiration
+        $accessToken = $user->createToken('mobile_access', ['*'], now()->addHours(4))->plainTextToken;
+        $refreshToken = $user->createToken('mobile_refresh', ['*'], now()->addDays(30))->plainTextToken;
 
         return response()->json([
             'access_token' => $accessToken,
             'refresh_token' => $refreshToken,
+            'expires_in' => 14400, // 4 hours in seconds
+            'expires_at' => now()->addHours(4)->toIso8601String(),
             'is_new_user' => $isNewUser,
             'me' => [
                 'id' => (string) $user->id,
@@ -239,7 +272,7 @@ class AuthController extends Controller
         $email = null;
         $firstName = 'Student';
         $lastName = 'User';
-        $providerId = 'oauth_' . substr(md5($idToken), 0, 16);
+        $providerId = 'oauth_'.substr(md5($idToken), 0, 16);
 
         // If JWT contains payload, extract basic info
         $parts = explode('.', $idToken);
@@ -259,12 +292,19 @@ class AuthController extends Controller
             $user = User::where('email', $email)->first();
         }
 
-        if (!$user) {
+        if (! $user) {
             $col = $provider === 'google' ? 'google_id' : 'apple_id';
             $user = User::where($col, $providerId)->first();
         }
 
-        if (!$user) {
+        if ($user) {
+            $col = $provider === 'google' ? 'google_id' : 'apple_id';
+            if (empty($user->$col)) {
+                $user->update([$col => $providerId]);
+            }
+        }
+
+        if (! $user) {
             $user = User::create([
                 'email' => $email,
                 'first_name' => $firstName,
@@ -283,17 +323,19 @@ class AuthController extends Controller
                     'balance_kobo' => 0,
                     'escrow_kobo' => 0,
                     'virtual_bank_name' => 'Squad GTCO Escrow',
-                    'virtual_account_nuban' => '801' . random_int(1000000, 9999999),
+                    'virtual_account_nuban' => '801'.random_int(1000000, 9999999),
                 ]
             );
         }
 
-        $accessToken = $user->createToken('mobile_access')->plainTextToken;
-        $refreshToken = $user->createToken('mobile_refresh')->plainTextToken;
+        $accessToken = $user->createToken('mobile_access', ['*'], now()->addHours(4))->plainTextToken;
+        $refreshToken = $user->createToken('mobile_refresh', ['*'], now()->addDays(30))->plainTextToken;
 
         return response()->json([
             'access_token' => $accessToken,
             'refresh_token' => $refreshToken,
+            'expires_in' => 14400, // 4 hours in seconds
+            'expires_at' => now()->addHours(4)->toIso8601String(),
             'needs_phone' => empty($user->phone),
             'me' => [
                 'id' => (string) $user->id,

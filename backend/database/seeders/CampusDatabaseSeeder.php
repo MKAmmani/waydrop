@@ -12,12 +12,10 @@ use App\Models\PlatformRule;
 use App\Models\RunnerVerification;
 use App\Models\Task;
 use App\Models\TaskActivity;
-use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class CampusDatabaseSeeder extends Seeder
 {
@@ -57,7 +55,7 @@ class CampusDatabaseSeeder extends Seeder
             ['id' => 'old-new-hall', 'area_id' => 'buk-old', 'name' => 'New Hall', 'aka' => ['Female Hostel New Hall'], 'kind' => 'hostel', 'lat' => 11.99600, 'lng' => 8.51650, 'confirmed' => true, 'note' => 'Female residential hall'],
             ['id' => 'old-sciences-library', 'area_id' => 'buk-old', 'name' => 'Sciences Library', 'aka' => ['FAS Library'], 'kind' => 'library', 'lat' => 11.99500, 'lng' => 8.51800, 'confirmed' => true],
             ['id' => 'old-kabuga-gate', 'area_id' => 'buk-old', 'name' => 'Kabuga Gate', 'aka' => ['Main Gate Old Site'], 'kind' => 'gate', 'lat' => 11.99400, 'lng' => 8.51500, 'confirmed' => true],
-            
+
             // Pending Places (waiting for approval)
             ['id' => 'place-jaja-gate', 'area_id' => 'buk-new', 'name' => 'Back gate of Jaja Hall', 'aka' => ['Jaja Back Gate'], 'kind' => 'gate', 'lat' => 11.98220, 'lng' => 8.47890, 'confirmed' => false, 'note' => 'New name · used by 4 students'],
             ['id' => 'place-moremi-junc', 'area_id' => 'buk-new', 'name' => 'Moremi Junction Quad', 'aka' => ['Moremi Roundabout'], 'kind' => 'landmark', 'lat' => 11.98180, 'lng' => 8.47760, 'confirmed' => false, 'note' => 'Used by 9 students'],

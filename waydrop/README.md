@@ -15,18 +15,7 @@ npx expo start
 - **In a browser:** press `w` in the terminal.
 - **Android emulator / iOS simulator:** press `a` or `i`.
 
-No backend is needed yet. With `EXPO_PUBLIC_API_BASE_URL` empty, the app talks to a built-in mock backend that follows `WAYDROP_API_CONTRACT.md` exactly.
-
-### Demo rules (mock backend)
-
-| Try this | What happens |
-|---|---|
-| Any 6-digit code | Accepted |
-| Code `000000` | "That code isn't right" (shake + red) |
-| Code `999999` | "That code has expired" |
-| Phone `803 000 0000` | "Too many codes sent" |
-| A phone number ending in `1` | Treated as a returning user: skips the name, photo and area steps |
-| "Start onboarding again" on the home placeholder | Signs out and replays everything |
+The app connects directly to the Waydrop Laravel API backend configured via `EXPO_PUBLIC_API_BASE_URL`.
 
 ## The onboarding flow
 
@@ -55,7 +44,7 @@ src/
   theme/tokens.ts        colours, type scale, spacing, radii, motion springs
   components/ui/         Text, Button, PressableScale, Screen, StepHeader, Field, OtpField
   components/art/        logo, mascots, flag, Google mark, paper props
-  api/                   index.ts (typed facade), http.ts (real server), mock.ts (demo server)
+  api/                   index.ts (typed facade), http.ts (real server)
   store/session.ts       session, tokens (secure storage), onboarding progress
   lib/                   phone formatting, haptics, storage, social sign-in
 scripts/phone.test.mjs   tests for phone handling: npm test
@@ -75,7 +64,7 @@ All BUK place names live in one file: `src/data/campuses/buk.ts`. Add one line p
 1. Create OAuth client IDs (Android, iOS, Web) in Google Cloud and put them in `.env` (see `.env.example`).
 2. In `app/(onboarding)/welcome.tsx`, use `Google.useIdTokenAuthRequest` from `expo-auth-session/providers/google` and send the ID token to `api.oauth('google', token)`.
 
-Until then, the mock accepts a fake Google sign-in so the flow can be tested.
+
 
 ## Before release
 

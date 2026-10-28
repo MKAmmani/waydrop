@@ -3,19 +3,21 @@
 namespace App\Services;
 
 use Ably\AblyRest;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class AblyService
 {
     protected ?AblyRest $client = null;
+
     protected ?string $key;
 
     public function __construct()
     {
         $this->key = config('services.ably.key');
-        if (!empty($this->key)) {
+        if (! empty($this->key)) {
             try {
-                if (!class_exists('Ably\AblyRest')) {
+                if (! class_exists('Ably\AblyRest')) {
                     $loader = base_path('vendor/ably/ably-php/ably-loader.php');
                     if (file_exists($loader)) {
                         require_once $loader;
@@ -23,7 +25,7 @@ class AblyService
                 }
                 $this->client = new AblyRest(['key' => $this->key]);
             } catch (\Throwable $e) {
-                Log::error('[AblyService] Init error: ' . $e->getMessage());
+                Log::error('[AblyService] Init error: '.$e->getMessage());
             }
         }
     }
@@ -33,7 +35,7 @@ class AblyService
      */
     public function isConfigured(): bool
     {
-        return !empty($this->key) && $this->client !== null;
+        return ! empty($this->key);
     }
 
     /**
@@ -41,7 +43,7 @@ class AblyService
      */
     public function createTokenRequest(?string $clientId = null, array $capability = ['*' => ['*']]): ?array
     {
-        if (!$this->isConfigured()) {
+        if (! $this->isConfigured()) {
             return null;
         }
 
@@ -53,10 +55,22 @@ class AblyService
                 $params['clientId'] = $clientId;
             }
 
+            if (! $this->client) {
+                if (! class_exists('Ably\AblyRest')) {
+                    $loader = base_path('vendor/ably/ably-php/ably-loader.php');
+                    if (file_exists($loader)) {
+                        require_once $loader;
+                    }
+                }
+                $this->client = new AblyRest(['key' => $this->key]);
+            }
+
             $tokenRequest = $this->client->auth->createTokenRequest($params);
+
             return (array) $tokenRequest;
         } catch (\Throwable $e) {
-            Log::error('[AblyService] Token request failed: ' . $e->getMessage());
+            Log::error('[AblyService] Token request failed: '.$e->getMessage());
+
             return null;
         }
     }
@@ -66,16 +80,37 @@ class AblyService
      */
     public function publish(string $channelName, string $eventName, array $data): bool
     {
-        if (!$this->isConfigured()) {
+        if (! $this->isConfigured()) {
             return false;
         }
 
         try {
-            $channel = $this->client->channels->get($channelName);
-            $channel->publish($eventName, $data);
-            return true;
+            [$keyId, $keySecret] = explode(':', $this->key, 2);
+            $encodedChannel = urlencode($channelName);
+            $isDev = app()->isLocal() || config('app.debug');
+
+            $response = Http::connectTimeout((float) config('services.ably.connect_timeout', 2))
+                ->timeout((float) config('services.ably.publish_timeout', 4))
+                ->withOptions([
+                    'force_ip_resolve' => 'v4',
+                    'verify' => ! $isDev,
+                ])
+                ->withBasicAuth($keyId, $keySecret)
+                ->post("https://rest.ably.io/channels/{$encodedChannel}/messages", [
+                    'name' => $eventName,
+                    'data' => $data,
+                ]);
+
+            if ($response->successful()) {
+                return true;
+            }
+
+            Log::error("[AblyService] Publish returned {$response->status()} on {$channelName}: ".$response->body());
+
+            return false;
         } catch (\Throwable $e) {
-            Log::error("[AblyService] Publish error on {$channelName}: " . $e->getMessage());
+            Log::error("[AblyService] Publish error on {$channelName}: ".$e->getMessage());
+
             return false;
         }
     }

@@ -15,10 +15,15 @@ use App\Models\Task;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Services\AblyService;
+use App\Services\NotificationService;
+use App\Services\PlatformRevenueService;
 use App\Services\SquadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class AdminDeskController extends Controller
 {
@@ -49,11 +54,16 @@ class AdminDeskController extends Controller
         $lockedQuery = Task::where(function ($q) {
             $q->where('status', 'disputed')->orWhere('pin_attempts', '>=', 3);
         });
+        $isSuperAdmin = auth()->user()?->isSuperAdmin() ?? false;
+
         $payoutsQuery = Payout::where('status', 'failed');
+        if (! $isSuperAdmin) {
+            $payoutsQuery->whereHas('user', fn ($q) => $q->where('role', '!=', 'platform'));
+        }
 
         if ($campusId && $campusId !== 'all') {
             $openErrandsQuery->where('area_id', $campusId);
-            $disputesQuery->whereHas('task', fn($q) => $q->where('area_id', $campusId));
+            $disputesQuery->whereHas('task', fn ($q) => $q->where('area_id', $campusId));
             $lockedQuery->where('area_id', $campusId);
             $pendingKycQuery->where('campus_id', $campusId);
         }
@@ -63,6 +73,25 @@ class AdminDeskController extends Controller
         $pendingKycCount = $pendingKycQuery->count();
         $totalEscrowKobo = Wallet::sum('escrow_kobo');
         $activeRunnersCount = User::where('role', 'runner')->where('runner_status', 'verified')->count();
+
+        $platformRevenueKobo = 0;
+        $platformFeeTotalKobo = 0;
+        $platformFeeCount = 0;
+        $platformWithdrawnKobo = 0;
+        $platformTransactions = collect();
+
+        if ($isSuperAdmin) {
+            $platformWallet = app(PlatformRevenueService::class)->wallet();
+            $platformRevenueKobo = $platformWallet->balance_kobo;
+            $platformFeeTotalKobo = (int) Transaction::where('wallet_id', $platformWallet->id)->where('type', 'fee')->sum('amount_kobo');
+            $platformFeeCount = Transaction::where('wallet_id', $platformWallet->id)->where('type', 'fee')->count();
+            $platformWithdrawnKobo = (int) Transaction::where('wallet_id', $platformWallet->id)->where('type', 'withdrawal')->sum('amount_kobo');
+            $platformTransactions = Transaction::where('wallet_id', $platformWallet->id)
+                ->whereIn('type', ['fee', 'withdrawal'])
+                ->latest()
+                ->limit(10)
+                ->get();
+        }
 
         // Urgent items for "Needs you now"
         $urgentLocked = (clone $lockedQuery)->with(['requester', 'runner', 'area'])->latest()->limit(2)->get();
@@ -77,7 +106,7 @@ class AdminDeskController extends Controller
 
         // Real match duration median
         $matchedTasks = Task::whereNotNull('accepted_at')->whereNotNull('created_at')->latest()->limit(50)->get();
-        $matchDurations = $matchedTasks->map(fn($t) => $t->accepted_at->diffInSeconds($t->created_at))->filter(fn($s) => $s > 0);
+        $matchDurations = $matchedTasks->map(fn ($t) => $t->accepted_at->diffInSeconds($t->created_at))->filter(fn ($s) => $s > 0);
         if ($matchDurations->count() > 0) {
             $medianSecs = (int) $matchDurations->median();
             $medianMin = floor($medianSecs / 60);
@@ -85,8 +114,8 @@ class AdminDeskController extends Controller
             $timeToMatchDisplay = sprintf('%d:%02d', $medianMin, $medianRemainder);
             $timeToMatchSub = "Based on {$matchDurations->count()} matched errands";
         } else {
-            $timeToMatchDisplay = "—";
-            $timeToMatchSub = "No matched errands yet";
+            $timeToMatchDisplay = '—';
+            $timeToMatchSub = 'No matched errands yet';
         }
 
         // Live real active errands & verified runners
@@ -102,7 +131,7 @@ class AdminDeskController extends Controller
         if ($campusId && $campusId !== 'all') {
             $activeCampus = Area::find($campusId);
         }
-        if (!$activeCampus) {
+        if (! $activeCampus) {
             $activeCampus = Area::first();
         }
 
@@ -138,7 +167,13 @@ class AdminDeskController extends Controller
             'timeToMatchDisplay',
             'timeToMatchSub',
             'liveTasks',
-            'liveRunners'
+            'liveRunners',
+            'isSuperAdmin',
+            'platformRevenueKobo',
+            'platformFeeTotalKobo',
+            'platformFeeCount',
+            'platformWithdrawnKobo',
+            'platformTransactions'
         ));
     }
 
@@ -156,8 +191,12 @@ class AdminDeskController extends Controller
         });
         $payoutsQuery = Payout::with('user')->where('status', 'failed');
 
+        if (! auth()->user()?->isSuperAdmin()) {
+            $payoutsQuery->whereHas('user', fn ($q) => $q->where('role', '!=', 'platform'));
+        }
+
         if ($campusId && $campusId !== 'all') {
-            $disputesQuery->whereHas('task', fn($q) => $q->where('area_id', $campusId));
+            $disputesQuery->whereHas('task', fn ($q) => $q->where('area_id', $campusId));
             $kycQuery->where('campus_id', $campusId);
             $lockedQuery->where('area_id', $campusId);
         }
@@ -179,7 +218,7 @@ class AdminDeskController extends Controller
         $query = Dispute::with(['task.area', 'requester', 'runner', 'resolver'])->latest();
 
         if ($campusId && $campusId !== 'all') {
-            $query->whereHas('task', fn($q) => $q->where('area_id', $campusId));
+            $query->whereHas('task', fn ($q) => $q->where('area_id', $campusId));
         }
 
         $disputes = $query->get();
@@ -240,7 +279,13 @@ class AdminDeskController extends Controller
         $roleFilter = $request->query('role');
         $search = $request->query('q');
 
+        $isSuperAdmin = auth()->user()?->isSuperAdmin() ?? false;
+
         $query = User::with(['wallet', 'area', 'runnerVerification'])->latest();
+
+        if (! $isSuperAdmin) {
+            $query->where('role', '!=', 'platform');
+        }
 
         if ($campusId && $campusId !== 'all') {
             $query->where('area_id', $campusId);
@@ -260,7 +305,13 @@ class AdminDeskController extends Controller
 
         $users = $query->get();
         $selectedId = $request->query('id', $users->first()?->id);
-        $selectedUser = User::with(['wallet', 'area', 'runnerVerification', 'tasksAsRequester.runner', 'tasksAsRunner.requester'])->find($selectedId) ?? $users->first();
+        $selectedUserQuery = User::with(['wallet', 'area', 'runnerVerification', 'tasksAsRequester.runner', 'tasksAsRunner.requester']);
+
+        if (! $isSuperAdmin) {
+            $selectedUserQuery->where('role', '!=', 'platform');
+        }
+
+        $selectedUser = $selectedUserQuery->find($selectedId) ?? $users->first();
 
         return view('desk.people', compact('users', 'selectedUser', 'roleFilter', 'search'));
     }
@@ -273,11 +324,16 @@ class AdminDeskController extends Controller
         $campusId = $this->getActiveCampusId();
         $query = Payout::with(['user.area'])->latest();
 
+        if (! auth()->user()?->isSuperAdmin()) {
+            $query->whereHas('user', fn ($q) => $q->where('role', '!=', 'platform'));
+        }
+
         if ($campusId && $campusId !== 'all') {
-            $query->whereHas('user', fn($q) => $q->where('area_id', $campusId));
+            $query->whereHas('user', fn ($q) => $q->where('area_id', $campusId));
         }
 
         $payouts = $query->get();
+
         return view('desk.payouts', compact('payouts'));
     }
 
@@ -314,6 +370,7 @@ class AdminDeskController extends Controller
         }
 
         $shifts = $query->get();
+
         return view('desk.crew', compact('shifts'));
     }
 
@@ -323,6 +380,7 @@ class AdminDeskController extends Controller
     public function rules()
     {
         $rules = PlatformRule::all();
+
         return view('desk.rules', compact('rules'));
     }
 
@@ -332,6 +390,7 @@ class AdminDeskController extends Controller
     public function audit()
     {
         $logs = AuditLog::with('admin')->latest('created_at')->limit(100)->get();
+
         return view('desk.audit', compact('logs'));
     }
 
@@ -342,7 +401,7 @@ class AdminDeskController extends Controller
     /**
      * 1-Click KYC Approval or Rejection
      */
-    public function reviewKyc(Request $request, string $id)
+    public function reviewKyc(Request $request, string $id, NotificationService $notifications)
     {
         $request->validate([
             'decision' => 'required|in:approve,reject',
@@ -361,6 +420,14 @@ class AdminDeskController extends Controller
 
             $user->update(['runner_status' => 'verified']);
 
+            $notifications->send(
+                $user,
+                'errand',
+                "You're verified to earn",
+                'Your student ID check passed. You can now accept errands on Waydrop.',
+                ['runner_status' => 'verified']
+            );
+
             AuditLog::record(
                 action: 'kyc.approve',
                 targetType: 'RunnerVerification',
@@ -377,6 +444,14 @@ class AdminDeskController extends Controller
 
             $user->update(['runner_status' => 'rejected']);
 
+            $notifications->send(
+                $user,
+                'errand',
+                'Verification needs another look',
+                $request->input('rejection_reason', 'Your ID check did not pass. Resubmit to try again.'),
+                ['runner_status' => 'rejected']
+            );
+
             AuditLog::record(
                 action: 'kyc.reject',
                 targetType: 'RunnerVerification',
@@ -391,7 +466,7 @@ class AdminDeskController extends Controller
     /**
      * Settle Disputed Errand Escrow
      */
-    public function resolveDispute(Request $request, string $id)
+    public function resolveDispute(Request $request, string $id, NotificationService $notifications)
     {
         $request->validate([
             'resolution_type' => 'required|in:refund_requester,release_runner,refund_cover,partial_split',
@@ -427,6 +502,9 @@ class AdminDeskController extends Controller
                 $requesterWallet->decrement('escrow_kobo', $task->bounty_kobo);
                 $payoutKobo = $task->runner_payout_kobo;
                 $runnerWallet->increment('balance_kobo', $payoutKobo);
+
+                $feeKobo = (int) ($task->platform_fee_kobo ?: round($task->bounty_kobo * 0.10));
+                app(PlatformRevenueService::class)->recordFee($task, $feeKobo, $payoutKobo);
             }
 
             AuditLog::record(
@@ -436,6 +514,28 @@ class AdminDeskController extends Controller
                 reason: $request->input('reason')
             );
         });
+
+        $resolution = $request->input('resolution_type');
+        $bountyNaira = number_format(((int) $task->bounty_kobo) / 100);
+
+        if ($resolution === 'release_runner' && $task->runner) {
+            $payoutNaira = number_format(((int) $task->runner_payout_kobo) / 100);
+            $notifications->send(
+                $task->runner,
+                'money',
+                "+₦{$payoutNaira} landed in your wallet",
+                "Dispute on errand {$task->id} was resolved in your favour. Your payout has been released.",
+                ['task_id' => (string) $task->id, 'amount_kobo' => (int) $task->runner_payout_kobo]
+            );
+        } elseif ($resolution === 'refund_requester') {
+            $notifications->send(
+                $task->requester,
+                'money',
+                "₦{$bountyNaira} refunded to your wallet",
+                "The escrow for errand {$task->id} was released back to your balance.",
+                ['task_id' => (string) $task->id, 'amount_kobo' => (int) $task->bounty_kobo]
+            );
+        }
 
         return back()->with('success', 'Dispute resolved and ledger settled.');
     }
@@ -471,10 +571,14 @@ class AdminDeskController extends Controller
     /**
      * Retry Failed Bank Transfer
      */
-    public function retryPayout(Request $request, string $id, SquadService $squad)
+    public function retryPayout(Request $request, string $id, SquadService $squad, NotificationService $notifications)
     {
         $payout = Payout::findOrFail($id);
-        
+
+        if ($payout->user?->role === 'platform') {
+            abort_unless(auth()->user()?->isSuperAdmin(), 403);
+        }
+
         $payout->increment('retry_count');
         $payout->update(['last_attempt_at' => now(), 'status' => 'processing']);
 
@@ -482,7 +586,7 @@ class AdminDeskController extends Controller
             bankCode: $payout->bank_code,
             accountNumber: $payout->account_number,
             amountKobo: $payout->amount_kobo,
-            reference: 'RETRY_' . $payout->id . '_' . time()
+            reference: 'RETRY_'.$payout->id.'_'.time()
         );
 
         if (($res['success'] ?? false) === true) {
@@ -490,6 +594,15 @@ class AdminDeskController extends Controller
                 'status' => 'success',
                 'gateway_reference' => $res['gateway_reference'] ?? null,
             ]);
+
+            $amountNaira = number_format(((int) $payout->amount_kobo) / 100);
+            $notifications->send(
+                $payout->user,
+                'bank',
+                "₦{$amountNaira} sent to your account",
+                "Your withdrawal to {$payout->account_number} completed successfully.",
+                ['payout_id' => (string) $payout->id, 'amount_kobo' => (int) $payout->amount_kobo]
+            );
         }
 
         AuditLog::record(
@@ -503,15 +616,122 @@ class AdminDeskController extends Controller
     }
 
     /**
+     * Withdraw platform commission revenue (Super Admin only).
+     */
+    public function withdrawRevenue(Request $request, SquadService $squad)
+    {
+        abort_unless(auth()->user()?->isSuperAdmin(), 403);
+
+        $data = $request->validate([
+            'amount' => ['required', 'integer', 'min:100'],
+            'bank_name' => ['required', 'string', 'max:100'],
+            'bank_code' => ['required', 'string', 'max:10'],
+            'account_number' => ['required', 'digits:10'],
+            'account_name' => ['required', 'string', 'max:150'],
+        ]);
+
+        $amountKobo = ((int) $data['amount']) * 100;
+        $reference = 'WD_REV_WD_'.strtoupper(Str::random(12));
+        $platformWallet = app(PlatformRevenueService::class)->wallet();
+
+        $payout = DB::transaction(function () use ($platformWallet, $amountKobo, $data, $reference) {
+            $wallet = Wallet::query()->whereKey($platformWallet->id)->lockForUpdate()->firstOrFail();
+
+            if ($wallet->balance_kobo < $amountKobo) {
+                throw ValidationException::withMessages([
+                    'amount' => 'The platform revenue balance is too low for this withdrawal.',
+                ]);
+            }
+
+            $balanceBefore = $wallet->balance_kobo;
+            $wallet->balance_kobo = $balanceBefore - $amountKobo;
+            $wallet->save();
+
+            $payout = Payout::create([
+                'user_id' => $wallet->user_id,
+                'amount_kobo' => $amountKobo,
+                'bank_name' => $data['bank_name'],
+                'bank_code' => $data['bank_code'],
+                'account_number' => $data['account_number'],
+                'account_name' => $data['account_name'],
+                'status' => 'processing',
+                'gateway_provider' => 'squad',
+                'gateway_reference' => $reference,
+                'reviewed_by' => auth()->id(),
+            ]);
+
+            Transaction::create([
+                'wallet_id' => $wallet->id,
+                'type' => 'withdrawal',
+                'amount_kobo' => $amountKobo,
+                'balance_before_kobo' => $balanceBefore,
+                'balance_after_kobo' => $wallet->balance_kobo,
+                'reference' => $reference,
+                'status' => 'success',
+                'metadata' => [
+                    'payout_id' => $payout->id,
+                    'bank_name' => $data['bank_name'],
+                    'account_number' => $data['account_number'],
+                    'account_name' => $data['account_name'],
+                    'requested_by' => auth()->id(),
+                ],
+            ]);
+
+            return $payout;
+        });
+
+        $result = $squad->initiateTransfer(
+            bankCode: $data['bank_code'],
+            accountNumber: $data['account_number'],
+            amountKobo: $amountKobo,
+            reference: $reference
+        );
+
+        $amountNaira = number_format($amountKobo / 100);
+
+        if (($result['success'] ?? false) === true) {
+            $payout->update([
+                'status' => 'success',
+                'gateway_reference' => $result['gateway_reference'] ?? $reference,
+                'last_attempt_at' => now(),
+            ]);
+
+            AuditLog::record(
+                action: 'revenue.withdraw',
+                targetType: 'Payout',
+                targetId: $payout->id,
+                reason: "Super admin withdrew ₦{$amountNaira} of platform revenue to {$data['bank_name']} {$data['account_number']}"
+            );
+
+            return back()->with('success', "₦{$amountNaira} platform revenue withdrawn successfully.");
+        }
+
+        $payout->update([
+            'status' => 'failed',
+            'failure_reason' => $result['message'] ?? 'Bank transfer failed.',
+            'last_attempt_at' => now(),
+        ]);
+
+        AuditLog::record(
+            action: 'revenue.withdraw.failed',
+            targetType: 'Payout',
+            targetId: $payout->id,
+            reason: "Platform revenue withdrawal of ₦{$amountNaira} failed: ".($result['message'] ?? 'Bank transfer failed.')
+        );
+
+        return back()->with('error', 'Bank transfer failed. The amount is held as a failed payout and can be retried from the Payouts desk.');
+    }
+
+    /**
      * Confirm Campus Landmark and Award Student Bounty
      */
-    public function approvePlace(Request $request, string $id)
+    public function approvePlace(Request $request, string $id, NotificationService $notifications)
     {
         $place = Place::findOrFail($id);
         $place->update(['confirmed' => true]);
 
         // If place was suggested by a student and bounty not yet paid, credit student wallet
-        if ($place->suggested_by_user_id && !$place->bounty_paid) {
+        if ($place->suggested_by_user_id && ! $place->bounty_paid) {
             $bountyKobo = (int) PlatformRule::get('landmark_bounty_kobo', 5000); // ₦50 default
             $user = User::find($place->suggested_by_user_id);
             if ($user && $user->wallet) {
@@ -524,10 +744,19 @@ class AdminDeskController extends Controller
                     'amount_kobo' => $bountyKobo,
                     'balance_before_kobo' => $user->wallet->balance_kobo - $bountyKobo,
                     'balance_after_kobo' => $user->wallet->balance_kobo,
-                    'reference' => 'LMB_' . $place->id . '_' . time(),
+                    'reference' => 'LMB_'.$place->id.'_'.time(),
                     'status' => 'success',
                     'metadata' => ['place_id' => $place->id, 'place_name' => $place->name],
                 ]);
+
+                $bountyNaira = number_format($bountyKobo / 100);
+                $notifications->send(
+                    $user,
+                    'money',
+                    "+₦{$bountyNaira} landmark bounty",
+                    "'{$place->name}' was verified on campus. Your bounty is in your wallet.",
+                    ['place_id' => (string) $place->id, 'amount_kobo' => $bountyKobo]
+                );
             }
         }
 
@@ -556,14 +785,14 @@ class AdminDeskController extends Controller
             'note' => 'nullable|string|max:255',
         ]);
 
-        $slug = \Illuminate\Support\Str::slug($validated['name']);
-        $uniqueId = $validated['area_id'] . '-' . $slug;
+        $slug = Str::slug($validated['name']);
+        $uniqueId = $validated['area_id'].'-'.$slug;
         if (Place::where('id', $uniqueId)->exists()) {
-            $uniqueId .= '-' . rand(100, 999);
+            $uniqueId .= '-'.rand(100, 999);
         }
 
         $akaArray = null;
-        if (!empty($validated['aka'])) {
+        if (! empty($validated['aka'])) {
             $akaArray = array_values(array_filter(array_map('trim', explode(',', $validated['aka']))));
         }
 
@@ -610,7 +839,7 @@ class AdminDeskController extends Controller
         ]);
 
         $akaArray = null;
-        if (!empty($validated['aka'])) {
+        if (! empty($validated['aka'])) {
             $akaArray = array_values(array_filter(array_map('trim', explode(',', $validated['aka']))));
         }
 
@@ -645,7 +874,7 @@ class AdminDeskController extends Controller
 
         if ($attached > 0) {
             return back()->withErrors([
-                'delete' => "Cannot delete landmark '{$place->name}' because {$attached} errand(s) have been dispatched to/from it."
+                'delete' => "Cannot delete landmark '{$place->name}' because {$attached} errand(s) have been dispatched to/from it.",
             ]);
         }
 
@@ -668,7 +897,7 @@ class AdminDeskController extends Controller
     public function campuses()
     {
         $user = auth()->user();
-        if (!$user->isSuperAdmin()) {
+        if (! $user->isSuperAdmin()) {
             abort(403, 'Unauthorized: Only Super Administrators can manage campus creation and admin provisioning.');
         }
 
@@ -687,7 +916,7 @@ class AdminDeskController extends Controller
      */
     public function createCampus(Request $request)
     {
-        if (!auth()->user()->isSuperAdmin()) {
+        if (! auth()->user()->isSuperAdmin()) {
             abort(403);
         }
 
@@ -707,7 +936,7 @@ class AdminDeskController extends Controller
             action: 'campus.create',
             targetType: 'Area',
             targetId: $area->id,
-            reason: 'Super Admin provisioned new university campus: ' . $area->name
+            reason: 'Super Admin provisioned new university campus: '.$area->name
         );
 
         return back()->with('success', "Campus '{$area->name}' created successfully.");
@@ -718,7 +947,7 @@ class AdminDeskController extends Controller
      */
     public function updateCampus(Request $request, string $id)
     {
-        if (!auth()->user()->isSuperAdmin()) {
+        if (! auth()->user()->isSuperAdmin()) {
             abort(403);
         }
 
@@ -749,12 +978,12 @@ class AdminDeskController extends Controller
      */
     public function toggleCampusStatus(string $id)
     {
-        if (!auth()->user()->isSuperAdmin()) {
+        if (! auth()->user()->isSuperAdmin()) {
             abort(403);
         }
 
         $area = Area::findOrFail($id);
-        $area->is_active = !$area->is_active;
+        $area->is_active = ! $area->is_active;
         $area->save();
 
         $statusLabel = $area->is_active ? 'Live (Active)' : 'Inactive (Deactivated)';
@@ -774,7 +1003,7 @@ class AdminDeskController extends Controller
      */
     public function deleteCampus(string $id)
     {
-        if (!auth()->user()->isSuperAdmin()) {
+        if (! auth()->user()->isSuperAdmin()) {
             abort(403);
         }
 
@@ -784,7 +1013,7 @@ class AdminDeskController extends Controller
 
         if ($attached > 0) {
             return back()->withErrors([
-                'delete' => "Cannot delete campus '{$area->name}' because it has {$attached} attached record(s) ({$area->places_count} places, {$area->tasks_count} errands, {$area->users_count} users, {$area->crew_shifts_count} shift routines). Deactivate the campus instead."
+                'delete' => "Cannot delete campus '{$area->name}' because it has {$attached} attached record(s) ({$area->places_count} places, {$area->tasks_count} errands, {$area->users_count} users, {$area->crew_shifts_count} shift routines). Deactivate the campus instead.",
             ]);
         }
 
@@ -806,7 +1035,7 @@ class AdminDeskController extends Controller
      */
     public function createCampusAdmin(Request $request)
     {
-        if (!auth()->user()->isSuperAdmin()) {
+        if (! auth()->user()->isSuperAdmin()) {
             abort(403);
         }
 
@@ -835,7 +1064,7 @@ class AdminDeskController extends Controller
             'balance_kobo' => 50000000, // ₦500k initial float
             'escrow_kobo' => 0,
             'virtual_bank_name' => 'Squad GTCO Escrow',
-            'virtual_account_nuban' => '80' . rand(10000000, 99999999),
+            'virtual_account_nuban' => '80'.rand(10000000, 99999999),
         ]);
 
         AuditLog::record(
@@ -853,7 +1082,7 @@ class AdminDeskController extends Controller
      */
     public function updateCampusAdmin(Request $request, string $id)
     {
-        if (!auth()->user()->isSuperAdmin()) {
+        if (! auth()->user()->isSuperAdmin()) {
             abort(403);
         }
 
@@ -861,8 +1090,8 @@ class AdminDeskController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:100',
-            'email' => 'required|email|unique:users,email,' . $admin->id,
-            'phone' => 'required|string|unique:users,phone,' . $admin->id,
+            'email' => 'required|email|unique:users,email,'.$admin->id,
+            'phone' => 'required|string|unique:users,phone,'.$admin->id,
             'role' => 'required|in:admin,super_admin',
             'area_id' => 'nullable|exists:areas,id',
             'password' => 'nullable|string|min:6',
@@ -876,7 +1105,7 @@ class AdminDeskController extends Controller
             'area_id' => $validated['role'] === 'super_admin' ? null : ($validated['area_id'] ?? null),
         ];
 
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $updateData['password'] = Hash::make($validated['password']);
         }
 
@@ -897,7 +1126,7 @@ class AdminDeskController extends Controller
      */
     public function toggleCampusAdminStatus(string $id)
     {
-        if (!auth()->user()->isSuperAdmin()) {
+        if (! auth()->user()->isSuperAdmin()) {
             abort(403);
         }
 
@@ -938,7 +1167,7 @@ class AdminDeskController extends Controller
      */
     public function deleteCampusAdmin(string $id)
     {
-        if (!auth()->user()->isSuperAdmin()) {
+        if (! auth()->user()->isSuperAdmin()) {
             abort(403);
         }
 
@@ -952,7 +1181,7 @@ class AdminDeskController extends Controller
 
         if ($attached > 0) {
             return back()->withErrors([
-                'delete' => "Cannot delete staff account '{$admin->name}' because it has {$attached} attached transaction record(s). Please deactivate access instead."
+                'delete' => "Cannot delete staff account '{$admin->name}' because it has {$attached} attached transaction record(s). Please deactivate access instead.",
             ]);
         }
 
@@ -965,7 +1194,7 @@ class AdminDeskController extends Controller
                 $admin->wallet->delete();
             } else {
                 return back()->withErrors([
-                    'delete' => "Cannot delete staff account '{$admin->name}' because its wallet has {$txCount} financial audit record(s). Please deactivate access instead."
+                    'delete' => "Cannot delete staff account '{$admin->name}' because its wallet has {$txCount} financial audit record(s). Please deactivate access instead.",
                 ]);
             }
         }
@@ -987,7 +1216,7 @@ class AdminDeskController extends Controller
      */
     public function switchCampus(Request $request)
     {
-        if (!auth()->user()->isSuperAdmin()) {
+        if (! auth()->user()->isSuperAdmin()) {
             abort(403);
         }
 
@@ -1085,6 +1314,11 @@ class AdminDeskController extends Controller
         ]);
 
         $user = User::findOrFail($id);
+
+        if ($user->role === 'platform' && ! auth()->user()?->isSuperAdmin()) {
+            abort(403);
+        }
+
         $before = [
             'is_paused' => $user->is_paused,
             'is_blocked' => $user->is_blocked,
@@ -1113,7 +1347,7 @@ class AdminDeskController extends Controller
         }
 
         AuditLog::record(
-            action: 'user.status_' . $validated['action'],
+            action: 'user.status_'.$validated['action'],
             targetType: 'User',
             targetId: $user->id,
             reason: $validated['reason'],
@@ -1149,16 +1383,15 @@ class AdminDeskController extends Controller
             'avatar' => $runner?->avatar_url ?? null,
             'phone' => $runner?->phone ?? null,
             'rating' => $runner?->rating_avg ?? 5.0,
-            'lat' => (float)$validated['lat'],
-            'lng' => (float)$validated['lng'],
-            'heading' => (float)($validated['heading'] ?? 0),
-            'speed' => (float)($validated['speed'] ?? 4.5),
+            'lat' => (float) $validated['lat'],
+            'lng' => (float) $validated['lng'],
+            'heading' => (float) ($validated['heading'] ?? 0),
+            'speed' => (float) ($validated['speed'] ?? 4.5),
             'timestamp' => now()->timestamp,
         ];
 
-        app(\App\Services\AblyService::class)->publish("campus:{$validated['campus_id']}:radar", 'runner:location', $payload);
+        app(AblyService::class)->publish("campus:{$validated['campus_id']}:radar", 'runner:location', $payload);
 
         return response()->json(['success' => true, 'payload' => $payload]);
     }
 }
-

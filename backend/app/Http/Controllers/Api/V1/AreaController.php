@@ -105,7 +105,7 @@ class AreaController extends Controller
         if ($query !== '') {
             $areasQuery->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
-                  ->orWhere('subtitle', 'like', "%{$query}%");
+                    ->orWhere('subtitle', 'like', "%{$query}%");
             });
         }
 

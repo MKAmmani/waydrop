@@ -4,7 +4,8 @@ export type CampusMapProps = {
   center: LatLng;
   you: LatLng | null;
   runners: LatLng[];
-  busy: { lat: number; lng: number; count: number; label: string; kind?: string }[];
+  busy: { lat: number; lng: number; count: number; label: string; kind?: string; place_id?: string | null }[];
+  places?: { id?: string; name: string; lat: number; lng: number; kind?: string }[];
   routes?: { from: string; to: string; path: LatLng[]; kind?: string }[];
   roads?: { id?: string; name: string; position?: string }[];
   mode: 'request' | 'earn';

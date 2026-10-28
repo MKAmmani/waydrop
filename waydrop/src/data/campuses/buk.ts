@@ -36,8 +36,15 @@ export const BUK_SITES = {
 } as const;
 
 export const BUK_PLACES: CampusPlace[] = [
-  // ── Known from BUK's own information ──
-  { id: 'new-main-library', name: 'Main Library', site: 'new', kind: 'library', confirmed: true },
+  // ── Known from BUK's own information & Prototype batch places ──
+  { id: 'moremi', name: 'Moremi Hall', aka: ['moremi', 'hostel'], site: 'new', kind: 'hostel', confirmed: true, note: 'Hostel' },
+  { id: 'lt3', name: 'LT3', aka: ['lecture theatre', 'lt 3'], site: 'new', kind: 'lecture', confirmed: true, note: 'Lecture Theatre 3' },
+  { id: 'musa', name: "Musa's Kitchen", aka: ['musa', 'kitchen', 'canteen'], site: 'new', kind: 'food', confirmed: true, note: 'Canteen' },
+  { id: 'new-main-library', name: 'Main Library', aka: ['library'], site: 'new', kind: 'library', confirmed: true },
+  { id: 'sci', name: 'Faculty of Science', aka: ['science', 'faculty of science'], site: 'new', kind: 'faculty', confirmed: true },
+  { id: 'ramat', name: 'Ramat Hall', aka: ['ramat'], site: 'new', kind: 'hostel', confirmed: true },
+  { id: 'sports', name: 'Sports Field', aka: ['sports', 'field'], site: 'new', kind: 'sports', confirmed: true },
+  { id: 'gate', name: 'Main Gate', aka: ['gate', 'main gate'], site: 'new', kind: 'gate', confirmed: true },
   { id: 'new-agric-library', name: 'Agric Library', site: 'new', kind: 'library', confirmed: true },
   { id: 'new-education-library', name: 'Education Library', site: 'new', kind: 'library', confirmed: true },
   { id: 'new-engineering-library', name: 'Engineering Library', site: 'new', kind: 'library', confirmed: true },

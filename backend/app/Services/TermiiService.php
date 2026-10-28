@@ -8,7 +8,9 @@ use Illuminate\Support\Facades\Log;
 class TermiiService
 {
     protected string $apiKey;
+
     protected string $senderId;
+
     protected string $baseUrl;
 
     public function __construct()
@@ -28,15 +30,21 @@ class TermiiService
 
         if (str_starts_with($this->apiKey, 'mock_') || empty($this->apiKey)) {
             Log::info("[Termii Mock] Dispatched OTP {$pin} to {$cleanPhone}");
+
             return [
                 'status' => 'success',
-                'message_id' => 'mock_msg_' . uniqid(),
+                'message_id' => 'mock_msg_'.uniqid(),
                 'phone' => $cleanPhone,
             ];
         }
 
         try {
-            $response = Http::timeout(10)->post("{$this->baseUrl}/api/sms/send", [
+            $client = Http::timeout(10);
+            if (app()->isLocal() || config('app.debug')) {
+                $client = $client->withoutVerifying();
+            }
+
+            $response = $client->post("{$this->baseUrl}/api/sms/send", [
                 'to' => $cleanPhone,
                 'from' => $this->senderId,
                 'sms' => "Your Waydrop code is {$pin}. Valid for 5 minutes. Do not share.",
@@ -46,11 +54,16 @@ class TermiiService
             ]);
 
             $json = $response->json();
-            Log::info("[Termii Live Response] " . json_encode($json));
+            if ($response->failed() || (isset($json['status']) && $json['status'] >= 400)) {
+                Log::error("[Termii Live Error Response] Code {$response->status()}: ".json_encode($json));
+            } else {
+                Log::info('[Termii Live Response] '.json_encode($json));
+            }
 
             return $json ?? ['status' => 'sent'];
         } catch (\Throwable $e) {
-            Log::error("[Termii Error] Failed to send SMS to {$cleanPhone}: " . $e->getMessage());
+            Log::error("[Termii Error] Failed to send SMS to {$cleanPhone}: ".$e->getMessage());
+
             return [
                 'status' => 'error',
                 'message' => $e->getMessage(),

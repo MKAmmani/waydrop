@@ -46,7 +46,8 @@ return [
         'secret_key' => env('SQUAD_SECRET_KEY'),
         'public_key' => env('SQUAD_PUBLIC_KEY'),
         'webhook_secret' => env('SQUAD_WEBHOOK_SECRET'),
-        'base_url' => env('SQUAD_BASE_URL', 'https://api-d.squadco.com'), // sandbox default
+        'base_url' => env('SQUAD_BASE_URL'), // auto-selects sandbox/live from the key when blank
+        'verify_ssl' => env('SQUAD_VERIFY_SSL', true),
     ],
 
     // Zainpay (Alternative Nigerian Banking Gateway)
@@ -54,6 +55,7 @@ return [
         'public_key' => env('ZAINPAY_PUBLIC_KEY'),
         'secret_key' => env('ZAINPAY_SECRET_KEY'),
         'base_url' => env('ZAINPAY_BASE_URL', 'https://sandbox.zainpay.ng'),
+        'verify_ssl' => env('ZAINPAY_VERIFY_SSL', true),
     ],
 
     // Smile ID (Biometric 1:1 Face Match & Liveness)
@@ -74,6 +76,8 @@ return [
     'ably' => [
         'key' => env('ABLY_API_KEY', env('ABLY_KEY')),
         'api_key' => env('ABLY_API_KEY', env('ABLY_KEY')),
+        'connect_timeout' => (float) env('ABLY_CONNECT_TIMEOUT', 2),
+        'publish_timeout' => (float) env('ABLY_PUBLISH_TIMEOUT', 4),
     ],
 
     // Agora.io (In-App VoIP Encrypted Calling)

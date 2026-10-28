@@ -28,6 +28,20 @@ export async function requestAndRegisterPushToken(
   try {
     // Dynamic import ensures expo-notifications is never evaluated in Android Expo Go
     const Notifications = await import('expo-notifications');
+
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('calls', {
+        name: 'Incoming calls',
+        description: 'Waydrop calls from the other errand participant',
+        importance: Notifications.AndroidImportance.MAX,
+        sound: 'default',
+        vibrationPattern: [0, 250, 250, 250],
+        lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+        bypassDnd: true,
+        enableVibrate: true,
+      }).catch(() => {});
+    }
+
     const { granted } = await Notifications.requestPermissionsAsync();
     if (!granted) return false;
 

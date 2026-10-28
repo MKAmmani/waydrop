@@ -6,9 +6,11 @@ import {
   ArrowLeft,
   Bank,
   BellSlash,
+  ChatCircleDots,
   Coins,
   Gift,
   Lightning,
+  Phone,
   Star,
 } from 'phosphor-react-native';
 import { PressableScale } from '@/components/ui/PressableScale';
@@ -18,7 +20,7 @@ import { tap } from '@/lib/haptics';
 
 export type NotificationItem = {
   id: string;
-  type: 'money' | 'errand' | 'rating' | 'bank' | 'invite';
+  type: 'money' | 'errand' | 'rating' | 'bank' | 'invite' | 'message' | 'call';
   title: string;
   desc: string;
   time: string;
@@ -75,6 +77,10 @@ export function NotificationsModal({
         return <Bank size={21} weight="duotone" color={color.ink2} />;
       case 'invite':
         return <Gift size={21} weight="duotone" color={color.midnight} />;
+      case 'message':
+        return <ChatCircleDots size={21} weight="duotone" color={color.midnight} />;
+      case 'call':
+        return <Phone size={21} weight="duotone" color={color.mintInk} />;
       default:
         return <Lightning size={21} weight="duotone" color={color.tangerine} />;
     }
@@ -92,6 +98,10 @@ export function NotificationsModal({
         return color.sunken;
       case 'invite':
         return '#EEE9FF';
+      case 'message':
+        return '#E8EEF9';
+      case 'call':
+        return color.mintSoft;
       default:
         return color.paper;
     }

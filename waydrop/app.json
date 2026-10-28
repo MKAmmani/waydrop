@@ -14,17 +14,19 @@
       "usesAppleSignIn": true,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Waydrop uses your location to find runners near you and errands along the routes you walk. It's only shared with your runner during an errand.",
-        "NSCameraUsageDescription": "Take a profile photo, or a photo of an item at pickup.",
-        "NSPhotoLibraryUsageDescription": "Choose a profile photo."
+        "NSCameraUsageDescription": "Take a profile photo, or a photo of an item at pickup or delivery.",
+        "NSPhotoLibraryUsageDescription": "Choose a profile photo.",
+        "NSMicrophoneUsageDescription": "Waydrop uses your microphone for encrypted in-app calls with the other errand participant."
       }
     },
     "android": {
       "package": "app.waydrop",
-      "edgeToEdgeEnabled": true,
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
         "CAMERA",
+        "RECORD_AUDIO",
+        "MODIFY_AUDIO_SETTINGS",
         "POST_NOTIFICATIONS"
       ],
       "adaptiveIcon": {
@@ -59,7 +61,7 @@
         "expo-image-picker",
         {
           "photosPermission": "Choose a profile photo.",
-          "cameraPermission": "Take a profile photo, or a photo of an item at pickup."
+          "cameraPermission": "Take a profile photo, or a photo of an item at pickup or delivery."
         }
       ],
       [

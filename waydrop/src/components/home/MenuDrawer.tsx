@@ -100,10 +100,10 @@ export function MenuDrawer({
   const isVerified = me?.runner_status === 'verified';
   const fullName = me?.first_name
     ? `${me.first_name} ${me.last_name ?? ''}`.trim()
-    : 'Adaeze Okafor';
+    : 'Waydrop User';
   const tripsCount = me ? (me.trips_count ?? 0) : 0;
   const userRating = me?.rating && tripsCount > 0 ? Number(me.rating).toFixed(1) : null;
-  const userPhone = me?.phone ?? '0803 123 4567';
+  const userPhone = me?.phone ?? '';
 
   // Real backend wallet info
   const virtualBank = wallet?.virtual_bank_name ?? 'Wema Bank';
@@ -115,7 +115,7 @@ export function MenuDrawer({
     me?.referral_code ??
     (me?.first_name
       ? `WAY-${me.first_name.toUpperCase().slice(0, 3)}-${(me.id || '4821').slice(0, 4)}`
-      : 'WAY-VIP-4821');
+      : '');
 
   const handleCopyReferral = () => {
     tap();
