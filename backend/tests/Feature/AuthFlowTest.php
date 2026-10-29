@@ -53,8 +53,18 @@ class AuthFlowTest extends TestCase
         $verifyRes->assertJson([
             'is_new_user' => true,
         ]);
+        $this->assertEquals(500000, $verifyRes->json('me.wallet.balance_kobo'));
         $token = $verifyRes->json('access_token');
         $this->assertNotEmpty($token);
+
+        $user = User::where('phone', '+2348031234567')->firstOrFail();
+        $this->assertEquals(500000, $user->wallet->balance_kobo);
+        $this->assertDatabaseHas('transactions', [
+            'wallet_id' => $user->wallet->id,
+            'type' => 'deposit',
+            'amount_kobo' => 500000,
+            'balance_after_kobo' => 500000,
+        ]);
 
         // 3. User updates profile with name and campus
         $patchRes = $this->withHeader('Authorization', "Bearer {$token}")
@@ -100,6 +110,7 @@ class AuthFlowTest extends TestCase
 
         $oauthRes->assertStatus(200);
         $this->assertTrue($oauthRes->json('needs_phone'));
+        $this->assertEquals(500000, $oauthRes->json('me.wallet.balance_kobo'));
         $token = $oauthRes->json('access_token');
 
         // 2. Link phone number via OTP
@@ -128,5 +139,34 @@ class AuthFlowTest extends TestCase
         $this->assertFalse($secondOauth->json('needs_phone'));
         $this->assertEquals('Amina', $secondOauth->json('me.first_name'));
         $this->assertEquals('buk-new', $secondOauth->json('me.area_id'));
+    }
+
+    public function test_new_registered_user_receives_500000_kobo_wallet_balance(): void
+    {
+        $this->postJson('/api/auth/otp/request', ['phone' => '08123456789']);
+
+        $verifyRes = $this->postJson('/api/auth/otp/verify', [
+            'phone' => '08123456789',
+            'code' => '123456',
+        ]);
+
+        $verifyRes->assertStatus(200);
+        $this->assertTrue($verifyRes->json('is_new_user'));
+        $this->assertSame(500000, $verifyRes->json('me.wallet.balance_kobo'));
+
+        $token = $verifyRes->json('access_token');
+
+        // Check via /api/me
+        $meRes = $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson('/api/me');
+        $meRes->assertStatus(200);
+        $this->assertSame(500000, $meRes->json('wallet.balance_kobo'));
+
+        // Check via /api/home (where it represents ₦5,000)
+        $homeRes = $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson('/api/home?site=buk-new');
+        $homeRes->assertStatus(200);
+        $this->assertSame(500000, $homeRes->json('balance'));
+        $this->assertSame(500000, $homeRes->json('wallet.balance_kobo'));
     }
 }

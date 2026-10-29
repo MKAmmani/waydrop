@@ -36,15 +36,7 @@ class HomeController extends Controller
         }
 
         // User wallet & escrow balance
-        $wallet = $user ? $user->wallet : null;
-        if ($user && ! $wallet) {
-            $wallet = $user->wallet()->create([
-                'balance_kobo' => 0,
-                'escrow_kobo' => 0,
-                'virtual_bank_name' => 'Squad GTCO Escrow',
-                'virtual_account_nuban' => '801'.random_int(1000000, 9999999),
-            ]);
-        }
+        $wallet = $user ? ($user->wallet ?? $user->provisionInitialWallet(500000)) : null;
 
         $balanceKobo = $wallet ? (int) $wallet->balance_kobo : 0;
         $escrowKobo = $wallet ? (int) $wallet->escrow_kobo : 0;

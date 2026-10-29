@@ -222,16 +222,8 @@ class AuthController extends Controller
                 'phone_verified_at' => now(),
             ]);
 
-            // Create initial wallet
-            Wallet::firstOrCreate(
-                ['user_id' => $user->id],
-                [
-                    'balance_kobo' => 0,
-                    'escrow_kobo' => 0,
-                    'virtual_bank_name' => 'Squad GTCO Escrow',
-                    'virtual_account_nuban' => '801'.random_int(1000000, 9999999),
-                ]
-            );
+            // Create initial wallet with 500,000 kobo (₦5,000)
+            $user->provisionInitialWallet(500000);
         } else {
             // Update phone verified timestamp if needed
             if (! $user->phone_verified_at) {
@@ -241,6 +233,8 @@ class AuthController extends Controller
 
         // If user already has first_name and campus area setup, they are a returning user
         $isNewUser = empty($user->first_name) || empty($user->area_id);
+
+        $wallet = $user->wallet ?? $user->provisionInitialWallet(500000);
 
         // Issue Sanctum Personal Access Tokens with 4-hour expiration
         $accessToken = $user->createToken('mobile_access', ['*'], now()->addHours(4))->plainTextToken;
@@ -260,6 +254,12 @@ class AuthController extends Controller
                 'photo_url' => $user->photo_url,
                 'area_id' => $user->area_id,
                 'runner_status' => $user->runner_status ?? 'unverified',
+                'wallet' => [
+                    'balance_kobo' => (int) $wallet->balance_kobo,
+                    'escrow_kobo' => (int) $wallet->escrow_kobo,
+                    'virtual_bank_name' => $wallet->virtual_bank_name ?? 'Squad GTCO Escrow',
+                    'virtual_account_nuban' => $wallet->virtual_account_nuban ?? '8010000000',
+                ],
             ],
         ]);
     }
@@ -327,16 +327,10 @@ class AuthController extends Controller
                 'email_verified_at' => $email ? now() : null,
             ]);
 
-            Wallet::firstOrCreate(
-                ['user_id' => $user->id],
-                [
-                    'balance_kobo' => 0,
-                    'escrow_kobo' => 0,
-                    'virtual_bank_name' => 'Squad GTCO Escrow',
-                    'virtual_account_nuban' => '801'.random_int(1000000, 9999999),
-                ]
-            );
+            $user->provisionInitialWallet(500000);
         }
+
+        $wallet = $user->wallet ?? $user->provisionInitialWallet(500000);
 
         $accessToken = $user->createToken('mobile_access', ['*'], now()->addHours(4))->plainTextToken;
         $refreshToken = $user->createToken('mobile_refresh', ['*'], now()->addDays(30))->plainTextToken;
@@ -355,6 +349,12 @@ class AuthController extends Controller
                 'photo_url' => $user->photo_url,
                 'area_id' => $user->area_id,
                 'runner_status' => $user->runner_status ?? 'unverified',
+                'wallet' => [
+                    'balance_kobo' => (int) $wallet->balance_kobo,
+                    'escrow_kobo' => (int) $wallet->escrow_kobo,
+                    'virtual_bank_name' => $wallet->virtual_bank_name ?? 'Squad GTCO Escrow',
+                    'virtual_account_nuban' => $wallet->virtual_account_nuban ?? '8010000000',
+                ],
             ],
         ]);
     }

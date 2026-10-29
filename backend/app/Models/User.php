@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable implements FilamentUser
@@ -111,6 +113,46 @@ class User extends Authenticatable implements FilamentUser
     public function wallet(): HasOne
     {
         return $this->hasOne(Wallet::class);
+    }
+
+    /**
+     * Provision the initial wallet for a user with the welcome bonus (default: 500,000 kobo / ₦5,000).
+     */
+    public function provisionInitialWallet(?int $initialBalanceKobo = null): Wallet
+    {
+        $amountKobo = $initialBalanceKobo ?? (int) (PlatformRule::get('welcome_bonus_kobo', 500000) ?? 500000);
+
+        return DB::transaction(function () use ($amountKobo): Wallet {
+            $wallet = Wallet::firstOrCreate(
+                ['user_id' => $this->id],
+                [
+                    'balance_kobo' => $amountKobo,
+                    'escrow_kobo' => 0,
+                    'virtual_bank_name' => 'Squad GTCO Escrow',
+                    'virtual_account_nuban' => '801'.random_int(1000000, 9999999),
+                ]
+            );
+
+            if ($wallet->wasRecentlyCreated && $amountKobo > 0) {
+                Transaction::create([
+                    'wallet_id' => $wallet->id,
+                    'type' => 'deposit',
+                    'amount_kobo' => $amountKobo,
+                    'balance_before_kobo' => 0,
+                    'balance_after_kobo' => $wallet->balance_kobo,
+                    'reference' => 'WD_WELCOME_'.strtoupper(Str::random(10)),
+                    'status' => 'success',
+                    'metadata' => [
+                        'description' => 'Welcome bonus credit',
+                        'channel' => 'system_bonus',
+                    ],
+                ]);
+            }
+
+            $this->setRelation('wallet', $wallet);
+
+            return $wallet;
+        });
     }
 
     /**

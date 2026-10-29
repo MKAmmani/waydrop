@@ -77,6 +77,7 @@ class CampusDatabaseSeeder extends Seeder
             ['key' => 'cash_cap_kobo', 'value' => '300000', 'group' => 'pricing', 'title' => 'Cash Purchase Cap (₦)', 'description' => 'Maximum cash value a runner can front for buy-for-me errands'],
             ['key' => 'kyc_auto_confidence_threshold', 'value' => '85', 'group' => 'kyc', 'title' => 'Smile ID Auto-Approval Threshold (%)', 'description' => 'Facial match percentage required for automated KYC green-flagging'],
             ['key' => 'landmark_bounty_kobo', 'value' => '5000', 'group' => 'pricing', 'title' => 'Student Landmark Bounty (₦50)', 'description' => 'Automatic wallet credit awarded to student when a suggested place is verified'],
+            ['key' => 'welcome_bonus_kobo', 'value' => '500000', 'group' => 'pricing', 'title' => 'New User Welcome Bonus (₦5,000)', 'description' => 'Automatic wallet credit awarded to newly registered users'],
         ];
 
         foreach ($rules as $r) {

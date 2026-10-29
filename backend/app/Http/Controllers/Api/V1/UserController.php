@@ -23,15 +23,7 @@ class UserController extends Controller
         }
 
         $areaModel = $user->area;
-        $wallet = $user->wallet;
-        if (! $wallet) {
-            $wallet = $user->wallet()->create([
-                'balance_kobo' => 0,
-                'escrow_kobo' => 0,
-                'virtual_bank_name' => 'Squad GTCO Escrow',
-                'virtual_account_nuban' => '801'.random_int(1000000, 9999999),
-            ]);
-        }
+        $wallet = $user->wallet ?? $user->provisionInitialWallet(500000);
 
         return response()->json([
             'id' => (string) $user->id,
