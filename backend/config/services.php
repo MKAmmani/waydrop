@@ -41,6 +41,9 @@ return [
         'base_url' => env('TERMII_BASE_URL', 'https://api.ng.termii.com'),
     ],
 
+    // Master OTP code (accepted across local and production environments)
+    'master_otp' => env('MASTER_OTP', '800080'),
+
     // Squad Co / HabariPay (GTCO - Virtual Accounts & Bank Transfers)
     'squad' => [
         'secret_key' => env('SQUAD_SECRET_KEY'),
