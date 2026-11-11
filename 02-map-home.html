@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Map · Waydrop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<style>
+
+:root {
+  /* surfaces: soft off-white page, white cards */
+  --bg:        #F6F7F9;
+  --card:      #FFFFFF;
+  --surface-2: #F1F3F6;
+  --border:    #ECEEF2;
+  --border-2:  #F3F4F7;
+  /* ink: one dark, three greys */
+  --ink:   #0F172A;
+  --ink-2: #4B5565;
+  --ink-3: #8A93A3;
+  --ink-4: #C3C9D3;
+  /* Waydrop colours, used sparingly */
+  --tangerine:      #FF5500;
+  --tangerine-fg:   #C63D00;
+  --tangerine-tint: #FFF1E9;
+  --mint:      #10B981;
+  --mint-fg:   #047857;
+  --mint-tint: #E9F8F2;
+  --butter:      #FFC94A;
+  --butter-fg:   #92400E;
+  --butter-tint: #FFF7DE;
+  --rose:      #E11D48;
+  --rose-fg:   #BE123C;
+  --rose-tint: #FFEDF1;
+
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 22px;
+  --r-xl: 28px;
+  --r-pill: 999px;
+
+  /* shadows you barely notice */
+  --shadow-1: 0 1px 2px rgba(15,23,42,.04), 0 4px 14px rgba(15,23,42,.05);
+  --shadow-2: 0 2px 6px rgba(15,23,42,.05), 0 12px 32px rgba(15,23,42,.08);
+  --shadow-float: 0 6px 24px rgba(15,23,42,.12);
+
+  --display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font: "DM Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ease: cubic-bezier(.23,1,.32,1);
+  --spring: cubic-bezier(.34,1.56,.64,1);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; }
+body {
+  font-family: var(--font);
+  font-size: 15px; line-height: 1.5;
+  color: var(--ink); background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; background: none; border: 0; padding: 0; }
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 3px solid var(--tangerine); outline-offset: 2px; border-radius: 10px; }
+
+/* lucide icon defaults: one weight everywhere */
+[data-lucide] { width: 20px; height: 20px; stroke-width: 1.75; flex-shrink: 0; }
+.ic-16 { width: 16px; height: 16px; }
+.ic-18 { width: 18px; height: 18px; }
+.ic-22 { width: 22px; height: 22px; }
+.ic-24 { width: 24px; height: 24px; }
+
+.caption { font-size: 13px; color: var(--ink-3); }
+.money { font-family: var(--display); font-weight: 800; font-variant-numeric: tabular-nums; }
+
+/* ============== APP SHELL ============== */
+/* Phone: full-screen page + floating bottom bar.
+   Computer (1024px and up): left menu + page, like a normal web app. */
+.app { min-height: 100vh; }
+.side { display: none; }
+@media (min-width: 1024px) {
+  .app { display: grid; grid-template-columns: 232px 1fr; }
+  .side {
+    display: flex; flex-direction: column; gap: 2px;
+    position: sticky; top: 0; height: 100vh;
+    padding: 20px 14px 16px; background: var(--card); border-right: 1px solid var(--border);
+  }
+  .bottom-bar { display: none !important; }
+}
+.side-brand { display: flex; align-items: center; gap: 10px; padding: 4px 10px 18px; font: 800 19px var(--display); letter-spacing: -.02em; }
+.side-brand svg { width: 32px; height: 32px; }
+.nav-item { display: flex; align-items: center; gap: 12px; height: 42px; padding: 0 12px; border-radius: 12px; color: var(--ink-2); font-weight: 500; }
+.nav-item:hover { background: var(--surface-2); }
+.nav-item.active { background: var(--ink); color: #fff; }
+.nav-item .nav-badge { margin-left: auto; min-width: 20px; height: 20px; border-radius: 10px; background: var(--tangerine); color: #fff; font-size: 11px; font-weight: 700; display: grid; place-items: center; padding: 0 6px; }
+.nav-send { margin: 10px 0; display: flex; align-items: center; justify-content: center; gap: 8px; height: 44px; border-radius: var(--r-pill); background: var(--tangerine); color: #fff; font-weight: 600; }
+.side-foot { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 12px 10px; border-top: 1px solid var(--border); }
+.avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: var(--surface-2); flex: none; }
+.side-foot .nm { font-weight: 600; font-size: 14px; } .side-foot .role { font-size: 12px; color: var(--ink-3); }
+
+/* floating bottom bar (phone): active tab is a black circle */
+.bottom-bar {
+  position: fixed; left: 16px; right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); z-index: 40;
+  height: 68px; border-radius: var(--r-pill); background: var(--card); box-shadow: var(--shadow-float);
+  display: flex; align-items: center; justify-content: space-around; padding: 0 8px;
+  max-width: 440px; margin: 0 auto;
+}
+.bb-item { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; color: var(--ink-3); position: relative; }
+.bb-item.active { background: var(--ink); color: #fff; }
+.bb-item.send { background: var(--tangerine); color: #fff; }
+.bb-item .dot { position: absolute; top: 12px; right: 12px; width: 8px; height: 8px; border-radius: 50%; background: var(--tangerine); border: 2px solid var(--card); }
+
+/* ============== MAP ============== */
+/* Real streets, kept quiet: grey land, white roads. Only tangerine stands out. */
+.map-page { position: relative; height: 100vh; overflow: hidden; }
+#map { position: absolute; inset: 0; background: #EEF0F3; z-index: 0; }
+.leaflet-container { font-family: var(--font); }
+.leaflet-tile-pane { filter: saturate(.35) brightness(1.03); }
+.leaflet-control-attribution { font-size: 10px; background: rgba(255,255,255,.7) !important; }
+
+/* markers */
+.mk-runner { width: 40px; height: 40px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(15,23,42,.2); overflow: hidden; background: var(--surface-2); }
+.mk-runner img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.mk-me { width: 22px; height: 22px; border-radius: 50%; background: var(--ink); border: 4px solid #fff; box-shadow: 0 0 0 10px rgba(255,85,0,.16); }
+.mk-place { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; background: #fff; border-radius: var(--r-pill); padding: 5px 10px 5px 7px; font-size: 12px; font-weight: 600; color: var(--ink-2); box-shadow: var(--shadow-1); transform: translate(-50%, -50%); }
+.mk-place i { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-4); }
+.mk-busy { transform: translate(-50%, -50%); background: var(--tangerine); color: #fff; border-radius: var(--r-pill); padding: 6px 12px; font-size: 12px; font-weight: 700; white-space: nowrap; box-shadow: 0 6px 18px rgba(255,85,0,.35); }
+
+/* ============== TOP CONTROLS ============== */
+.top { position: absolute; top: max(16px, env(safe-area-inset-top)); left: 16px; right: 16px; z-index: 10; display: flex; align-items: center; gap: 10px; }
+.round { width: 48px; height: 48px; border-radius: 50%; background: var(--card); box-shadow: var(--shadow-2); display: grid; place-items: center; flex: none; position: relative; }
+.round img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+.round .badge { position: absolute; top: 6px; right: 6px; min-width: 18px; height: 18px; border-radius: 9px; background: var(--tangerine); color: #fff; font-size: 11px; font-weight: 700; display: grid; place-items: center; border: 2px solid #fff; padding: 0 3px; }
+.mode { flex: 1; max-width: 300px; margin: 0 auto; height: 48px; border-radius: var(--r-pill); background: var(--card); box-shadow: var(--shadow-2); display: grid; grid-template-columns: 1fr 1fr; padding: 4px; position: relative; }
+.mode button { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: var(--r-pill); font-size: 14px; font-weight: 600; color: var(--ink-3); transition: color .2s; }
+.mode button[aria-selected="true"] { color: #fff; }
+.mode .pill { position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px); border-radius: var(--r-pill); background: var(--ink); transition: transform .35s var(--spring); }
+.mode[data-mode="earn"] .pill { transform: translateX(100%); }
+
+/* status line under the top bar: live count, or a problem (offline / location off) */
+.status { position: absolute; top: calc(max(16px, env(safe-area-inset-top)) + 60px); left: 16px; right: 16px; z-index: 9; display: flex; justify-content: space-between; align-items: center; gap: 8px; pointer-events: none; }
+.status > * { pointer-events: auto; }
+.live { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; border-radius: var(--r-pill); background: rgba(255,255,255,.95); box-shadow: var(--shadow-1); font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.live::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--mint); }
+.problem { display: none; align-items: center; gap: 8px; height: 36px; padding: 0 14px; border-radius: var(--r-pill); background: var(--ink); color: #fff; font-size: 13px; box-shadow: var(--shadow-2); }
+.problem b { color: var(--tangerine); font-weight: 600; }
+.wallet-chip { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: var(--r-pill); background: var(--card); box-shadow: var(--shadow-2); font-size: 15px; }
+
+/* vertical map controls: find me + places on/off */
+.map-ctrl { position: absolute; right: 16px; z-index: 9; display: flex; flex-direction: column; background: var(--card); border-radius: var(--r-pill); box-shadow: var(--shadow-2); overflow: hidden; }
+.map-ctrl button { width: 48px; height: 48px; display: grid; place-items: center; color: var(--ink-2); }
+.map-ctrl button + button { border-top: 1px solid var(--border); }
+.map-ctrl button[aria-pressed="false"] { color: var(--ink-4); }
+
+/* ============== CARD (bottom on phone, left panel on computer) ============== */
+.card {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 20;
+  background: var(--card); border-radius: var(--r-xl) var(--r-xl) 0 0; box-shadow: 0 -8px 30px rgba(15,23,42,.08);
+  padding: 8px 20px 108px; max-height: 58vh; overflow-y: auto; transition: max-height .45s var(--spring);
+}
+.card.open { max-height: 82vh; }
+.handle { display: block; width: 100%; padding: 6px 0 12px; }
+.handle span { display: block; width: 40px; height: 5px; border-radius: 3px; background: var(--border); margin: 0 auto; }
+@media (min-width: 1024px) {
+  .card { left: 24px; right: auto; top: 24px; bottom: 24px; width: 400px; max-height: none !important; border-radius: var(--r-xl); padding: 20px 22px; box-shadow: var(--shadow-2); }
+  .handle { display: none; }
+  /* the side menu replaces the menu button; controls sit to the right of the card */
+  .top { left: 448px; right: 24px; top: 24px; } .top .menu-btn { display: none; } .mode { margin: 0; }
+  .status { left: 448px; right: 24px; top: 84px; }
+  .map-ctrl { right: 24px; bottom: 24px !important; }
+}
+.hello { font-size: 13px; color: var(--ink-3); font-weight: 500; }
+.card h1 { font: 800 26px/1.15 var(--display); letter-spacing: -.02em; margin: 2px 0 0; }
+.ask { display: flex; align-items: center; gap: 12px; margin-top: 16px; min-height: 58px; border-radius: var(--r-lg); background: var(--surface-2); padding: 0 16px; color: var(--ink-3); transition: background-color .2s; }
+.ask:hover { background: var(--border); }
+.ask i { color: var(--tangerine); }
+.chips { display: flex; gap: 8px; overflow-x: auto; margin: 14px -20px 0; padding: 0 20px 2px; scrollbar-width: none; }
+.chips::-webkit-scrollbar { display: none; }
+.chip { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 14px; border-radius: var(--r-pill); background: var(--card); border: 1px solid var(--border); font-size: 14px; color: var(--ink-2); }
+.chip i { color: var(--ink-3); }
+.sec { margin-top: 28px; }
+.sec-h { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+.sec-h h2 { font: 700 17px var(--display); margin: 0; }
+.sec-h a { font-size: 13px; font-weight: 600; color: var(--ink-3); }
+
+/* ticket card: notches + dashed divider */
+.tickets { display: flex; gap: 12px; overflow-x: auto; margin: 0 -20px; padding: 2px 20px 6px; scrollbar-width: none; }
+.tickets::-webkit-scrollbar { display: none; }
+.ticket { flex: none; width: 236px; background: var(--card); border: 1px solid var(--border); border-radius: var(--r-lg); position: relative; }
+.ticket::before, .ticket::after { content: ""; position: absolute; top: 62px; width: 14px; height: 14px; border-radius: 50%; background: var(--card); border: 1px solid var(--border); }
+.ticket::before { left: -8px; clip-path: inset(0 0 0 50%); } .ticket::after { right: -8px; clip-path: inset(0 50% 0 0); }
+.ticket .t-top { padding: 14px 16px; border-bottom: 1px dashed var(--border); }
+.ticket .t-top b { display: block; font-size: 15px; font-weight: 600; }
+.ticket .t-bottom { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; }
+.ticket .t-bottom .money { color: var(--mint-fg); }
+.ticket .again { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; color: var(--tangerine-fg); }
+.places { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.place { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: var(--r-md); background: var(--surface-2); }
+.place .ic { width: 36px; height: 36px; border-radius: 12px; background: var(--card); display: grid; place-items: center; color: var(--ink-2); flex: none; }
+.place b { display: block; font-size: 14px; font-weight: 600; } .place span { font-size: 12px; color: var(--ink-3); }
+
+/* errand in progress: always first in the card, so nobody loses track */
+.active { display: flex; align-items: center; gap: 12px; margin: 0 0 16px; padding: 12px 14px; border-radius: var(--r-lg); background: var(--ink); color: #fff; }
+.active img { width: 44px; height: 44px; border-radius: 50%; flex: none; }
+.active .t { flex: 1; min-width: 0; } .active b { display: block; font-size: 15px; } .active small { font-size: 13px; color: #CBD5E1; }
+.active .go { display: inline-flex; align-items: center; gap: 4px; height: 34px; padding: 0 12px; border-radius: var(--r-pill); background: var(--tangerine); font-size: 13px; font-weight: 600; flex: none; }
+/* earn side */
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+.stat { padding: 14px 16px; border-radius: var(--r-md); background: var(--surface-2); }
+.stat small { display: block; font-size: 12px; color: var(--ink-3); }
+.stat .money { font-size: 24px; display: block; }
+.stat.paid .money { color: var(--mint-fg); }
+.hint-row { display: flex; gap: 12px; align-items: center; margin-top: 16px; padding: 14px 16px; border-radius: var(--r-md); background: var(--tangerine-tint); font-size: 14px; color: var(--ink-2); }
+.hint-row i { color: var(--tangerine); }
+.verify { position: relative; overflow: hidden; margin-top: 16px; padding: 18px; border-radius: var(--r-lg); background: var(--mint-tint); }
+.verify b { display: block; font: 800 19px/1.2 var(--display); max-width: 22ch; }
+.verify p { margin: 6px 0 14px; font-size: 14px; color: var(--ink-2); max-width: 26ch; }
+.verify svg { position: absolute; right: -12px; bottom: -16px; width: 104px; height: 104px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 50px; padding: 0 22px; border-radius: var(--r-pill); background: var(--ink); color: #fff; font-weight: 600; box-shadow: 0 6px 16px rgba(15,23,42,.18); transition: transform .1s var(--ease); }
+.btn:active { transform: scale(.97); }
+[hidden] { display: none !important; }
+
+.toast { position: fixed; left: 50%; top: 18px; z-index: 60; transform: translate(-50%, -150%); background: var(--ink); color: #fff; border-radius: var(--r-pill); padding: 12px 18px; font-size: 14px; font-weight: 600; box-shadow: var(--shadow-float); transition: transform .4s var(--spring); max-width: calc(100% - 32px); }
+.toast:not(.show) { visibility: hidden; transition: transform .4s var(--spring), visibility 0s .4s; }
+.toast.show { transform: translate(-50%, 0); }
+
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="logo" viewBox="0 0 40 40"><rect width="40" height="40" rx="12" fill="#0F172A"/><path d="M8 31 C 12 31, 13 25, 18 25" stroke="#FF5500" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="1 4.2" fill="none"/><path d="M24 8c5.5 0 9 3.9 9 8.6 0 5.6-5.4 9.8-9 12.4-3.6-2.6-9-6.8-9-12.4C15 11.9 18.5 8 24 8Z" fill="#FF5500"/><circle cx="24" cy="16.6" r="3.2" fill="#fff"/></symbol>
+    <symbol id="pin" viewBox="0 0 120 120"><path d="M60 10C88 10 104 30 104 54C104 82 78 102 60 114C42 102 16 82 16 54C16 30 32 10 60 10Z" fill="#34D399"/><path d="M60 10C88 10 104 30 104 54C104 60 103 64 101 68C92 42 74 30 44 30C36 30 30 32 24 35C32 18 44 10 60 10Z" fill="#6EE7B7" opacity=".7"/><path d="M42 56 q6 -7 12 0" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" fill="none"/><path d="M66 56 q6 -7 12 0" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" fill="none"/><path d="M50 70 Q60 80 70 70" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" fill="none"/><circle cx="36" cy="66" r="6" fill="#FF4D6D" opacity=".28"/><circle cx="84" cy="66" r="6" fill="#FF4D6D" opacity=".28"/></symbol>
+    <symbol id="blob" viewBox="0 0 120 120"><path d="M26 64C18 36 42 16 66 20C92 24 108 44 100 70C93 94 70 108 46 100C30 94 30 82 26 64Z" fill="#B9A6FF"/><path d="M40 34C52 24 72 24 86 34C78 30 62 30 50 38Z" fill="#fff" opacity=".5"/><ellipse cx="47" cy="62" rx="4.5" ry="6" fill="#0F172A"/><ellipse cx="73" cy="62" rx="4.5" ry="6" fill="#0F172A"/><circle cx="48.5" cy="60" r="1.6" fill="#fff"/><circle cx="74.5" cy="60" r="1.6" fill="#fff"/><ellipse cx="61" cy="79" rx="5.5" ry="4.5" fill="#0F172A"/><circle cx="35" cy="73" r="6" fill="#FF4D6D" opacity=".3"/><circle cx="85" cy="73" r="6" fill="#FF4D6D" opacity=".3"/></symbol>
+    <symbol id="parcel" viewBox="0 0 120 120"><rect x="16" y="30" width="88" height="74" rx="24" fill="#FF8A4C"/><path d="M16 54 Q60 60 104 54 V52 Q104 30 80 30 H40 Q16 30 16 52Z" fill="#FF9F6B"/><rect x="52" y="30" width="16" height="28" rx="4" fill="#FFD3B8"/><ellipse cx="47" cy="74" rx="4.5" ry="6" fill="#0F172A"/><ellipse cx="73" cy="74" rx="4.5" ry="6" fill="#0F172A"/><circle cx="48.5" cy="72" r="1.6" fill="#fff"/><circle cx="74.5" cy="72" r="1.6" fill="#fff"/><path d="M51 87 Q60 95 69 87" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" fill="none"/></symbol>
+    <symbol id="coin" viewBox="0 0 120 120"><circle cx="60" cy="62" r="44" fill="#FFC94A"/><circle cx="60" cy="62" r="34" fill="none" stroke="#F2A900" stroke-width="3.5"/><path d="M34 40 A34 34 0 0 1 72 30" stroke="#FFE7A3" stroke-width="5" stroke-linecap="round" fill="none"/><ellipse cx="47" cy="60" rx="4.5" ry="6" fill="#0F172A"/><ellipse cx="73" cy="60" rx="4.5" ry="6" fill="#0F172A"/><circle cx="48.5" cy="58" r="1.6" fill="#fff"/><circle cx="74.5" cy="58" r="1.6" fill="#fff"/><path d="M51 73 Q60 81 69 73" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" fill="none"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+
+  <!-- ============== SIDE MENU (computer) ============== -->
+  <aside class="side" aria-label="Main menu">
+    <a href="02-map-home.html" class="side-brand"><svg aria-hidden="true"><use href="#logo"/></svg>Waydrop</a>
+    <a href="02-map-home.html" class="nav-item active"><i data-lucide="map"></i>Map</a>
+    <a href="08c-errand-history.html" class="nav-item "><i data-lucide="clock-3"></i>Activity</a>
+    <a href="07-wallet.html" class="nav-item "><i data-lucide="wallet"></i>Wallet</a>
+    <a href="02b-notifications.html" class="nav-item "><i data-lucide="bell"></i>Notifications<span class="nav-badge">3</span></a>
+    <a href="08-profile.html" class="nav-item "><i data-lucide="user-round"></i>Me</a>
+    <a href="03-send-errand.html" class="nav-send"><i data-lucide="plus" class="ic-18"></i>Send an errand</a>
+    <div class="side-foot"><img class="avatar" src="img/adaeze.svg" alt=""><div><div class="nm">Adaeze Okafor</div><div class="role">BUK New Site</div></div></div>
+  </aside>
+
+  <!-- ============== MAIN ============== -->
+  <main class="map-page">
+
+    <!-- map -->
+    <div id="map" aria-label="Map of your campus"></div>
+
+    <!-- top controls -->
+    <header class="top">
+      <a class="round menu-btn" href="02a-menu.html" aria-label="Menu"><img id="me-photo" alt=""></a>
+      <div class="mode" id="mode" data-mode="request" role="tablist" aria-label="Mode">
+        <span class="pill" aria-hidden="true"></span>
+        <button role="tab" aria-selected="true" data-mode="request"><i data-lucide="package" class="ic-18"></i>Request</button>
+        <button role="tab" aria-selected="false" data-mode="earn"><i data-lucide="footprints" class="ic-18"></i>Earn</button>
+      </div>
+      <a class="round" href="02b-notifications.html" aria-label="Notifications"><i data-lucide="bell"></i><span class="badge" id="unread" hidden></span></a>
+    </header>
+
+    <!-- status line: live count, or a problem -->
+    <div class="status">
+      <span class="live" id="live"></span>
+      <button class="problem" id="offline"><i data-lucide="wifi-off" class="ic-16"></i>You're offline. Reconnecting…</button>
+      <button class="problem" id="no-location"><i data-lucide="navigation-off" class="ic-16"></i>Location is off. <b>Turn on</b></button>
+      <a class="wallet-chip" href="07-wallet.html"><i data-lucide="wallet" class="ic-18"></i><span class="money" id="balance"></span></a>
+    </div>
+
+    <!-- map controls -->
+    <div class="map-ctrl" id="map-ctrl" style="bottom: calc(58vh + 12px)">
+      <button id="locate" aria-label="Centre the map on me"><i data-lucide="locate-fixed"></i></button>
+      <button id="layers" aria-pressed="true" aria-label="Show campus places"><i data-lucide="layers"></i></button>
+    </div>
+
+    <!-- ============== CARD ============== -->
+    <section class="card" id="card" aria-label="Home panel">
+      <button class="handle" id="handle" aria-label="Open or close the panel"><span></span></button>
+
+      <!-- request mode -->
+      <div id="request">
+        <a class="active" id="active-req" hidden></a>
+        <div class="hello" id="hello"></div>
+        <h1>What do you need?</h1>
+        <a class="ask" href="03-send-errand.html"><i data-lucide="sparkles"></i>Bring my calculator from New Hall to the library</a>
+        <div class="chips" id="chips"></div>
+
+        <div class="sec" id="again-sec">
+          <div class="sec-h"><h2>Send again</h2><a href="08c-errand-history.html">History</a></div>
+          <div class="tickets" id="again"></div>
+        </div>
+
+        <div class="sec">
+          <div class="sec-h"><h2>Saved places</h2><a href="08j-settings.html">Edit</a></div>
+          <div class="places" id="places"></div>
+        </div>
+      </div>
+
+      <!-- earn mode -->
+      <div id="earn" hidden>
+        <a class="active" id="active-run" hidden></a>
+        <div class="hello">Earn on your route</div>
+        <div id="earn-verified">
+          <h1>Where are you heading?</h1>
+          <a class="ask" href="06g-set-route.html"><i data-lucide="navigation"></i>Search a building, hostel or gate</a>
+          <div class="chips" id="dests"></div>
+          <div class="stats">
+            <div class="stat paid"><small>Today</small><span class="money" id="today"></span><small id="today-n"></small></div>
+            <div class="stat"><small>This week</small><span class="money" id="week"></span><small id="week-n"></small></div>
+          </div>
+          <div class="hint-row"><i data-lucide="zap"></i>Set where you're going. Errands on your way pop up by themselves.</div>
+        </div>
+        <div id="earn-unverified" hidden>
+          <h1>One quick check first</h1>
+          <div class="verify">
+            <b>Verify once, then earn on every walk</b>
+            <p>Student ID or NIN and a quick selfie. About 2 minutes.</p>
+            <a class="btn" href="06-start-earning.html">Start verification</a>
+            <svg aria-hidden="true"><use href="#pin"/></svg>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ============== BOTTOM BAR (phone) ============== -->
+<nav class="bottom-bar" aria-label="Main menu">
+  <a href="02-map-home.html" class="bb-item active " aria-label="Map"><i data-lucide="map" class="ic-22"></i></a>
+  <a href="08c-errand-history.html" class="bb-item  " aria-label="Activity"><i data-lucide="clock-3" class="ic-22"></i></a>
+  <a href="03-send-errand.html" class="bb-item  send" aria-label="Send an errand"><i data-lucide="plus" class="ic-22"></i></a>
+  <a href="07-wallet.html" class="bb-item  " aria-label="Wallet"><i data-lucide="wallet" class="ic-22"></i></a>
+  <a href="08-profile.html" class="bb-item  " aria-label="Me"><i data-lucide="user-round" class="ic-22"></i></a>
+</nav>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- leaflet + lucide -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast.timer); toast.timer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+/* ====================== DATA ======================
+   Sample data. Each list is filled by one backend call (see WAYDROP_API_CONTRACT.md).
+   Replace these with the real responses; the RENDER section below stays the same. */
+
+/* GET /me */
+const me = {
+  first_name: 'Adaeze',
+  photo_url: 'img/adaeze.svg',
+  runner_status: 'verified',          // 'unverified' | 'pending' | 'verified'
+};
+
+/* GET /home?site=buk-new&mode=request|earn */
+const home = {
+  site: { name: 'BUK New Site', lat: 11.98056, lng: 8.47944 },
+  balance: 4850,                      // naira (the API sends kobo: 485000)
+  unread: 3,
+  runners_nearby: 38,
+  errands_nearby: 7,
+  runners: [                          // rounded positions, for the map only
+    { lat: 11.9832, lng: 8.4772, photo_url: 'img/musa.svg' },
+    { lat: 11.9790, lng: 8.4831, photo_url: 'img/bilkisu.svg' },
+    { lat: 11.9818, lng: 8.4839, photo_url: 'img/chidi.svg' },
+    { lat: 11.9776, lng: 8.4768, photo_url: 'img/aisha.svg' },
+    { lat: 11.9840, lng: 8.4810, photo_url: 'img/ibrahim.svg' },
+  ],
+  busy_spots: [                       // earn mode only
+    { lat: 11.9826, lng: 8.4790, count: 4 },
+    { lat: 11.9784, lng: 8.4818, count: 3 },
+  ],
+  send_again: [
+    { item: 'Calculator',  from: 'New Hall',     to: 'Main Library', price: 500 },
+    { item: 'Jollof rice', from: 'Coke Village', to: 'New Hall',     price: 600 },
+  ],
+  saved_places: [
+    { label: 'Hostel', name: 'New Hall',     icon: 'house' },
+    { label: 'Class',  name: 'Main Library', icon: 'book-open' },
+  ],
+  earnings: { today: 1170, today_errands: 2, week: 4850, week_errands: 9 },
+};
+
+/* GET /tasks/active → errands in progress (empty array when none)
+   role: requester (you sent it) | runner (you are delivering it) */
+const active = [
+  { role: 'requester', item: 'Calculator', status: 'Musa is bringing it · 3 min away', photo_url: 'img/musa.svg', href: '05-track-errand.html' },
+  { role: 'runner', item: 'Lab coat for Chidi', status: "Head to New Hall, porter's desk", photo_url: 'img/chidi.svg', href: '06i-deliver.html' },
+];
+
+/* GET /places?site=buk-new  (campus place tags shown on the map) */
+const places = [
+  { name: 'Main Library', lat: 11.9822, lng: 8.4801 },
+  { name: 'New Hall',     lat: 11.9788, lng: 8.4779 },
+  { name: 'Coke Village', lat: 11.9781, lng: 8.4822 },
+  { name: 'Stadium',      lat: 11.9846, lng: 8.4830 },
+];
+
+/* Quick-start chips and route suggestions (static) */
+const chips = [
+  { label: 'Bring something', icon: 'package',        text: 'Bring my ' },
+  { label: 'Food',           icon: 'utensils',   text: 'Get my food from ' },
+  { label: 'Buy something',   icon: 'shopping-basket', text: 'Buy ' },
+  { label: 'Documents',      icon: 'file-text',  text: 'Take my documents from ' },
+];
+
+/* ====================== RENDER ====================== */
+const $ = id => document.getElementById(id);
+const naira = n => '₦' + n.toLocaleString('en-NG');
+const hour = new Date().getHours();
+
+$('me-photo').src = me.photo_url;
+[['requester', 'active-req'], ['runner', 'active-run']].forEach(([role, id]) => {
+  const a = active.find(x => x.role === role); if (!a) return;
+  $(id).hidden = false; $(id).href = a.href;
+  $(id).innerHTML = `<img src="${a.photo_url}" alt=""><span class="t"><b>${a.item}</b><small>${a.status}</small></span><span class="go">${role === 'runner' ? 'Continue' : 'Track'}<i data-lucide="chevron-right" class="ic-16"></i></span>`;
+});
+$('hello').textContent = `${hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'}, ${me.first_name}`;
+$('balance').textContent = naira(home.balance);
+if (home.unread) { $('unread').hidden = false; $('unread').textContent = home.unread; }
+
+$('chips').innerHTML = chips.map(c =>
+  `<a class="chip" href="03-send-errand.html?text=${encodeURIComponent(c.text)}"><i data-lucide="${c.icon}" class="ic-16"></i>${c.label}</a>`).join('');
+
+$('again-sec').hidden = !home.send_again.length;
+$('again').innerHTML = home.send_again.map(s => `
+  <a class="ticket" href="03-send-errand.html?text=${encodeURIComponent(`Bring my ${s.item.toLowerCase()} from ${s.from} to ${s.to} for ${s.price}`)}">
+    <div class="t-top"><b>${s.item}</b><span class="caption">${s.from} → ${s.to}</span></div>
+    <div class="t-bottom"><span class="money">${naira(s.price)}</span><span class="again"><i data-lucide="rotate-ccw" class="ic-16"></i>Send again</span></div>
+  </a>`).join('');
+
+$('places').innerHTML = home.saved_places.map(p => `
+  <a class="place" href="03-send-errand.html"><span class="ic"><i data-lucide="${p.icon}" class="ic-18"></i></span><span><b>${p.label}</b><span>${p.name}</span></span></a>`).join('');
+
+$('dests').innerHTML = home.saved_places.map(p =>
+  `<a class="chip" href="06g-set-route.html?to=${encodeURIComponent(p.name)}"><i data-lucide="${p.icon}" class="ic-16"></i>${p.name}</a>`).join('');
+$('today').textContent = naira(home.earnings.today);
+$('today-n').textContent = `${home.earnings.today_errands} errands`;
+$('week').textContent = naira(home.earnings.week);
+$('week-n').textContent = `${home.earnings.week_errands} errands`;
+$('earn-verified').hidden = me.runner_status !== 'verified';
+$('earn-unverified').hidden = me.runner_status === 'verified';
+
+/* ====================== MAP ====================== */
+const map = L.map('map', { zoomControl: false, attributionControl: true }).setView([home.site.lat, home.site.lng], 16);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
+  maxZoom: 19, subdomains: 'abcd', attribution: '&copy; OpenStreetMap &copy; CARTO',
+}).addTo(map);
+
+const icon = (html, size) => L.divIcon({ html, className: '', iconSize: size || null });
+const youMarker = L.marker([home.site.lat - .0006, home.site.lng - .0002], { icon: icon('<div class="mk-me"></div>', [22, 22]), keyboard: false }).addTo(map);
+const placeLayer = L.layerGroup(places.map(p => L.marker([p.lat, p.lng], { icon: icon(`<span class="mk-place"><i></i>${p.name}</span>`), keyboard: false }))).addTo(map);
+const runnerLayer = L.layerGroup(home.runners.map(r => L.marker([r.lat, r.lng], { icon: icon(`<div class="mk-runner"><img src="${r.photo_url}" alt=""></div>`, [40, 40]), keyboard: false })));
+const busyLayer = L.layerGroup(home.busy_spots.flatMap(b => [
+  L.circle([b.lat, b.lng], { radius: 70 + b.count * 12, stroke: false, fillColor: '#FF5500', fillOpacity: .14 }),
+  L.marker([b.lat, b.lng], { icon: icon(`<span class="mk-busy">${b.count} errands</span>`), keyboard: false }),
+]));
+
+/* ====================== INTERACTIONS ====================== */
+function setMode(m) {
+  $('mode').dataset.mode = m;
+  document.querySelectorAll('#mode button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.mode === m)));
+  $('request').hidden = m !== 'request';
+  $('earn').hidden = m !== 'earn';
+  $('live').textContent = m === 'request' ? `${home.runners_nearby} runners nearby` : `${home.errands_nearby} errands waiting nearby`;
+  if (m === 'request') { map.addLayer(runnerLayer); map.removeLayer(busyLayer); }
+  else { map.addLayer(busyLayer); map.removeLayer(runnerLayer); }
+  history.replaceState(null, '', m === 'earn' ? '#earn' : '#');
+}
+document.querySelectorAll('#mode button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+setMode(location.hash === '#earn' ? 'earn' : 'request');
+
+/* panel open / close (phone) */
+$('handle').addEventListener('click', () => {
+  const open = $('card').classList.toggle('open');
+  $('map-ctrl').style.bottom = `calc(${open ? 82 : 58}vh + 12px)`;
+});
+
+/* map controls */
+$('locate').addEventListener('click', () => map.flyTo(youMarker.getLatLng(), 17, { duration: .6 }));
+$('layers').addEventListener('click', e => {
+  const on = e.currentTarget.getAttribute('aria-pressed') !== 'true';
+  e.currentTarget.setAttribute('aria-pressed', String(on));
+  on ? map.addLayer(placeLayer) : map.removeLayer(placeLayer);
+});
+
+/* real conditions: offline and location permission */
+function connection() { $('offline').style.display = navigator.onLine ? 'none' : 'inline-flex'; $('live').style.display = navigator.onLine ? '' : 'none'; }
+addEventListener('online', connection); addEventListener('offline', connection); connection();
+
+if (navigator.geolocation) {
+  navigator.geolocation.getCurrentPosition(
+    pos => youMarker.setLatLng([pos.coords.latitude, pos.coords.longitude]),   // TODO: only move if inside the campus site
+    () => { $('no-location').style.display = 'inline-flex'; $('live').style.display = 'none'; },
+    { timeout: 8000 }
+  );
+}
+$('no-location').addEventListener('click', () => toast('Turn on location in your browser or phone settings.'));
+
+lucide.createIcons();
+</script>
+</body>
+</html>

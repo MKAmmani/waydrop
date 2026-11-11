@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Your shopping errand · Waydrop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<style>
+
+:root {
+  /* surfaces: soft off-white page, white cards */
+  --bg:        #F6F7F9;
+  --card:      #FFFFFF;
+  --surface-2: #F1F3F6;
+  --border:    #ECEEF2;
+  --border-2:  #F3F4F7;
+  /* ink: one dark, three greys */
+  --ink:   #0F172A;
+  --ink-2: #4B5565;
+  --ink-3: #8A93A3;
+  --ink-4: #C3C9D3;
+  /* Waydrop colours, used sparingly */
+  --tangerine:      #FF5500;
+  --tangerine-fg:   #C63D00;
+  --tangerine-tint: #FFF1E9;
+  --mint:      #10B981;
+  --mint-fg:   #047857;
+  --mint-tint: #E9F8F2;
+  --butter:      #FFC94A;
+  --butter-fg:   #92400E;
+  --butter-tint: #FFF7DE;
+  --rose:      #E11D48;
+  --rose-fg:   #BE123C;
+  --rose-tint: #FFEDF1;
+
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 22px;
+  --r-xl: 28px;
+  --r-pill: 999px;
+
+  /* shadows you barely notice */
+  --shadow-1: 0 1px 2px rgba(15,23,42,.04), 0 4px 14px rgba(15,23,42,.05);
+  --shadow-2: 0 2px 6px rgba(15,23,42,.05), 0 12px 32px rgba(15,23,42,.08);
+  --shadow-float: 0 6px 24px rgba(15,23,42,.12);
+
+  --display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font: "DM Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ease: cubic-bezier(.23,1,.32,1);
+  --spring: cubic-bezier(.34,1.56,.64,1);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; }
+body {
+  font-family: var(--font);
+  font-size: 15px; line-height: 1.5;
+  color: var(--ink); background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; background: none; border: 0; padding: 0; }
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 3px solid var(--tangerine); outline-offset: 2px; border-radius: 10px; }
+
+/* lucide icon defaults: one weight everywhere */
+[data-lucide] { width: 20px; height: 20px; stroke-width: 1.75; flex-shrink: 0; }
+.ic-16 { width: 16px; height: 16px; }
+.ic-18 { width: 18px; height: 18px; }
+.ic-22 { width: 22px; height: 22px; }
+.ic-24 { width: 24px; height: 24px; }
+
+.caption { font-size: 13px; color: var(--ink-3); }
+.money { font-family: var(--display); font-weight: 800; font-variant-numeric: tabular-nums; }
+
+/* ============== APP SHELL ============== */
+/* Phone: full-screen page + floating bottom bar.
+   Computer (1024px and up): left menu + page, like a normal web app. */
+.app { min-height: 100vh; }
+.side { display: none; }
+@media (min-width: 1024px) {
+  .app { display: grid; grid-template-columns: 232px 1fr; }
+  .side {
+    display: flex; flex-direction: column; gap: 2px;
+    position: sticky; top: 0; height: 100vh;
+    padding: 20px 14px 16px; background: var(--card); border-right: 1px solid var(--border);
+  }
+  .bottom-bar { display: none !important; }
+}
+.side-brand { display: flex; align-items: center; gap: 10px; padding: 4px 10px 18px; font: 800 19px var(--display); letter-spacing: -.02em; }
+.side-brand svg { width: 32px; height: 32px; }
+.nav-item { display: flex; align-items: center; gap: 12px; height: 42px; padding: 0 12px; border-radius: 12px; color: var(--ink-2); font-weight: 500; }
+.nav-item:hover { background: var(--surface-2); }
+.nav-item.active { background: var(--ink); color: #fff; }
+.nav-item .nav-badge { margin-left: auto; min-width: 20px; height: 20px; border-radius: 10px; background: var(--tangerine); color: #fff; font-size: 11px; font-weight: 700; display: grid; place-items: center; padding: 0 6px; }
+.nav-send { margin: 10px 0; display: flex; align-items: center; justify-content: center; gap: 8px; height: 44px; border-radius: var(--r-pill); background: var(--tangerine); color: #fff; font-weight: 600; }
+.side-foot { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 12px 10px; border-top: 1px solid var(--border); }
+.avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: var(--surface-2); flex: none; }
+.side-foot .nm { font-weight: 600; font-size: 14px; } .side-foot .role { font-size: 12px; color: var(--ink-3); }
+
+/* floating bottom bar (phone): active tab is a black circle */
+.bottom-bar {
+  position: fixed; left: 16px; right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); z-index: 40;
+  height: 68px; border-radius: var(--r-pill); background: var(--card); box-shadow: var(--shadow-float);
+  display: flex; align-items: center; justify-content: space-around; padding: 0 8px;
+  max-width: 440px; margin: 0 auto;
+}
+.bb-item { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; color: var(--ink-3); position: relative; }
+.bb-item.active { background: var(--ink); color: #fff; }
+.bb-item.send { background: var(--tangerine); color: #fff; }
+.bb-item .dot { position: absolute; top: 12px; right: 12px; width: 8px; height: 8px; border-radius: 50%; background: var(--tangerine); border: 2px solid var(--card); }
+
+.track { position: relative; min-height: 100vh; display: flex; flex-direction: column; }
+.map-area { position: relative; height: 46vh; flex: none; }
+#map { position: absolute; inset: 0; background: #EEF0F3; }
+.leaflet-tile-pane { filter: saturate(.35) brightness(1.03); }
+.leaflet-control-attribution { font-size: 10px; }
+.mk-photo { width: 44px; height: 44px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(15,23,42,.2); overflow: hidden; }
+.mk-photo img { width: 100%; height: 100%; display: block; }
+.mk-me { width: 22px; height: 22px; border-radius: 50%; background: var(--ink); border: 4px solid #fff; box-shadow: 0 0 0 10px rgba(255,85,0,.16); }
+.mk-tag { display: inline-block; transform: translate(-50%, -150%); white-space: nowrap; background: #fff; border-radius: var(--r-pill); padding: 5px 10px; font-size: 12px; font-weight: 600; box-shadow: var(--shadow-1); }
+.float-btn { position: absolute; top: max(16px, env(safe-area-inset-top)); left: 16px; z-index: 500; width: 46px; height: 46px; border-radius: 50%; background: var(--card); box-shadow: var(--shadow-2); display: grid; place-items: center; }
+.panel { flex: 1; margin-top: -24px; position: relative; z-index: 600; background: var(--bg); border-radius: var(--r-xl) var(--r-xl) 0 0; padding: 20px 20px 32px; }
+.panel-inner { max-width: 560px; margin: 0 auto; }
+.panel h1 { font: 800 24px/1.15 var(--display); margin: 0; }
+.steps3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 14px; font-size: 12px; font-weight: 600; color: var(--ink-4); }
+.steps3 i { display: block; height: 5px; border-radius: 4px; background: var(--border); margin-bottom: 6px; }
+.steps3 .on { color: var(--ink); } .steps3 .on i { background: var(--mint); }
+.budget { margin-top: 16px; padding: 14px 16px; }
+.bar { height: 8px; border-radius: 6px; background: var(--surface-2); overflow: hidden; margin-top: 10px; } .bar i { display: block; height: 100%; background: var(--mint); }
+.receipt { display: flex; gap: 12px; align-items: center; margin-top: 12px; padding: 12px; }
+.receipt .ph { width: 56px; height: 56px; border-radius: 12px; background: linear-gradient(135deg, #D6C2A8, #B89A78); flex: none; }
+.who { display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 14px 16px; }
+.who img { width: 48px; height: 48px; border-radius: 50%; }
+.who .t { flex: 1; }
+.act { width: 44px; height: 44px; border-radius: 50%; background: var(--surface-2); display: grid; place-items: center; }
+.btn { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 54px; width: 100%; border-radius: var(--r-pill); font-weight: 600; font-size: 16px; }
+.btn-dark { background: var(--ink); color: #fff; } .btn-light { background: var(--card); box-shadow: var(--shadow-1); }
+.card { background: var(--card); border-radius: var(--r-lg); box-shadow: var(--shadow-1); }
+.caption { font-size: 13px; color: var(--ink-3); }
+/* decision sheet (price check, swap) */
+.sheet-dim { position: fixed; inset: 0; z-index: 1000; background: rgba(15,23,42,.4); display: flex; align-items: flex-end; justify-content: center; }
+.sheet { width: 100%; max-width: 480px; background: var(--card); border-radius: var(--r-xl) var(--r-xl) 0 0; padding: 22px 20px max(26px, env(safe-area-inset-bottom)); animation: up .4s var(--spring); }
+@keyframes up { from { transform: translateY(100%); } }
+.ask-card { position: relative; border-radius: var(--r-lg); box-shadow: inset 0 0 0 1px var(--border); }
+.ask-card::before, .ask-card::after { content: ""; position: absolute; top: 78px; width: 18px; height: 18px; border-radius: 50%; background: var(--card); box-shadow: inset 0 0 0 1px var(--border); }
+.ask-card::before { left: -9px; clip-path: inset(0 0 0 50%); } .ask-card::after { right: -9px; clip-path: inset(0 50% 0 0); }
+.ask-top { padding: 16px; border-bottom: 1px dashed var(--border); min-height: 86px; }
+.ask-top .k { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600; color: var(--tangerine-fg); }
+.timer { background: var(--ink); color: #fff; border-radius: var(--r-pill); padding: 4px 10px; font: 700 13px var(--font); font-variant-numeric: tabular-nums; }
+.ask-top h2 { font: 800 19px/1.2 var(--display); margin: 8px 0 0; }
+.ask-bottom { padding: 12px 16px; }
+.calc { display: flex; justify-content: space-between; padding: 5px 0; font-size: 14px; color: var(--ink-2); } .calc b { font-family: var(--display); color: var(--ink); }
+.row2 { display: flex; gap: 10px; margin-top: 10px; }
+@media (min-width: 1024px) { .track { flex-direction: row; } .map-area { height: 100vh; flex: 1; order: 2; } .panel { order: 1; width: 440px; flex: none; margin: 0; border-radius: 0; overflow-y: auto; height: 100vh; } .float-btn { display: none; } }
+[hidden] { display: none !important; }
+
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="logo" viewBox="0 0 40 40"><rect width="40" height="40" rx="12" fill="#0F172A"/><path d="M8 31 C 12 31, 13 25, 18 25" stroke="#FF5500" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="1 4.2" fill="none"/><path d="M24 8c5.5 0 9 3.9 9 8.6 0 5.6-5.4 9.8-9 12.4-3.6-2.6-9-6.8-9-12.4C15 11.9 18.5 8 24 8Z" fill="#FF5500"/><circle cx="24" cy="16.6" r="3.2" fill="#fff"/></symbol>
+    <symbol id="pin" viewBox="0 0 120 120"><path d="M60 10C88 10 104 30 104 54C104 82 78 102 60 114C42 102 16 82 16 54C16 30 32 10 60 10Z" fill="#34D399"/><path d="M60 10C88 10 104 30 104 54C104 60 103 64 101 68C92 42 74 30 44 30C36 30 30 32 24 35C32 18 44 10 60 10Z" fill="#6EE7B7" opacity=".7"/><path d="M42 56 q6 -7 12 0" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" fill="none"/><path d="M66 56 q6 -7 12 0" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" fill="none"/><path d="M50 70 Q60 80 70 70" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" fill="none"/><circle cx="36" cy="66" r="6" fill="#FF4D6D" opacity=".28"/><circle cx="84" cy="66" r="6" fill="#FF4D6D" opacity=".28"/></symbol>
+    <symbol id="blob" viewBox="0 0 120 120"><path d="M26 64C18 36 42 16 66 20C92 24 108 44 100 70C93 94 70 108 46 100C30 94 30 82 26 64Z" fill="#B9A6FF"/><path d="M40 34C52 24 72 24 86 34C78 30 62 30 50 38Z" fill="#fff" opacity=".5"/><ellipse cx="47" cy="62" rx="4.5" ry="6" fill="#0F172A"/><ellipse cx="73" cy="62" rx="4.5" ry="6" fill="#0F172A"/><circle cx="48.5" cy="60" r="1.6" fill="#fff"/><circle cx="74.5" cy="60" r="1.6" fill="#fff"/><ellipse cx="61" cy="79" rx="5.5" ry="4.5" fill="#0F172A"/><circle cx="35" cy="73" r="6" fill="#FF4D6D" opacity=".3"/><circle cx="85" cy="73" r="6" fill="#FF4D6D" opacity=".3"/></symbol>
+    <symbol id="parcel" viewBox="0 0 120 120"><rect x="16" y="30" width="88" height="74" rx="24" fill="#FF8A4C"/><path d="M16 54 Q60 60 104 54 V52 Q104 30 80 30 H40 Q16 30 16 52Z" fill="#FF9F6B"/><rect x="52" y="30" width="16" height="28" rx="4" fill="#FFD3B8"/><ellipse cx="47" cy="74" rx="4.5" ry="6" fill="#0F172A"/><ellipse cx="73" cy="74" rx="4.5" ry="6" fill="#0F172A"/><circle cx="48.5" cy="72" r="1.6" fill="#fff"/><circle cx="74.5" cy="72" r="1.6" fill="#fff"/><path d="M51 87 Q60 95 69 87" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" fill="none"/></symbol>
+    <symbol id="coin" viewBox="0 0 120 120"><circle cx="60" cy="62" r="44" fill="#FFC94A"/><circle cx="60" cy="62" r="34" fill="none" stroke="#F2A900" stroke-width="3.5"/><path d="M34 40 A34 34 0 0 1 72 30" stroke="#FFE7A3" stroke-width="5" stroke-linecap="round" fill="none"/><ellipse cx="47" cy="60" rx="4.5" ry="6" fill="#0F172A"/><ellipse cx="73" cy="60" rx="4.5" ry="6" fill="#0F172A"/><circle cx="48.5" cy="58" r="1.6" fill="#fff"/><circle cx="74.5" cy="58" r="1.6" fill="#fff"/><path d="M51 73 Q60 81 69 73" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" fill="none"/></symbol>
+  </defs>
+</svg>
+<div class="app">
+
+  <!-- ============== SIDE MENU (computer) ============== -->
+  <aside class="side" aria-label="Main menu">
+    <a href="02-map-home.html" class="side-brand"><svg aria-hidden="true"><use href="#logo"/></svg>Waydrop</a>
+    <a href="02-map-home.html" class="nav-item "><i data-lucide="map"></i>Map</a>
+    <a href="08c-errand-history.html" class="nav-item active"><i data-lucide="clock-3"></i>Activity</a>
+    <a href="07-wallet.html" class="nav-item "><i data-lucide="wallet"></i>Wallet</a>
+    <a href="02b-notifications.html" class="nav-item "><i data-lucide="bell"></i>Notifications<span class="nav-badge">3</span></a>
+    <a href="08-profile.html" class="nav-item "><i data-lucide="user-round"></i>Me</a>
+    <a href="03-send-errand.html" class="nav-send"><i data-lucide="plus" class="ic-18"></i>Send an errand</a>
+    <div class="side-foot"><img class="avatar" src="img/adaeze.svg" alt=""><div><div class="nm">Adaeze Okafor</div><div class="role">BUK New Site</div></div></div>
+  </aside>
+
+  <!-- ============== MAIN ============== -->
+  <main class="track">
+
+    <!-- map -->
+    <div class="map-area"><div id="map" aria-label="Map"></div><a class="float-btn" href="02-map-home.html" aria-label="Back to the map"><i data-lucide="x"></i></a></div>
+
+    <!-- panel -->
+    <section class="panel"><div class="panel-inner">
+      <h1 id="title"></h1>
+      <p class="caption" style="font-size:14px;margin:4px 0 0" id="sub"></p>
+      <div class="steps3" id="steps"></div>
+
+      <div class="card budget" id="budget" hidden><div style="display:flex;justify-content:space-between;font-size:14px"><span class="caption">Spent so far</span><span><b id="spent"></b> <span class="caption" id="of"></span></span></div><div class="bar"><i id="bar"></i></div></div>
+      <a class="card receipt" id="receipt" href="04d-what-you-paid.html" hidden><span class="ph"></span><span><b style="display:block;font-size:15px" id="r-title"></b><span class="caption" id="r-sub"></span></span></a>
+
+      <a class="btn btn-dark" id="beacon" href="04c-screen-beacon.html" style="margin-top:14px" hidden><i data-lucide="flashlight" class="ic-18"></i>Light up my screen</a>
+      <p class="caption" id="beacon-t" style="margin:8px 0 0" hidden>Your screen flashes orange with your name so the runner can spot you in a crowd.</p>
+
+      <div class="card who"><img id="r-photo" alt=""><div class="t"><b id="r-name"></b><span class="caption" style="display:block" id="r-meta"></span></div><a class="act" href="05b-call.html" aria-label="Call"><i data-lucide="phone" class="ic-18"></i></a><a class="act" href="05a-chat.html" aria-label="Message"><i data-lucide="message-circle" class="ic-18"></i></a></div>
+    </div></section>
+  </main>
+</div>
+
+<!-- decision sheet: price check or swap -->
+<div class="sheet-dim" id="ask" hidden><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="ask-title">
+  <div class="ask-card"><div class="ask-top"><div class="k"><span id="ask-k"></span><span class="timer" id="timer">2:00</span></div><h2 id="ask-title"></h2></div><div class="ask-bottom" id="ask-body"></div></div>
+  <div id="ask-actions" style="margin-top:16px"></div>
+  <p class="caption" style="text-align:center;margin:10px 0 0" id="ask-foot"></p>
+</div></div>
+
+<!-- leaflet + lucide -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+/* ====================== DATA ======================
+   GET /tasks/:id  (live updates on the WebSocket: task.updated, task.price_check)
+   status: shopping | price_check | swap | bought | nearby
+   Add ?status=price_check, swap, bought or nearby to the address to see each state. */
+const task = {
+  status: new URLSearchParams(location.search).get('status') || 'shopping',
+  item: '6 bottles of water',
+  deliver_to: 'Stadium, east stand',
+  budget: 2000, spent: 0,
+  receipt: { spent: 1800, paid_to: 'a stadium kiosk', refunded: 200 },
+  runner: { name: 'Musa', photo_url: 'img/musa.svg', rating: 4.9, deliveries: 87, lat: 11.9801, lng: 8.4790 },
+  you: { lat: 11.9846, lng: 8.4830 },
+  shop: { name: 'Stadium kiosk', lat: 11.9839, lng: 8.4818 },
+  /* task.price_check event */
+  price_check: { item: 'Water', expected: 300, actual: 350, qty: 6, seconds_left: 120, note: 'All the kiosks around the stadium charge ₦350 on match days.' },
+  /* task.swap event */
+  swap: { wanted: 'Eva water', offered: 'Aquafina', price: 300, seconds_left: 103 },
+};
+
+/* ====================== RENDER ====================== */
+const $ = id => document.getElementById(id);
+const naira = n => '₦' + Math.round(n).toLocaleString('en-NG');
+const TEXT = {
+  shopping:    ['Musa is shopping for you', 'At a kiosk near the Stadium, 2 min from you', 0],
+  price_check: ['Musa is shopping for you', 'He needs a quick yes from you', 0],
+  swap:        ['Musa is shopping for you', 'He found a swap for one item', 0],
+  bought:      ['Musa bought your water', 'On the way to you, about 3 min', 1],
+  nearby:      ['Musa is 30m away', 'Look around, or light up your screen', 1],
+};
+
+function render() {
+  const s = task.status, [t, sub, step] = TEXT[s];
+  $('title').textContent = t; $('sub').textContent = sub;
+  $('steps').innerHTML = ['Shopping', 'Bought', 'Arrived'].map((l, i) => `<div class="${i <= step ? 'on' : ''}"><i></i>${l}</div>`).join('');
+  const shopping = ['shopping', 'price_check', 'swap'].includes(s);
+  $('budget').hidden = !shopping; $('receipt').hidden = shopping;
+  $('spent').textContent = naira(task.spent); $('of').textContent = `of ${naira(task.budget)}`; $('bar').style.width = (task.spent / task.budget * 100) + '%';
+  $('r-title').textContent = `Spent ${naira(task.receipt.spent)} of ${naira(task.budget)}`;
+  $('r-sub').textContent = `Paid to ${task.receipt.paid_to} by transfer. ${naira(task.receipt.refunded)} already back in your wallet.`;
+  $('beacon').hidden = $('beacon-t').hidden = s !== 'nearby';
+  const r = task.runner;
+  $('r-photo').src = r.photo_url; $('r-name').textContent = r.name; $('r-meta').textContent = `${r.rating} rating · ${r.deliveries} deliveries`;
+
+  /* decision sheet */
+  $('ask').hidden = !['price_check', 'swap'].includes(s);
+  if (s === 'price_check') {
+    const p = task.price_check, total = p.actual * p.qty, short = total - task.budget;
+    $('ask-k').textContent = `${r.name} needs a quick yes`;
+    $('ask-title').textContent = `${p.item} is ${naira(p.actual)} here, not ${naira(p.expected)}`;
+    $('ask-body').innerHTML = `<p class="caption" style="margin:0 0 6px">${p.note}</p><div class="calc"><span>${p.qty} × ${naira(p.actual)}</span><b>${naira(total)}</b></div><div class="calc"><span>Your budget</span><b>${naira(task.budget)}</b></div><div class="calc" style="color:var(--rose-fg)"><span>Short by</span><b style="color:var(--rose-fg)">${naira(short)}</b></div>`;
+    $('ask-actions').innerHTML = `<a class="btn btn-dark" href="?status=bought">Approve ${naira(short)} more</a><div class="row2"><a class="btn btn-light" href="?status=bought">Buy ${p.qty - 1} instead</a><a class="btn btn-light" href="04d-what-you-paid.html">Skip it</a></div>`;
+    $('ask-foot').textContent = `No answer in 2 minutes? ${r.name} buys what your budget covers.`;
+    countdown(p.seconds_left);
+  }
+  if (s === 'swap') {
+    const w = task.swap;
+    $('ask-k').textContent = `${r.name} found a swap`;
+    $('ask-title').textContent = `No ${w.wanted} here. ${w.offered} instead?`;
+    $('ask-body').innerHTML = `<p class="caption" style="margin:0">Same size, same price: ${naira(w.price)} each.</p>`;
+    $('ask-actions').innerHTML = `<a class="btn btn-dark" href="?status=bought">Yes, swap it</a><div class="row2"><a class="btn btn-light" href="?status=shopping">Try another shop</a><a class="btn btn-light" href="?status=bought">Skip it</a></div>`;
+    $('ask-foot').textContent = 'You see this because you chose "Ask me" for missing items.';
+    countdown(w.seconds_left);
+  }
+  lucide.createIcons();
+}
+function countdown(sec) {
+  clearInterval(countdown.t);
+  const tick = () => { $('timer').textContent = `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`; sec = Math.max(0, sec - 1); };
+  tick(); countdown.t = setInterval(tick, 1000);
+}
+
+/* ====================== MAP ====================== */
+const map = L.map('map', { zoomControl: false });
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19, subdomains: 'abcd', attribution: '&copy; OpenStreetMap &copy; CARTO' }).addTo(map);
+const ic = (html, size) => L.divIcon({ html, className: '', iconSize: size || null });
+const nearRunner = task.status === 'nearby' ? [task.you.lat - .0003, task.you.lng - .0002] : [task.runner.lat, task.runner.lng];
+L.marker([task.you.lat, task.you.lng], { icon: ic('<div class="mk-me"></div>', [22, 22]) }).addTo(map);
+L.marker([task.shop.lat, task.shop.lng], { icon: ic(`<span class="mk-tag">${task.shop.name}</span>`) }).addTo(map);
+L.marker(nearRunner, { icon: ic(`<div class="mk-photo"><img src="${task.runner.photo_url}" alt=""></div>`, [44, 44]) }).addTo(map);
+L.polyline(task.status === 'nearby' ? [nearRunner, [task.you.lat, task.you.lng]] : [nearRunner, [task.shop.lat, task.shop.lng], [task.you.lat, task.you.lng]], { color: '#FF5500', weight: 4, opacity: .9, dashArray: task.status === 'nearby' ? null : '1 8', lineCap: 'round' }).addTo(map);
+map.fitBounds([nearRunner, [task.you.lat, task.you.lng], [task.shop.lat, task.shop.lng]], { padding: [50, 50] });
+
+render();
+</script>
+</body>
+</html>

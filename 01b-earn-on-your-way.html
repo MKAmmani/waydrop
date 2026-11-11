@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Earn on your way · Waydrop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+
+:root {
+  /* surfaces: soft off-white page, white cards */
+  --bg:        #F6F7F9;
+  --card:      #FFFFFF;
+  --surface-2: #F1F3F6;
+  --border:    #ECEEF2;
+  --border-2:  #F3F4F7;
+  /* ink: one dark, three greys */
+  --ink:   #0F172A;
+  --ink-2: #4B5565;
+  --ink-3: #8A93A3;
+  --ink-4: #C3C9D3;
+  /* Waydrop colours, used sparingly */
+  --tangerine:      #FF5500;
+  --tangerine-fg:   #C63D00;
+  --tangerine-tint: #FFF1E9;
+  --mint:      #10B981;
+  --mint-fg:   #047857;
+  --mint-tint: #E9F8F2;
+  --butter:      #FFC94A;
+  --butter-fg:   #92400E;
+  --butter-tint: #FFF7DE;
+  --rose:      #E11D48;
+  --rose-fg:   #BE123C;
+  --rose-tint: #FFEDF1;
+
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 22px;
+  --r-xl: 28px;
+  --r-pill: 999px;
+
+  /* shadows you barely notice */
+  --shadow-1: 0 1px 2px rgba(15,23,42,.04), 0 4px 14px rgba(15,23,42,.05);
+  --shadow-2: 0 2px 6px rgba(15,23,42,.05), 0 12px 32px rgba(15,23,42,.08);
+  --shadow-float: 0 6px 24px rgba(15,23,42,.12);
+
+  --display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font: "DM Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ease: cubic-bezier(.23,1,.32,1);
+  --spring: cubic-bezier(.34,1.56,.64,1);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; }
+body {
+  font-family: var(--font);
+  font-size: 15px; line-height: 1.5;
+  color: var(--ink); background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; background: none; border: 0; padding: 0; }
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 3px solid var(--tangerine); outline-offset: 2px; border-radius: 10px; }
+
+/* lucide icon defaults: one weight everywhere */
+[data-lucide] { width: 20px; height: 20px; stroke-width: 1.75; flex-shrink: 0; }
+.ic-16 { width: 16px; height: 16px; }
+.ic-18 { width: 18px; height: 18px; }
+.ic-22 { width: 22px; height: 22px; }
+.ic-24 { width: 24px; height: 24px; }
+
+.caption { font-size: 13px; color: var(--ink-3); }
+.money { font-family: var(--display); font-weight: 800; font-variant-numeric: tabular-nums; }
+
+/* ============== ONBOARDING (dark) ============== */
+:root { --night: #0F172A; --night-2: #1E293B; --grid: rgba(148,163,184,.09); --muted: #94A3B8; --ease-out: cubic-bezier(.23,1,.32,1); --ease-in-out: cubic-bezier(.77,0,.175,1); }
+html, body { background: var(--night); color: #fff; }
+.screen { min-height: 100vh; min-height: 100dvh; max-width: 460px; margin: 0 auto; display: flex; flex-direction: column; padding: max(20px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom)); }
+
+/* wordmark */
+.brand { text-align: center; font: 800 26px var(--display); letter-spacing: -.02em; padding-top: 8px; }
+.brand span { color: var(--tangerine); }
+
+/* the scene */
+.scene { position: relative; flex: 1; min-height: 340px; margin: 8px -24px 0; }
+.scene svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.live { position: absolute; left: 24px; top: 10%; font-size: 17px; color: #E2E8F0; opacity: 0; transform: translateY(6px); transition: opacity .4s var(--ease-out), transform .4s var(--ease-out); }
+.live.show { opacity: 1; transform: none; }
+.live b { font: 800 30px/1 var(--display); color: #fff; display: inline-block; min-width: .6em; text-align: center; vertical-align: -3px; }
+.live b.tick { animation: tick .35s var(--ease-out); }
+@keyframes tick { from { transform: translateY(-8px); opacity: 0; } }
+
+/* svg pieces */
+.route-base { stroke: rgba(148,163,184,.28); stroke-width: 3; fill: none; stroke-linejoin: round; stroke-linecap: round; }
+.route-trail { stroke: var(--tangerine); stroke-width: 4; fill: none; stroke-linejoin: round; stroke-linecap: round; }
+.place { font: 600 12px var(--font); fill: var(--muted); }
+.who { font: 600 13px var(--font); fill: #E2E8F0; }
+.end { transform-box: fill-box; transform-origin: center; }
+.end.arrived { animation: land .5s var(--ease-out); }
+@keyframes land { 40% { transform: scale(1.25); } }
+.pulse { transform-box: fill-box; transform-origin: center; opacity: 0; }
+.pulse.go { animation: pulse 1.4s var(--ease-out) infinite; }
+@keyframes pulse { from { transform: scale(.6); opacity: .7; } to { transform: scale(2.2); opacity: 0; } }
+.runner { opacity: 0; transition: opacity .3s var(--ease-out); }
+.runner.show { opacity: 1; }
+.code { transform-box: fill-box; transform-origin: 0% 50%; opacity: 0; transform: scale(.9); transition: opacity .3s var(--ease-out), transform .45s cubic-bezier(.34,1.56,.64,1); }
+.code.show { opacity: 1; transform: none; }
+
+/* words */
+.words { padding-top: 8px; }
+.words h1 { font: 800 clamp(34px, 9.5vw, 42px)/1.05 var(--display); letter-spacing: -.03em; margin: 0; max-width: 12ch; }
+.words p { font-size: 18px; line-height: 1.45; color: #CBD5E1; margin: 12px 0 0; max-width: 30ch; }
+.enter { opacity: 0; transform: translateY(10px); animation: enter .6s var(--ease-out) forwards; }
+.enter.d2 { animation-delay: .08s; }
+@keyframes enter { to { opacity: 1; transform: none; } }
+
+/* progress + actions */
+.dots { display: flex; gap: 6px; margin: 26px 0 18px; } .dots i { height: 6px; width: 6px; border-radius: 3px; background: rgba(148,163,184,.35); } .dots i.on { width: 22px; background: #fff; }
+.actions { display: grid; grid-template-columns: 1fr 1.3fr; gap: 12px; }
+.btn { display: flex; align-items: center; justify-content: center; min-height: 58px; border-radius: var(--r-pill); font-size: 18px; font-weight: 600; transition: transform .14s var(--ease-out), box-shadow .14s var(--ease-out); -webkit-tap-highlight-color: transparent; }
+.btn:active { transform: scale(.97); }
+.skip { background: var(--night-2); color: #fff; }
+/* a slightly darker bottom edge so it reads as something to press */
+.go { background: var(--tangerine); color: var(--night); box-shadow: inset 0 -4px 0 rgba(120,30,0,.35); }
+.go:active { box-shadow: inset 0 -2px 0 rgba(120,30,0,.35); }
+:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .enter { animation: none; opacity: 1; transform: none; }
+  .pulse.go { animation: none; }
+}
+
+.offer { position: absolute; left: 24px; right: 24px; bottom: 4%; background: #1E293B; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,.35); opacity: 0; transform: translateY(24px); }
+.offer::before, .offer::after { content: ""; position: absolute; top: 58px; width: 16px; height: 16px; border-radius: 50%; background: var(--night); }
+.offer::before { left: -8px; } .offer::after { right: -8px; }
+.o-top { display: flex; justify-content: space-between; gap: 10px; padding: 14px 16px; border-bottom: 1px dashed #334155; min-height: 66px; }
+.o-top b { display: block; font: 800 17px var(--display); } .o-top small { font-size: 12px; color: var(--muted); }
+.earn { text-align: right; } .earn b { color: #6EE7B7; font-size: 22px; }
+.o-act { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px 12px; }
+.timer { font: 700 13px var(--font); background: #0F172A; border-radius: 999px; padding: 4px 10px; color: #E2E8F0; font-variant-numeric: tabular-nums; }
+.accept { background: #fff; color: var(--night); border-radius: 999px; padding: 8px 18px; font-weight: 700; font-size: 14px; transition: transform .14s var(--ease-out), background-color .2s; }
+.accept.pressed { transform: scale(.94); background: #6EE7B7; }
+
+</style>
+</head>
+<body>
+
+<main class="screen">
+
+  <!-- wordmark -->
+  <div class="brand" aria-label="Waydrop">Waydrop<span>.</span></div>
+
+  <!-- scene -->
+  <section class="scene" aria-hidden="true">
+
+    <p class="live show" id="earned"></p>
+    <svg viewBox="0 0 360 400" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <pattern id="grid" width="45" height="45" patternUnits="userSpaceOnUse"><path d="M45 0 H0 V45" fill="none" stroke="rgba(148,163,184,.13)" stroke-width="1"/></pattern>
+        <radialGradient id="fade" cx="50%" cy="45%" r="60%"><stop offset="55%" stop-color="#fff"/><stop offset="100%" stop-color="#000"/></radialGradient>
+        <mask id="soft"><rect width="360" height="400" fill="url(#fade)"/></mask>
+        <clipPath id="face"><circle r="15"/></clipPath>
+      </defs>
+      <rect width="360" height="400" fill="url(#grid)" mask="url(#soft)"/>
+      <!-- your walk, as you'd see it in the app -->
+      <path id="walk" d="M70 320 V250 H190 V120 H290 V70" fill="none" stroke="#10B981" stroke-opacity=".22" stroke-width="22" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M70 320 V250 H190 V120 H290 V70" fill="none" stroke="#10B981" stroke-width="3" stroke-dasharray="2 9" stroke-linecap="round"/>
+      <text class="place" x="86" y="342">New Hall</text>
+      <text class="place" x="250" y="52">Main Library</text>
+      <!-- the errand that fits the walk -->
+      <g id="pick" opacity="0"><rect x="196" y="176" width="16" height="16" rx="5" fill="#FF5500"/><text class="who" x="220" y="189">Lab coat</text></g>
+      <!-- you -->
+      <g id="me"><circle r="18" fill="#0F172A" stroke="#fff" stroke-width="2.5"/><image href="img/adaeze.svg" x="-15" y="-15" width="30" height="30" clip-path="url(#face)"/></g>
+    </svg>
+    <!-- offer ticket -->
+    <div class="offer" id="offer">
+      <div class="o-top"><span><b>Lab coat</b><small>New Hall → Main Library · 50m off your way</small></span><span class="earn"><small>You earn</small><b>₦450</b></span></div>
+      <div class="o-act"><span class="timer">0:25</span><span class="accept" id="accept">Accept</span></div>
+    </div>
+  </section>
+
+  <!-- words -->
+  <section class="words">
+    <h1 class="enter" id="title"></h1>
+    <p class="enter d2" id="text"></p>
+  </section>
+
+  <!-- progress + actions -->
+  <div class="dots" role="progressbar" aria-valuemin="1" aria-valuemax="3" aria-valuenow="3" aria-label="Step 3 of 3"><i class=""></i><i class=""></i><i class="on"></i></div>
+  <div class="actions">
+    <a class="btn skip" href="01c-welcome.html">Skip</a>
+    <a class="btn go" href="01c-welcome.html">Get started</a>
+  </div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const EASE = 'cubic-bezier(.23,1,.32,1)', MOVE = 'cubic-bezier(.77,0,.175,1)', POP = 'cubic-bezier(.34,1.56,.64,1)';
+const anim = (el, frames, ms, easing = EASE, delay = 0) => el.animate(frames, { duration: ms, easing, delay, fill: 'forwards' }).finished;
+
+/* ====================== DATA ====================== */
+const copy = {
+  title: 'Going somewhere anyway? Get paid.',
+  text: "Tell Waydrop where you're walking. Errands on your way pop up, and you choose which to take.",
+};
+$('title').textContent = copy.title; $('text').textContent = copy.text;
+
+/* ====================== ANIMATION ======================
+   You walk your route → an errand on your way pops up → you accept → you carry it to the end → today's earnings tick up. */
+const walk = $('walk'), me = $('me'), L = walk.getTotalLength();
+const easeInOut = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+function tween(ms, fn, e = easeInOut) { return new Promise(res => { const t0 = performance.now(); (function f(t) { const p = Math.min(1, (t - t0) / ms); fn(e(p)); p < 1 ? requestAnimationFrame(f) : res(); })(t0); }); }
+const place = p => { const pt = walk.getPointAtLength(p * L); me.setAttribute('transform', `translate(${pt.x} ${pt.y})`); };
+function earned(n, tick) { $('earned').innerHTML = `Today <b class="${tick ? 'tick' : ''}">₦${n}</b>`; }
+async function loop() {
+  earned(0); place(0); $('pick').setAttribute('opacity', 0); $('accept').classList.remove('pressed');
+  await tween(1500, p => place(p * .42));
+  $('pick').animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300, fill: 'forwards' });
+  $('pick').setAttribute('opacity', 1);
+  await anim($('offer'), [{ opacity: 0, transform: 'translateY(24px)' }, { opacity: 1, transform: 'none' }], 420);
+  await wait(900);
+  $('accept').classList.add('pressed'); $('accept').textContent = 'Accepted';
+  await wait(500);
+  await anim($('offer'), [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(16px)' }], 300);
+  $('accept').textContent = 'Accept';
+  await tween(2200, p => place(.42 + p * .58));
+  earned(450, true);
+  await wait(2600);
+  loop();
+}
+if (reduce) { place(1); earned(450); $('pick').setAttribute('opacity', 1); }
+else setTimeout(loop, 400);
+
+</script>
+</body>
+</html>

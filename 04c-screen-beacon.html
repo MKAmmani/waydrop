@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Light up my screen · Waydrop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+
+:root {
+  /* surfaces: soft off-white page, white cards */
+  --bg:        #F6F7F9;
+  --card:      #FFFFFF;
+  --surface-2: #F1F3F6;
+  --border:    #ECEEF2;
+  --border-2:  #F3F4F7;
+  /* ink: one dark, three greys */
+  --ink:   #0F172A;
+  --ink-2: #4B5565;
+  --ink-3: #8A93A3;
+  --ink-4: #C3C9D3;
+  /* Waydrop colours, used sparingly */
+  --tangerine:      #FF5500;
+  --tangerine-fg:   #C63D00;
+  --tangerine-tint: #FFF1E9;
+  --mint:      #10B981;
+  --mint-fg:   #047857;
+  --mint-tint: #E9F8F2;
+  --butter:      #FFC94A;
+  --butter-fg:   #92400E;
+  --butter-tint: #FFF7DE;
+  --rose:      #E11D48;
+  --rose-fg:   #BE123C;
+  --rose-tint: #FFEDF1;
+
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 22px;
+  --r-xl: 28px;
+  --r-pill: 999px;
+
+  /* shadows you barely notice */
+  --shadow-1: 0 1px 2px rgba(15,23,42,.04), 0 4px 14px rgba(15,23,42,.05);
+  --shadow-2: 0 2px 6px rgba(15,23,42,.05), 0 12px 32px rgba(15,23,42,.08);
+  --shadow-float: 0 6px 24px rgba(15,23,42,.12);
+
+  --display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font: "DM Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ease: cubic-bezier(.23,1,.32,1);
+  --spring: cubic-bezier(.34,1.56,.64,1);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; }
+body {
+  font-family: var(--font);
+  font-size: 15px; line-height: 1.5;
+  color: var(--ink); background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; background: none; border: 0; padding: 0; }
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 3px solid var(--tangerine); outline-offset: 2px; border-radius: 10px; }
+
+/* lucide icon defaults: one weight everywhere */
+[data-lucide] { width: 20px; height: 20px; stroke-width: 1.75; flex-shrink: 0; }
+.ic-16 { width: 16px; height: 16px; }
+.ic-18 { width: 18px; height: 18px; }
+.ic-22 { width: 22px; height: 22px; }
+.ic-24 { width: 24px; height: 24px; }
+
+.caption { font-size: 13px; color: var(--ink-3); }
+.money { font-family: var(--display); font-weight: 800; font-variant-numeric: tabular-nums; }
+
+/* ============== BEACON ==============
+   Full screen, flashing tangerine with the requester's name, so the runner can find them in a crowd. */
+html, body { height: 100%; }
+.beacon { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: #fff; padding: 24px; position: relative; overflow: hidden; animation: flash 1s steps(1) infinite; }
+@keyframes flash { 0% { background: #FF5500; } 50% { background: #FF8A3D; } }
+.ring { position: absolute; width: 260px; height: 260px; border-radius: 50%; border: 6px solid rgba(255,255,255,.5); animation: grow 1.2s var(--ease) infinite; }
+@keyframes grow { from { transform: scale(.4); opacity: 1; } to { transform: scale(2); opacity: 0; } }
+.name { position: relative; font: 800 clamp(56px, 18vw, 120px)/1 var(--display); letter-spacing: -.03em; }
+.beacon p { position: relative; font-size: 18px; font-weight: 600; max-width: 18ch; margin: 14px 0 0; }
+.found { position: absolute; bottom: max(32px, env(safe-area-inset-bottom)); display: inline-flex; align-items: center; gap: 8px; height: 54px; padding: 0 26px; border-radius: var(--r-pill); background: rgba(15,23,42,.88); color: #fff; font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { .beacon { animation: none; background: #FF5500; } .ring { animation: none; opacity: .4; } }
+</style>
+</head>
+<body>
+<main class="beacon" aria-label="Screen beacon">
+  <span class="ring" aria-hidden="true"></span>
+  <div class="name" id="name"></div>
+  <p id="line"></p>
+  <a class="found" href="05-track-errand.html" id="found"></a>
+</main>
+<script>
+/* ====================== DATA ====================== */
+/* GET /me and GET /tasks/:id (runner's first name) */
+const me = { first_name: 'Adaeze' };
+const runner = { first_name: 'Musa' };
+
+/* ====================== RENDER ====================== */
+document.getElementById('name').textContent = me.first_name.toUpperCase();
+document.getElementById('line').textContent = `Hold your phone up high. ${runner.first_name} is looking for this screen.`;
+document.getElementById('found').textContent = `${runner.first_name} found me`;
+/* keep the screen on while the beacon shows */
+if ('wakeLock' in navigator) navigator.wakeLock.request('screen').catch(() => {});
+</script>
+</body>
+</html>

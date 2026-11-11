@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Crew · Desk · Waydrop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+
+:root {
+  /* surfaces: soft off-white page, white cards */
+  --bg:        #F6F7F9;
+  --card:      #FFFFFF;
+  --surface-2: #F1F3F6;
+  --border:    #ECEEF2;
+  --border-2:  #F3F4F7;
+  /* ink: one dark, three greys */
+  --ink:   #0F172A;
+  --ink-2: #4B5565;
+  --ink-3: #8A93A3;
+  --ink-4: #C3C9D3;
+  /* Waydrop colours, used sparingly */
+  --tangerine:      #FF5500;
+  --tangerine-fg:   #C63D00;
+  --tangerine-tint: #FFF1E9;
+  --mint:      #10B981;
+  --mint-fg:   #047857;
+  --mint-tint: #E9F8F2;
+  --butter:      #FFC94A;
+  --butter-fg:   #92400E;
+  --butter-tint: #FFF7DE;
+  --rose:      #E11D48;
+  --rose-fg:   #BE123C;
+  --rose-tint: #FFEDF1;
+
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 22px;
+  --r-xl: 28px;
+  --r-pill: 999px;
+
+  /* shadows you barely notice */
+  --shadow-1: 0 1px 2px rgba(15,23,42,.04), 0 4px 14px rgba(15,23,42,.05);
+  --shadow-2: 0 2px 6px rgba(15,23,42,.05), 0 12px 32px rgba(15,23,42,.08);
+  --shadow-float: 0 6px 24px rgba(15,23,42,.12);
+
+  --display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font: "DM Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ease: cubic-bezier(.23,1,.32,1);
+  --spring: cubic-bezier(.34,1.56,.64,1);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; }
+body {
+  font-family: var(--font);
+  font-size: 15px; line-height: 1.5;
+  color: var(--ink); background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; background: none; border: 0; padding: 0; }
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 3px solid var(--tangerine); outline-offset: 2px; border-radius: 10px; }
+
+/* lucide icon defaults: one weight everywhere */
+[data-lucide] { width: 20px; height: 20px; stroke-width: 1.75; flex-shrink: 0; }
+.ic-16 { width: 16px; height: 16px; }
+.ic-18 { width: 18px; height: 18px; }
+.ic-22 { width: 22px; height: 22px; }
+.ic-24 { width: 24px; height: 24px; }
+
+.caption { font-size: 13px; color: var(--ink-3); }
+.money { font-family: var(--display); font-weight: 800; font-variant-numeric: tabular-nums; }
+
+/* ============== DESK SHELL ============== */
+body { background: #F4F6F8; font-size: 14px; }
+.desk { display: grid; grid-template-columns: 236px minmax(0, 1fr); min-height: 100vh; }
+.nav { position: sticky; top: 0; height: 100vh; overflow: auto; display: flex; flex-direction: column; gap: 2px; padding: 18px 12px; background: var(--card); border-right: 1px solid var(--border); }
+.brand { display: flex; align-items: center; gap: 10px; padding: 2px 8px 16px; font: 800 18px var(--display); }
+.brand svg { width: 30px; height: 30px; } .brand span { font: 700 11px var(--font); color: var(--ink-3); background: var(--surface-2); border-radius: 5px; padding: 2px 6px; }
+.ngrp { font-size: 11px; font-weight: 700; color: var(--ink-4); letter-spacing: .06em; text-transform: uppercase; padding: 14px 10px 6px; }
+.nl { display: flex; align-items: center; gap: 10px; height: 38px; padding: 0 10px; border-radius: 10px; color: var(--ink-2); font-weight: 500; }
+.nl:hover { background: var(--surface-2); }
+.nl.on { background: var(--ink); color: #fff; }
+.nl em { margin-left: auto; font-style: normal; font-size: 12px; font-weight: 700; min-width: 22px; height: 20px; border-radius: 10px; display: grid; place-items: center; padding: 0 6px; background: var(--tangerine); color: #fff; }
+.me { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 12px 8px 0; border-top: 1px solid var(--border); font-size: 13px; }
+.me img { width: 32px; height: 32px; border-radius: 50%; }
+.top { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 12px; padding: 12px 24px; background: rgba(244,246,248,.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+.search { flex: 1; max-width: 520px; display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; border-radius: 10px; background: var(--card); box-shadow: inset 0 0 0 1px var(--border); color: var(--ink-3); }
+.search input { flex: 1; border: 0; outline: 0; background: none; font-size: 14px; }
+.site { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; border-radius: 10px; background: var(--card); box-shadow: inset 0 0 0 1px var(--border); font-weight: 600; }
+.site i { width: 8px; height: 8px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 0 3px var(--mint-tint); }
+.pg { padding: 22px 24px 48px; display: flex; flex-direction: column; gap: 16px; }
+.ph { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.ph h1 { font: 800 24px/1.15 var(--display); letter-spacing: -.02em; margin: 0; }
+.ph p { margin: 4px 0 0; color: var(--ink-3); }
+@media (max-width: 900px) { .panel { overflow-x: auto; } table { min-width: 560px; } .pg { padding: 16px; } .rail, .kv { grid-template-columns: 1fr 1fr !important; } .desk { grid-template-columns: minmax(0, 1fr); } .nav { position: static; height: auto; flex-direction: row; flex-wrap: nowrap; overflow-x: auto; max-width: 100vw; border-right: 0; border-bottom: 1px solid var(--border); } .nl { flex: none; } .brand { padding-bottom: 2px; flex: none; } .search { min-width: 0; } .site { display: none; } .ngrp, .me { display: none; } .top { position: static; } }
+
+/* ============== PIECES ============== */
+/* grid children may shrink; wide tables scroll inside their panel instead of widening the page */
+.pg > *, .grid2 > *, .cg > *, .kyc > *, .grid2 > * > * { min-width: 0; }
+.panel { background: var(--card); border-radius: 14px; box-shadow: 0 0 0 1px var(--border); }
+.panel-h { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border-2); }
+.panel-h b { font-size: 14px; } .panel-h small { color: var(--ink-3); font-size: 12px; }
+.b { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: 10px; font-weight: 600; font-size: 13px; white-space: nowrap; }
+.b-dark { background: var(--ink); color: #fff; } .b-line { background: var(--card); box-shadow: inset 0 0 0 1px var(--border); }
+.b-mint { background: var(--mint); color: var(--ink); } .b-danger { background: var(--card); color: var(--rose-fg); box-shadow: inset 0 0 0 1px rgba(225,29,72,.3); }
+.b:disabled, .b[aria-disabled="true"] { opacity: .4; pointer-events: none; }
+.chip { display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border-radius: 6px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.c-mint { background: var(--mint-tint); color: var(--mint-fg); } .c-butter { background: var(--butter-tint); color: var(--butter-fg); }
+.c-rose { background: var(--rose-tint); color: var(--rose-fg); } .c-grey { background: var(--surface-2); color: var(--ink-2); } .c-tan { background: var(--tangerine-tint); color: var(--tangerine-fg); }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: 11px; font-weight: 700; color: var(--ink-4); letter-spacing: .05em; text-transform: uppercase; padding: 10px 16px; border-bottom: 1px solid var(--border-2); }
+td { padding: 11px 16px; border-bottom: 1px solid var(--border-2); vertical-align: middle; }
+tr:last-child td { border-bottom: 0; }
+.r { text-align: right; } .mono { font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: var(--ink-3); } .n { font: 800 14px var(--display); }
+.tabs { display: flex; gap: 4px; padding: 8px 12px; border-bottom: 1px solid var(--border-2); flex-wrap: wrap; }
+.tabs button { height: 32px; padding: 0 12px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--ink-3); }
+.tabs button[aria-selected="true"] { background: var(--surface-2); color: var(--ink); }
+.kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.kv div { padding: 14px 16px; border-right: 1px solid var(--border-2); } .kv div:last-child { border-right: 0; }
+.kv small { display: block; font-size: 12px; color: var(--ink-3); } .kv b { font: 800 20px var(--display); }
+.ok { color: var(--mint-fg); } .warn { color: var(--butter-fg); } .bad { color: var(--rose-fg); }
+.av { width: 34px; height: 34px; border-radius: 50%; flex: none; }
+.tl { padding: 12px 16px; } .tli { display: grid; grid-template-columns: 74px 14px 1fr; gap: 10px; padding-bottom: 12px; font-size: 13px; }
+.tli time { color: var(--ink-3); font-size: 12px; } .tli i { width: 10px; height: 10px; border-radius: 50%; margin-top: 5px; background: var(--mint); }
+.tli.red i { background: var(--rose); } .tli.orange i { background: var(--tangerine); } .tli small { display: block; color: var(--ink-3); }
+.ledger { margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: #F6F8FA; box-shadow: inset 0 0 0 1px var(--border-2); font: 12px ui-monospace, Menlo, monospace; }
+.ledger .lh { display: flex; justify-content: space-between; font: 700 11px var(--font); color: var(--ink-4); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+.ledger .ln { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px dashed var(--border); }
+.ledger .plus { color: var(--mint-fg); } .ledger .minus { color: var(--rose-fg); }
+.ledger .sum { font: 600 12px var(--font); color: var(--mint-fg); margin-top: 6px; }
+.fld { display: flex; flex-direction: column; gap: 5px; margin-top: 12px; } .fld label { font-size: 12px; font-weight: 600; color: var(--ink-2); }
+.fld input, .fld textarea, .fld select { background: var(--surface-2); border: 1px solid transparent; border-radius: 9px; padding: 9px 11px; font-size: 14px; outline: 0; }
+.fld input:focus, .fld textarea:focus, .fld select:focus { border-color: var(--tangerine); background: #fff; }
+.tg { width: 40px; height: 24px; border-radius: 12px; background: var(--ink-4); position: relative; flex: none; transition: background-color .2s; }
+.tg::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.2); transition: transform .2s; }
+.tg[aria-checked="true"] { background: var(--ink); } .tg[aria-checked="true"]::after { transform: translateX(16px); }
+.empty { padding: 32px; text-align: center; color: var(--ink-3); }
+/* reason dialog: no money or account action without a reason */
+.scrim { position: fixed; inset: 0; z-index: 50; display: none; align-items: center; justify-content: center; background: rgba(15,23,42,.35); }
+.scrim.show { display: flex; }
+.modal { width: 460px; max-width: 92vw; background: var(--card); border-radius: 16px; box-shadow: 0 24px 60px rgba(15,23,42,.25); padding: 20px; }
+.modal h3 { font: 800 18px var(--display); margin: 0; } .modal p { color: var(--ink-3); margin: 4px 0 0; font-size: 13px; }
+.mrow { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.toast { position: fixed; left: 50%; bottom: 24px; z-index: 60; transform: translate(-50%, 150%); background: var(--ink); color: #fff; border-radius: 12px; padding: 12px 18px; font-weight: 600; box-shadow: var(--shadow-float); transition: transform .35s var(--spring); }
+.toast:not(.show) { visibility: hidden; transition: transform .35s var(--spring), visibility 0s .35s; } .toast.show { transform: translate(-50%, 0); }
+[hidden] { display: none !important; }
+
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="logo" viewBox="0 0 40 40"><rect width="40" height="40" rx="12" fill="#0F172A"/><path d="M8 31 C 12 31, 13 25, 18 25" stroke="#FF5500" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="1 4.2" fill="none"/><path d="M24 8c5.5 0 9 3.9 9 8.6 0 5.6-5.4 9.8-9 12.4-3.6-2.6-9-6.8-9-12.4C15 11.9 18.5 8 24 8Z" fill="#FF5500"/><circle cx="24" cy="16.6" r="3.2" fill="#fff"/></symbol>
+    <symbol id="pin" viewBox="0 0 120 120"><path d="M60 10C88 10 104 30 104 54C104 82 78 102 60 114C42 102 16 82 16 54C16 30 32 10 60 10Z" fill="#34D399"/><path d="M60 10C88 10 104 30 104 54C104 60 103 64 101 68C92 42 74 30 44 30C36 30 30 32 24 35C32 18 44 10 60 10Z" fill="#6EE7B7" opacity=".7"/><path d="M42 56 q6 -7 12 0" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" fill="none"/><path d="M66 56 q6 -7 12 0" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" fill="none"/><path d="M50 70 Q60 80 70 70" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" fill="none"/><circle cx="36" cy="66" r="6" fill="#FF4D6D" opacity=".28"/><circle cx="84" cy="66" r="6" fill="#FF4D6D" opacity=".28"/></symbol>
+    <symbol id="blob" viewBox="0 0 120 120"><path d="M26 64C18 36 42 16 66 20C92 24 108 44 100 70C93 94 70 108 46 100C30 94 30 82 26 64Z" fill="#B9A6FF"/><path d="M40 34C52 24 72 24 86 34C78 30 62 30 50 38Z" fill="#fff" opacity=".5"/><ellipse cx="47" cy="62" rx="4.5" ry="6" fill="#0F172A"/><ellipse cx="73" cy="62" rx="4.5" ry="6" fill="#0F172A"/><circle cx="48.5" cy="60" r="1.6" fill="#fff"/><circle cx="74.5" cy="60" r="1.6" fill="#fff"/><ellipse cx="61" cy="79" rx="5.5" ry="4.5" fill="#0F172A"/><circle cx="35" cy="73" r="6" fill="#FF4D6D" opacity=".3"/><circle cx="85" cy="73" r="6" fill="#FF4D6D" opacity=".3"/></symbol>
+    <symbol id="parcel" viewBox="0 0 120 120"><rect x="16" y="30" width="88" height="74" rx="24" fill="#FF8A4C"/><path d="M16 54 Q60 60 104 54 V52 Q104 30 80 30 H40 Q16 30 16 52Z" fill="#FF9F6B"/><rect x="52" y="30" width="16" height="28" rx="4" fill="#FFD3B8"/><ellipse cx="47" cy="74" rx="4.5" ry="6" fill="#0F172A"/><ellipse cx="73" cy="74" rx="4.5" ry="6" fill="#0F172A"/><circle cx="48.5" cy="72" r="1.6" fill="#fff"/><circle cx="74.5" cy="72" r="1.6" fill="#fff"/><path d="M51 87 Q60 95 69 87" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" fill="none"/></symbol>
+    <symbol id="coin" viewBox="0 0 120 120"><circle cx="60" cy="62" r="44" fill="#FFC94A"/><circle cx="60" cy="62" r="34" fill="none" stroke="#F2A900" stroke-width="3.5"/><path d="M34 40 A34 34 0 0 1 72 30" stroke="#FFE7A3" stroke-width="5" stroke-linecap="round" fill="none"/><ellipse cx="47" cy="60" rx="4.5" ry="6" fill="#0F172A"/><ellipse cx="73" cy="60" rx="4.5" ry="6" fill="#0F172A"/><circle cx="48.5" cy="58" r="1.6" fill="#fff"/><circle cx="74.5" cy="58" r="1.6" fill="#fff"/><path d="M51 73 Q60 81 69 73" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" fill="none"/></symbol>
+  </defs>
+</svg>
+<div class="desk">
+
+  <!-- ============== MENU ============== -->
+  <nav class="nav" aria-label="Desk menu">
+    <a class="brand" href="13-today.html"><svg aria-hidden="true"><use href="#logo"/></svg>Waydrop<span>DESK</span></a>
+    <a class="nl " href="13-today.html"><i data-lucide="activity" class="ic-18"></i>Today</a><div class="ngrp">Needs you</div><a class="nl " href="13a-queue.html"><i data-lucide="inbox" class="ic-18"></i>Queue<em data-count="queue" hidden></em></a><div class="ngrp">Look up</div><a class="nl " href="13d-errand.html"><i data-lucide="package" class="ic-18"></i>Errands</a><a class="nl " href="13e-person.html"><i data-lucide="user-round" class="ic-18"></i>People</a><a class="nl " href="13f-payouts.html"><i data-lucide="landmark" class="ic-18"></i>Payouts<em data-count="payouts" hidden></em></a><div class="ngrp">Campus</div><a class="nl " href="13h-spots-and-places.html"><i data-lucide="map-pin" class="ic-18"></i>Spots and places<em data-count="places" hidden></em></a><a class="nl on" href="13i-crew.html"><i data-lucide="users" class="ic-18"></i>Crew</a><div class="ngrp">Control</div><a class="nl " href="13g-prices-and-rules.html"><i data-lucide="sliders-horizontal" class="ic-18"></i>Prices and rules</a><a class="nl " href="13j-audit-log.html"><i data-lucide="scroll-text" class="ic-18"></i>Audit log</a>
+    <div class="me"><img src="img/zainab.svg" alt=""><div><b style="display:block">Funmi A.</b><span class="caption">Support lead</span></div></div>
+  </nav>
+
+  <!-- ============== MAIN ============== -->
+  <main>
+    <div class="top">
+      <form class="search" action="13d-errand.html"><i data-lucide="search" class="ic-18"></i><input name="q" placeholder="Errand reference (WD-…), name or phone number" aria-label="Search"></form>
+      <div class="site"><i></i>BUK New Site</div>
+    </div>
+    <div class="pg">
+
+      <div class="ph"><div><h1>Crew</h1><p>Crew are paid by the hour at launch so no errand goes unanswered while regular runners grow.</p></div></div>
+      <section class="panel"><div class="panel-h"><b>Safety net</b><span style="display:flex;align-items:center;gap:10px"><span id="net-t"></span><button class="tg" id="net" role="switch" aria-label="Crew safety net"></button></span></div>
+        <table><thead><tr><th>On shift</th><th>Covering</th><th>Hours</th><th class="r">Errands tonight</th><th class="r">Available</th></tr></thead><tbody id="crew"></tbody></table></section>
+      <section class="panel"><div class="panel-h"><b>Where errands are waiting</b><small>Last hour</small></div><table><thead><tr><th>Area</th><th class="r">Waiting</th><th class="r">Runners near</th><th class="r">Status</th><th></th></tr></thead><tbody id="gaps"></tbody></table></section>
+    </div>
+  </main>
+</div>
+<div class="scrim" id="scrim"><div class="modal" id="modal" role="dialog" aria-modal="true"></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+
+const $ = id => document.getElementById(id);
+const naira = n => (n < 0 ? '−' : '') + '₦' + Math.abs(Math.round(n)).toLocaleString('en-NG');
+function toast(m) { const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2800); }
+
+/* Badges in the menu. GET /admin/counts */
+const counts = { queue: 9, payouts: 2, places: 3 };
+document.querySelectorAll('[data-count]').forEach(e => { const n = counts[e.dataset.count]; if (n) { e.textContent = n; e.hidden = false; } });
+
+/* Reason dialog. Every money or account action needs a reason; it goes to the audit log
+   (POST /admin/actions { action, target, reason, note }). */
+function ask({ title, text, reasons, cta, danger, onOk }) {
+  $('modal').innerHTML = `<h3>${title}</h3><p>${text}</p>
+    ${reasons ? `<div class="fld"><label for="m-reason">Reason</label><select id="m-reason">${reasons.map(r => `<option>${r}</option>`).join('')}</select></div>` : ''}
+    <div class="fld"><label for="m-note">Note for the audit log ${reasons ? '(optional)' : '(required)'}</label><textarea id="m-note" rows="2"></textarea></div>
+    <div class="mrow"><button class="b b-line" id="m-cancel">Cancel</button><button class="b ${danger ? 'b-danger' : 'b-dark'}" id="m-ok">${cta}</button></div>`;
+  $('scrim').classList.add('show');
+  $('m-cancel').onclick = () => $('scrim').classList.remove('show');
+  $('m-ok').onclick = () => {
+    if (!reasons && $('m-note').value.trim().length < 4) { $('m-note').focus(); return; }
+    $('scrim').classList.remove('show'); onOk && onOk();
+  };
+}
+$('scrim').addEventListener('click', e => { if (e.target.id === 'scrim') $('scrim').classList.remove('show'); });
+
+
+/* ====================== DATA ====================== */
+/* GET /admin/crew?site=buk-new ; PATCH /admin/crew/:id { available } ; PATCH /admin/config { crew_net } ; POST /admin/crew/dispatch { area } */
+const net = { on: true, after_s: 90 };
+const crew = [
+  { id: 'c1', name: 'Seyi A.',   photo_url: 'img/tobi.svg',    area: 'New Hall ↔ Faculty',          hours: '6–10 PM', errands: 4, available: true },
+  { id: 'c2', name: 'Halima M.', photo_url: 'img/aisha.svg',   area: 'Main gate ↔ Coke Village',    hours: '6–10 PM', errands: 3, available: true },
+  { id: 'c3', name: 'Uche N.',   photo_url: 'img/chidi.svg',   area: 'Library loop',                hours: '6–9 PM',  errands: 5, available: true },
+  { id: 'c4', name: 'Dayo F.',   photo_url: 'img/musa.svg',    area: 'Stadium area',                hours: '7–10 PM', errands: 2, available: false },
+];
+const gaps = [
+  { area: 'Coke Village', waiting: 3, runners: 1, status: 'Short' },
+  { area: 'Main Library', waiting: 2, runners: 9, status: 'Covered' },
+  { area: 'Stadium',      waiting: 1, runners: 2, status: 'Tight' },
+];
+
+/* ====================== RENDER ====================== */
+function render() {
+  $('net').setAttribute('aria-checked', String(net.on));
+  $('net-t').textContent = net.on ? `Unmatched errands go to Crew after ${net.after_s} s` : 'Off: unmatched errands wait for regular runners';
+  $('crew').innerHTML = crew.map(c => `<tr><td><span style="display:flex;align-items:center;gap:10px"><img class="av" src="${c.photo_url}" alt=""><b>${c.name}</b></span></td><td>${c.area}</td><td>${c.hours}</td><td class="r n">${c.errands}</td><td class="r"><button class="tg" role="switch" aria-checked="${c.available}" aria-label="${c.name} available" data-c="${c.id}"></button></td></tr>`).join('');
+  $('gaps').innerHTML = gaps.map(g => `<tr><td><b>${g.area}</b></td><td class="r n">${g.waiting}</td><td class="r n">${g.runners}</td><td class="r"><span class="chip ${g.status === 'Short' ? 'c-rose' : g.status === 'Tight' ? 'c-butter' : 'c-mint'}">${g.status}</span></td><td class="r">${g.status !== 'Covered' ? `<button class="b b-line" data-send="${g.area}">Send Crew</button>` : ''}</td></tr>`).join('');
+}
+
+/* ====================== INTERACTIONS ====================== */
+$('net').addEventListener('click', () => { net.on = !net.on; render(); toast(`Safety net ${net.on ? 'on' : 'off'}. Logged.`); });
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-c]'); if (t) { const c = crew.find(x => x.id === t.dataset.c); c.available = !c.available; render(); }
+  const s = e.target.closest('[data-send]'); if (s) toast(`Nearest available Crew member asked to head to ${s.dataset.send}.`);
+});
+render();
+
+lucide.createIcons();
+</script>
+</body>
+</html>

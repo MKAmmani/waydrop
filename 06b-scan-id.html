@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Scan your ID · Waydrop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+
+:root {
+  /* surfaces: soft off-white page, white cards */
+  --bg:        #F6F7F9;
+  --card:      #FFFFFF;
+  --surface-2: #F1F3F6;
+  --border:    #ECEEF2;
+  --border-2:  #F3F4F7;
+  /* ink: one dark, three greys */
+  --ink:   #0F172A;
+  --ink-2: #4B5565;
+  --ink-3: #8A93A3;
+  --ink-4: #C3C9D3;
+  /* Waydrop colours, used sparingly */
+  --tangerine:      #FF5500;
+  --tangerine-fg:   #C63D00;
+  --tangerine-tint: #FFF1E9;
+  --mint:      #10B981;
+  --mint-fg:   #047857;
+  --mint-tint: #E9F8F2;
+  --butter:      #FFC94A;
+  --butter-fg:   #92400E;
+  --butter-tint: #FFF7DE;
+  --rose:      #E11D48;
+  --rose-fg:   #BE123C;
+  --rose-tint: #FFEDF1;
+
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 22px;
+  --r-xl: 28px;
+  --r-pill: 999px;
+
+  /* shadows you barely notice */
+  --shadow-1: 0 1px 2px rgba(15,23,42,.04), 0 4px 14px rgba(15,23,42,.05);
+  --shadow-2: 0 2px 6px rgba(15,23,42,.05), 0 12px 32px rgba(15,23,42,.08);
+  --shadow-float: 0 6px 24px rgba(15,23,42,.12);
+
+  --display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font: "DM Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ease: cubic-bezier(.23,1,.32,1);
+  --spring: cubic-bezier(.34,1.56,.64,1);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; }
+body {
+  font-family: var(--font);
+  font-size: 15px; line-height: 1.5;
+  color: var(--ink); background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; background: none; border: 0; padding: 0; }
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 3px solid var(--tangerine); outline-offset: 2px; border-radius: 10px; }
+
+/* lucide icon defaults: one weight everywhere */
+[data-lucide] { width: 20px; height: 20px; stroke-width: 1.75; flex-shrink: 0; }
+.ic-16 { width: 16px; height: 16px; }
+.ic-18 { width: 18px; height: 18px; }
+.ic-22 { width: 22px; height: 22px; }
+.ic-24 { width: 24px; height: 24px; }
+
+.caption { font-size: 13px; color: var(--ink-3); }
+.money { font-family: var(--display); font-weight: 800; font-variant-numeric: tabular-nums; }
+
+html, body { background: #0B1120; }
+.cam { min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: max(16px, env(safe-area-inset-top)) 20px max(28px, env(safe-area-inset-bottom)); color: #fff; text-align: center; max-width: 560px; margin: 0 auto; }
+.bar { align-self: stretch; display: flex; align-items: center; gap: 12px; min-height: 52px; }
+.bar a { width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,.12); display: grid; place-items: center; color: #fff; }
+.cam h1 { font: 800 24px/1.2 var(--display); margin: 8px 0 0; }
+.cam p { color: #CBD5E1; margin: 6px 0 0; }
+.viewer { position: relative; width: 100%; margin-top: 24px; overflow: hidden; background: #111827; }
+.viewer video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.viewer.card-shape { aspect-ratio: 1.58; border-radius: 18px; box-shadow: inset 0 0 0 3px rgba(255,255,255,.85); }
+.viewer.face-shape { width: 240px; aspect-ratio: .78; border-radius: 50%; box-shadow: 0 0 0 4px rgba(255,255,255,.85); }
+.viewer.ok { box-shadow: inset 0 0 0 3px var(--mint); } .viewer.face-shape.ok { box-shadow: 0 0 0 4px var(--mint); }
+.viewer.bad { box-shadow: 0 0 0 4px var(--rose); }
+.scan { position: absolute; left: 0; right: 0; height: 2px; background: var(--tangerine); box-shadow: 0 0 12px var(--tangerine); animation: scan 2s ease-in-out infinite; }
+@keyframes scan { 0%, 100% { top: 8%; } 50% { top: 92%; } }
+.tip { margin-top: 16px; font-size: 18px; font-weight: 600; min-height: 28px; }
+.tries { display: flex; gap: 6px; justify-content: center; margin-top: 10px; } .tries i { width: 28px; height: 6px; border-radius: 3px; background: rgba(255,255,255,.2); } .tries i.used { background: var(--rose); }
+.tips { text-align: left; display: grid; gap: 10px; margin-top: 16px; font-size: 15px; color: #E2E8F0; } .tips div { display: flex; gap: 10px; align-items: center; } .tips i { color: #6EE7B7; }
+.actions { margin-top: auto; padding-top: 20px; align-self: stretch; display: flex; flex-direction: column; gap: 10px; }
+.btn { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 54px; border-radius: var(--r-pill); font-weight: 600; font-size: 16px; width: 100%; }
+.btn-white { background: #fff; color: var(--ink); } .btn-outline { box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.35); color: #fff; }
+.off { margin-top: 24px; padding: 20px; border-radius: var(--r-lg); background: rgba(255,255,255,.06); text-align: left; }
+.off ol { margin: 10px 0 0; padding-left: 20px; color: #E2E8F0; line-height: 1.8; }
+.shutter { width: 76px; height: 76px; border-radius: 50%; border: 5px solid #fff; background: rgba(255,255,255,.2); margin: 0 auto; }
+[hidden] { display: none !important; }
+@media (prefers-reduced-motion: reduce) { .scan { animation: none; top: 50%; } }
+
+</style>
+</head>
+<body>
+<main class="cam">
+  <div class="bar"><a href="06a-choose-id.html" aria-label="Back"><i data-lucide="arrow-left"></i></a></div>
+
+  <h1 id="title">Scan your student ID</h1>
+  <p>Front side, inside the frame. Good light, no glare.</p>
+
+  <!-- live camera -->
+  <div class="viewer card-shape" id="viewer"><video id="video" playsinline muted></video><span class="scan"></span></div>
+  <p class="tip" id="tip" aria-live="polite">Hold still…</p>
+
+  <!-- camera blocked -->
+  <section class="off" id="off" hidden>
+    <b style="font-size:17px">Waydrop can't use your camera</b>
+    <ol><li>Open your browser or phone settings</li><li>Find Waydrop</li><li>Turn Camera on, then come back</li></ol>
+    <p style="margin-top:10px">You can also upload a photo of your ID you already took.</p>
+  </section>
+
+  <div class="actions">
+    <button class="btn btn-white" id="capture">Take photo</button>
+    <label class="btn btn-outline"><i data-lucide="image" class="ic-18"></i>Upload a photo instead<input type="file" accept="image/*" id="upload" hidden></label>
+  </div>
+</main>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+
+/* ====================== DATA ====================== */
+/* POST /kyc/sessions/:id/document (multipart image) → { quality: ok | blurry | glare, expired } */
+const type = new URLSearchParams(location.search).get('type') || 'student_id';
+const titles = { student_id: 'Scan your student ID', passport: 'Scan your passport photo page' };
+
+/* ====================== CAMERA ====================== */
+const $ = id => document.getElementById(id);
+$('title').textContent = titles[type];
+let stream = null;
+async function start() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    $('video').srcObject = stream; await $('video').play();
+  } catch (e) {
+    $('viewer').hidden = true; $('tip').hidden = true; $('capture').hidden = true; $('off').hidden = false;
+  }
+}
+function done() {
+  $('viewer').classList.add('ok'); $('tip').textContent = 'Got it. Sharp and readable.';
+  stream && stream.getTracks().forEach(t => t.stop());
+  /* upload, then: quality ok → selfie; blurry → 06f?status=retry; expired → 06f?status=expired */
+  setTimeout(() => location.href = '06d-selfie-check.html', 900);
+}
+
+/* ====================== INTERACTIONS ====================== */
+$('capture').addEventListener('click', done);
+$('upload').addEventListener('change', e => { if (e.target.files.length) done(); });
+if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) start(); else { $('viewer').hidden = true; $('capture').hidden = true; $('off').hidden = false; }
+
+lucide.createIcons();
+</script>
+</body>
+</html>

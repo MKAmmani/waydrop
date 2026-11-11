@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Verification code · Waydrop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+
+:root {
+  /* surfaces: soft off-white page, white cards */
+  --bg:        #F6F7F9;
+  --card:      #FFFFFF;
+  --surface-2: #F1F3F6;
+  --border:    #ECEEF2;
+  --border-2:  #F3F4F7;
+  /* ink: one dark, three greys */
+  --ink:   #0F172A;
+  --ink-2: #4B5565;
+  --ink-3: #8A93A3;
+  --ink-4: #C3C9D3;
+  /* Waydrop colours, used sparingly */
+  --tangerine:      #FF5500;
+  --tangerine-fg:   #C63D00;
+  --tangerine-tint: #FFF1E9;
+  --mint:      #10B981;
+  --mint-fg:   #047857;
+  --mint-tint: #E9F8F2;
+  --butter:      #FFC94A;
+  --butter-fg:   #92400E;
+  --butter-tint: #FFF7DE;
+  --rose:      #E11D48;
+  --rose-fg:   #BE123C;
+  --rose-tint: #FFEDF1;
+
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 22px;
+  --r-xl: 28px;
+  --r-pill: 999px;
+
+  /* shadows you barely notice */
+  --shadow-1: 0 1px 2px rgba(15,23,42,.04), 0 4px 14px rgba(15,23,42,.05);
+  --shadow-2: 0 2px 6px rgba(15,23,42,.05), 0 12px 32px rgba(15,23,42,.08);
+  --shadow-float: 0 6px 24px rgba(15,23,42,.12);
+
+  --display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font: "DM Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ease: cubic-bezier(.23,1,.32,1);
+  --spring: cubic-bezier(.34,1.56,.64,1);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; }
+body {
+  font-family: var(--font);
+  font-size: 15px; line-height: 1.5;
+  color: var(--ink); background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; background: none; border: 0; padding: 0; }
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 3px solid var(--tangerine); outline-offset: 2px; border-radius: 10px; }
+
+/* lucide icon defaults: one weight everywhere */
+[data-lucide] { width: 20px; height: 20px; stroke-width: 1.75; flex-shrink: 0; }
+.ic-16 { width: 16px; height: 16px; }
+.ic-18 { width: 18px; height: 18px; }
+.ic-22 { width: 22px; height: 22px; }
+.ic-24 { width: 24px; height: 24px; }
+
+.caption { font-size: 13px; color: var(--ink-3); }
+.money { font-family: var(--display); font-weight: 800; font-variant-numeric: tabular-nums; }
+
+/* ============== ONBOARDING (dark) ============== */
+:root { --night: #0F172A; --night-2: #1E293B; --grid: rgba(148,163,184,.09); --muted: #94A3B8; --ease-out: cubic-bezier(.23,1,.32,1); --ease-in-out: cubic-bezier(.77,0,.175,1); }
+html, body { background: var(--night); color: var(--ink); }
+.screen { min-height: 100vh; min-height: 100dvh; max-width: 460px; margin: 0 auto; display: flex; flex-direction: column; padding: max(20px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom)); }
+
+/* wordmark */
+.brand { text-align: center; font: 800 26px var(--display); letter-spacing: -.02em; padding-top: 8px; }
+.brand span { color: var(--tangerine); }
+
+/* the scene */
+.scene { position: relative; flex: 1; min-height: 340px; margin: 8px -24px 0; }
+.scene svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.live { position: absolute; left: 24px; top: 10%; font-size: 17px; color: var(--ink); opacity: 0; transform: translateY(6px); transition: opacity .4s var(--ease-out), transform .4s var(--ease-out); }
+.live.show { opacity: 1; transform: none; }
+.live b { font: 800 30px/1 var(--display); color: var(--ink); display: inline-block; min-width: .6em; text-align: center; vertical-align: -3px; }
+.live b.tick { animation: tick .35s var(--ease-out); }
+@keyframes tick { from { transform: translateY(-8px); opacity: 0; } }
+
+/* svg pieces */
+.route-base { stroke: rgba(148,163,184,.28); stroke-width: 3; fill: none; stroke-linejoin: round; stroke-linecap: round; }
+.route-trail { stroke: var(--tangerine); stroke-width: 4; fill: none; stroke-linejoin: round; stroke-linecap: round; }
+.place { font: 600 12px var(--font); fill: var(--ink-3); }
+.who { font: 600 13px var(--font); fill: var(--ink); }
+.end { transform-box: fill-box; transform-origin: center; }
+.end.arrived { animation: land .5s var(--ease-out); }
+@keyframes land { 40% { transform: scale(1.25); } }
+.pulse { transform-box: fill-box; transform-origin: center; opacity: 0; }
+.pulse.go { animation: pulse 1.4s var(--ease-out) infinite; }
+@keyframes pulse { from { transform: scale(.6); opacity: .7; } to { transform: scale(2.2); opacity: 0; } }
+.runner { opacity: 0; transition: opacity .3s var(--ease-out); }
+.runner.show { opacity: 1; }
+.code { transform-box: fill-box; transform-origin: 0% 50%; opacity: 0; transform: scale(.9); transition: opacity .3s var(--ease-out), transform .45s cubic-bezier(.34,1.56,.64,1); }
+.code.show { opacity: 1; transform: none; }
+
+/* words */
+.words { padding-top: 8px; }
+.words h1 { font: 800 clamp(34px, 9.5vw, 42px)/1.05 var(--display); letter-spacing: -.03em; margin: 0; max-width: 12ch; }
+.words p { font-size: 18px; line-height: 1.45; color: var(--ink-2); margin: 12px 0 0; max-width: 30ch; }
+.enter { opacity: 0; transform: translateY(10px); animation: enter .6s var(--ease-out) forwards; }
+.enter.d2 { animation-delay: .08s; }
+@keyframes enter { to { opacity: 1; transform: none; } }
+
+/* progress + actions */
+.dots { display: flex; gap: 6px; margin: 26px 0 18px; } .dots i { height: 6px; width: 6px; border-radius: 3px; background: rgba(148,163,184,.35); } .dots i.on { width: 22px; background: #fff; }
+.actions { display: grid; grid-template-columns: 1fr 1.3fr; gap: 12px; }
+.btn { display: flex; align-items: center; justify-content: center; min-height: 58px; border-radius: var(--r-pill); font-size: 18px; font-weight: 600; transition: transform .14s var(--ease-out), box-shadow .14s var(--ease-out); -webkit-tap-highlight-color: transparent; }
+.btn:active { transform: scale(.97); }
+.skip { background: var(--card); color: var(--ink); }
+/* a slightly darker bottom edge so it reads as something to press */
+.go { background: var(--tangerine); color: var(--night); box-shadow: inset 0 -4px 0 rgba(120,30,0,.35); }
+.go:active { box-shadow: inset 0 -2px 0 rgba(120,30,0,.35); }
+:focus-visible { outline: 3px solid var(--tangerine); outline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .enter { animation: none; opacity: 1; transform: none; }
+  .pulse.go { animation: none; }
+}
+
+/* ============== ACCOUNT STEPS (dark) ============== */
+.top { display: flex; align-items: center; gap: 12px; min-height: 52px; }
+.back { width: 44px; height: 44px; border-radius: 50%; background: var(--card); display: grid; place-items: center; color: var(--ink); }
+.steps { flex: 1; display: flex; gap: 5px; } .steps i { flex: 1; height: 4px; border-radius: 2px; background: var(--border); } .steps i.on { background: var(--tangerine); }
+.body { flex: 1; padding-top: 18px; }
+.body h1 { font: 800 clamp(30px, 8vw, 36px)/1.1 var(--display); letter-spacing: -.02em; margin: 0; }
+.body .lede { font-size: 17px; line-height: 1.45; color: var(--ink-2); margin: 10px 0 24px; max-width: 34ch; }
+.field { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.field label { font-size: 14px; font-weight: 600; color: var(--ink); } .field label em { font-style: normal; font-weight: 400; color: var(--ink-3); }
+.input { display: flex; align-items: center; gap: 10px; min-height: 58px; padding: 0 16px; border-radius: 16px; background: var(--card); box-shadow: inset 0 0 0 1.5px var(--border); transition: box-shadow .15s; }
+.input:focus-within { box-shadow: inset 0 0 0 2px var(--tangerine), 0 0 0 4px rgba(255,85,0,.18); }
+.input.bad { box-shadow: inset 0 0 0 2px var(--rose); }
+.input input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; color: var(--ink); font-size: 18px; padding: 14px 0; }
+.input input::placeholder { color: var(--ink-4); }
+.prefix { display: flex; align-items: center; gap: 8px; font-weight: 600; padding-right: 12px; border-right: 1px solid var(--border); }
+.flag { width: 22px; height: 15px; border-radius: 3px; background: linear-gradient(90deg, #008751 33%, #fff 33% 66%, #008751 66%); }
+.hint { font-size: 14px; color: var(--ink-3); margin: 0; } .hint.bad { color: var(--rose-fg); }
+.foot { padding-top: 18px; display: flex; flex-direction: column; gap: 10px; }
+.go[aria-disabled="true"] { opacity: .35; pointer-events: none; }
+.ghost { min-height: 48px; display: flex; align-items: center; justify-content: center; color: var(--ink-2); font-weight: 600; }
+.check { display: flex; align-items: flex-start; gap: 12px; width: 100%; text-align: left; margin-top: 20px; font-size: 15px; color: var(--ink-2); }
+.check .box { width: 24px; height: 24px; border-radius: 7px; box-shadow: inset 0 0 0 2px var(--ink-4); display: grid; place-items: center; flex: none; color: transparent; font-weight: 800; transition: background-color .15s; }
+.check[aria-checked="true"] .box { background: var(--tangerine); box-shadow: none; color: var(--night); }
+[hidden] { display: none !important; }
+.check small { display: block; color: var(--ink-3); font-size: 13px; margin-top: 2px; }
+.notice { display: flex; gap: 10px; padding: 12px 14px; border-radius: 14px; background: var(--card); font-size: 14px; color: var(--ink-2); margin-bottom: 18px; }
+.notice b { color: var(--ink); }
+.spin { width: 20px; height: 20px; border-radius: 50%; border: 3px solid rgba(15,23,42,.25); border-top-color: var(--night); animation: sp .7s linear infinite; }
+@keyframes sp { to { transform: rotate(360deg); } }
+
+.otp { position: relative; display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; max-width: 380px; cursor: text; }
+.otp input { position: absolute; inset: 0; opacity: 0; width: 100%; font-size: 16px; }
+.otp span { height: 62px; border-radius: 14px; background: var(--card); box-shadow: inset 0 0 0 1.5px var(--border); display: grid; place-items: center; font: 800 26px var(--display); transition: box-shadow .15s, transform .15s; }
+.otp span.cur { box-shadow: inset 0 0 0 2px var(--tangerine); }
+.otp span.ok { box-shadow: inset 0 0 0 2px #10B981; color: var(--mint-fg); }
+.otp span.bad { box-shadow: inset 0 0 0 2px var(--rose); color: var(--rose-fg); animation: shake .35s; }
+@keyframes shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+
+
+/* ============== LIGHT (same look as the app) ============== */
+html, body { background: var(--bg); color: var(--ink); }
+.go { background: var(--ink); color: #fff; box-shadow: 0 6px 16px rgba(15,23,42,.18); }
+.go:active { box-shadow: 0 3px 8px rgba(15,23,42,.18); }
+.go .spin { border-color: rgba(255,255,255,.3); border-top-color: #fff; }
+.input, .site, .choice, .back, .notice, .n { box-shadow: inset 0 0 0 1.5px var(--border), var(--shadow-1); }
+.input:focus-within { box-shadow: inset 0 0 0 2px var(--tangerine), 0 0 0 4px var(--tangerine-tint); }
+.input.bad { box-shadow: inset 0 0 0 2px var(--rose); }
+.site[aria-checked="true"] { box-shadow: inset 0 0 0 2px var(--tangerine); }
+.otp span { background: var(--card); box-shadow: inset 0 0 0 1.5px var(--border); }
+.otp span.cur { box-shadow: inset 0 0 0 2px var(--tangerine); } .otp span.ok { box-shadow: inset 0 0 0 2px var(--mint); } .otp span.bad { box-shadow: inset 0 0 0 2px var(--rose); }
+.steps i { background: var(--border); }
+.found { background: var(--mint-tint); }
+.n { box-shadow: var(--shadow-2); }
+/* arriving from the dark welcome screen: content settles in */
+.screen { animation: settle .35s var(--ease-out); }
+@keyframes settle { from { opacity: 0; transform: translateY(6px); } }
+@media (prefers-reduced-motion: reduce) { .screen { animation: none; } }
+</style>
+</head>
+<body>
+
+<main class="screen">
+  <!-- top: back + progress -->
+  <header class="top"><a class="back" href="01d-phone-number.html" aria-label="Back"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg></a><div class="steps" role="progressbar" aria-valuemin="1" aria-valuemax="5" aria-valuenow="2" aria-label="Step 2 of 5"><i class="on"></i><i class="on"></i><i class=""></i><i class=""></i><i class=""></i></div></header>
+  <section class="body">
+
+    <!-- signed out after 30 days: same screen, number already filled in -->
+    <div class="notice" id="expired" hidden><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></svg><span><b>You were signed out to keep your account safe.</b> Enter the code we just sent to carry on.</span></div>
+    <h1>Enter the code we sent</h1>
+    <p class="lede" id="sent-to"></p>
+    <div class="otp" id="otp" role="group" aria-label="6-digit code"></div>
+    <p class="hint" id="msg" aria-live="polite" style="margin-top:12px"></p>
+    <button class="check" id="shared" role="checkbox" aria-checked="false"><span class="box" aria-hidden="true">✓</span><span>This is a shared computer<small>You'll be signed out when the browser closes.</small></span></button>
+  </section>
+  <footer class="foot"><button class="ghost" id="resend" disabled></button></footer>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const EASE = 'cubic-bezier(.23,1,.32,1)', MOVE = 'cubic-bezier(.77,0,.175,1)', POP = 'cubic-bezier(.34,1.56,.64,1)';
+const anim = (el, frames, ms, easing = EASE, delay = 0) => el.animate(frames, { duration: ms, easing, delay, fill: 'forwards' }).finished;
+
+/* ====================== DATA ====================== */
+/* POST /auth/verify { request_id, code, shared_device } → { session, is_new_user }
+   Session: httpOnly cookie, 30 days, renewed on use; shared_device = ends when the browser closes.
+   Stand-in so the page works on its own: 000000 is wrong, a number ending in 1 is a returning user.
+   ?reason=expired shows the signed-out note. */
+const phone = sessionStorage.getItem('wd_phone') || '8031234567';
+const RESEND_S = 30;
+async function verify(code) { return code === '000000' ? { ok: false } : { ok: true, is_new_user: !phone.endsWith('1') }; }
+
+/* ====================== RENDER ====================== */
+$('expired').hidden = new URLSearchParams(location.search).get('reason') !== 'expired';
+$('sent-to').innerHTML = `Sent to +234 ${phone.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3')}. <a href="01d-phone-number.html" style="color:var(--ink);font-weight:600;text-decoration:underline">Change number</a>`;
+/* one real input carries autocomplete="one-time-code" so the SMS code fills in by itself; the boxes mirror it */
+$('otp').innerHTML = `<input id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" aria-label="Code">` + '<span></span>'.repeat(6);
+const code = $('code'), boxes = [...document.querySelectorAll('#otp span')];
+function paint(state) {
+  boxes.forEach((b, i) => { b.textContent = code.value[i] || ''; b.className = (i === code.value.length && document.activeElement === code ? 'cur ' : '') + (state || ''); });
+}
+let secs = RESEND_S;
+function timer() { const r = $('resend'); r.disabled = secs > 0; r.textContent = secs > 0 ? `Resend code in 0:${String(secs).padStart(2, '0')}` : 'Resend code'; }
+setInterval(() => { if (secs > 0) { secs--; timer(); } }, 1000); timer();
+
+/* ====================== INTERACTIONS ====================== */
+code.addEventListener('focus', () => paint()); code.addEventListener('blur', () => paint());
+code.addEventListener('input', async () => {
+  code.value = code.value.replace(/\D/g, '').slice(0, 6); paint(); $('msg').textContent = '';
+  if (code.value.length < 6) return;
+  const res = await verify(code.value);
+  if (!res.ok) { paint('bad'); $('msg').className = 'hint bad'; $('msg').textContent = "That code isn't right. Check the text and try again."; setTimeout(() => { code.value = ''; paint(); }, 900); return; }
+  paint('ok');
+  sessionStorage.setItem('wd_shared', $('shared').getAttribute('aria-checked'));
+  setTimeout(() => location.href = res.is_new_user ? '01f-name-and-photo.html' : (sessionStorage.getItem('wd_shared') === 'true' ? '02-map-home.html' : '01i-sign-in-faster.html'), 500);
+});
+$('otp').addEventListener('click', () => code.focus());
+$('shared').addEventListener('click', e => { const b = e.currentTarget; b.setAttribute('aria-checked', String(b.getAttribute('aria-checked') !== 'true')); });
+$('resend').addEventListener('click', () => { secs = RESEND_S; timer(); $('msg').className = 'hint'; $('msg').textContent = 'New code sent.'; });
+/* Android Chrome can read the SMS directly when it ends with "@waydrop.app #123456" */
+if ('OTPCredential' in window) navigator.credentials.get({ otp: { transport: ['sms'] } }).then(o => { if (o) { code.value = o.code; code.dispatchEvent(new Event('input')); } }).catch(() => {});
+code.focus(); paint();
+
+</script>
+</body>
+</html>

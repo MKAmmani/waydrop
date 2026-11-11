@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Delivered · Waydrop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+
+:root {
+  /* surfaces: soft off-white page, white cards */
+  --bg:        #F6F7F9;
+  --card:      #FFFFFF;
+  --surface-2: #F1F3F6;
+  --border:    #ECEEF2;
+  --border-2:  #F3F4F7;
+  /* ink: one dark, three greys */
+  --ink:   #0F172A;
+  --ink-2: #4B5565;
+  --ink-3: #8A93A3;
+  --ink-4: #C3C9D3;
+  /* Waydrop colours, used sparingly */
+  --tangerine:      #FF5500;
+  --tangerine-fg:   #C63D00;
+  --tangerine-tint: #FFF1E9;
+  --mint:      #10B981;
+  --mint-fg:   #047857;
+  --mint-tint: #E9F8F2;
+  --butter:      #FFC94A;
+  --butter-fg:   #92400E;
+  --butter-tint: #FFF7DE;
+  --rose:      #E11D48;
+  --rose-fg:   #BE123C;
+  --rose-tint: #FFEDF1;
+
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 22px;
+  --r-xl: 28px;
+  --r-pill: 999px;
+
+  /* shadows you barely notice */
+  --shadow-1: 0 1px 2px rgba(15,23,42,.04), 0 4px 14px rgba(15,23,42,.05);
+  --shadow-2: 0 2px 6px rgba(15,23,42,.05), 0 12px 32px rgba(15,23,42,.08);
+  --shadow-float: 0 6px 24px rgba(15,23,42,.12);
+
+  --display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font: "DM Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ease: cubic-bezier(.23,1,.32,1);
+  --spring: cubic-bezier(.34,1.56,.64,1);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; }
+body {
+  font-family: var(--font);
+  font-size: 15px; line-height: 1.5;
+  color: var(--ink); background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; background: none; border: 0; padding: 0; }
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 3px solid var(--tangerine); outline-offset: 2px; border-radius: 10px; }
+
+/* lucide icon defaults: one weight everywhere */
+[data-lucide] { width: 20px; height: 20px; stroke-width: 1.75; flex-shrink: 0; }
+.ic-16 { width: 16px; height: 16px; }
+.ic-18 { width: 18px; height: 18px; }
+.ic-22 { width: 22px; height: 22px; }
+.ic-24 { width: 24px; height: 24px; }
+
+.caption { font-size: 13px; color: var(--ink-3); }
+.money { font-family: var(--display); font-weight: 800; font-variant-numeric: tabular-nums; }
+
+/* ============== APP SHELL ============== */
+/* Phone: full-screen page + floating bottom bar.
+   Computer (1024px and up): left menu + page, like a normal web app. */
+.app { min-height: 100vh; }
+.side { display: none; }
+@media (min-width: 1024px) {
+  .app { display: grid; grid-template-columns: 232px 1fr; }
+  .side {
+    display: flex; flex-direction: column; gap: 2px;
+    position: sticky; top: 0; height: 100vh;
+    padding: 20px 14px 16px; background: var(--card); border-right: 1px solid var(--border);
+  }
+  .bottom-bar { display: none !important; }
+}
+.side-brand { display: flex; align-items: center; gap: 10px; padding: 4px 10px 18px; font: 800 19px var(--display); letter-spacing: -.02em; }
+.side-brand svg { width: 32px; height: 32px; }
+.nav-item { display: flex; align-items: center; gap: 12px; height: 42px; padding: 0 12px; border-radius: 12px; color: var(--ink-2); font-weight: 500; }
+.nav-item:hover { background: var(--surface-2); }
+.nav-item.active { background: var(--ink); color: #fff; }
+.nav-item .nav-badge { margin-left: auto; min-width: 20px; height: 20px; border-radius: 10px; background: var(--tangerine); color: #fff; font-size: 11px; font-weight: 700; display: grid; place-items: center; padding: 0 6px; }
+.nav-send { margin: 10px 0; display: flex; align-items: center; justify-content: center; gap: 8px; height: 44px; border-radius: var(--r-pill); background: var(--tangerine); color: #fff; font-weight: 600; }
+.side-foot { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 12px 10px; border-top: 1px solid var(--border); }
+.avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: var(--surface-2); flex: none; }
+.side-foot .nm { font-weight: 600; font-size: 14px; } .side-foot .role { font-size: 12px; color: var(--ink-3); }
+
+/* floating bottom bar (phone): active tab is a black circle */
+.bottom-bar {
+  position: fixed; left: 16px; right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); z-index: 40;
+  height: 68px; border-radius: var(--r-pill); background: var(--card); box-shadow: var(--shadow-float);
+  display: flex; align-items: center; justify-content: space-around; padding: 0 8px;
+  max-width: 440px; margin: 0 auto;
+}
+.bb-item { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; color: var(--ink-3); position: relative; }
+.bb-item.active { background: var(--ink); color: #fff; }
+.bb-item.send { background: var(--tangerine); color: #fff; }
+.bb-item .dot { position: absolute; top: 12px; right: 12px; width: 8px; height: 8px; border-radius: 50%; background: var(--tangerine); border: 2px solid var(--card); }
+
+/* ============== PAGE ============== */
+.page { max-width: 560px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; padding: max(12px, env(safe-area-inset-top)) 20px 0; }
+@media (min-width: 1024px) { .page { padding-top: 32px; min-height: auto; } }
+.topbar { display: flex; align-items: center; gap: 12px; min-height: 56px; }
+.topbar .t { flex: 1; font: 700 17px var(--display); }
+.icon-btn { width: 44px; height: 44px; border-radius: 50%; background: var(--card); box-shadow: var(--shadow-1); display: grid; place-items: center; flex: none; }
+.content { flex: 1; padding: 8px 0 28px; }
+h1 { font: 800 28px/1.12 var(--display); letter-spacing: -.02em; margin: 6px 0 0; }
+.lede { color: var(--ink-2); margin: 8px 0 22px; }
+.caption { font-size: 13px; color: var(--ink-3); }
+
+/* footer: sticky on phone, normal on computer */
+.footer { position: sticky; bottom: 0; padding: 14px 0 max(18px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 8px; background: linear-gradient(to top, var(--bg) 78%, rgba(246,247,249,0)); }
+@media (min-width: 1024px) { .footer { position: static; background: none; padding-bottom: 40px; } }
+
+/* buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 54px; padding: 0 22px; width: 100%; border-radius: var(--r-pill); font-weight: 600; font-size: 16px; transition: transform .1s var(--ease), opacity .2s; }
+.btn:active { transform: scale(.98); }
+.btn-dark { background: var(--ink); color: #fff; box-shadow: 0 6px 16px rgba(15,23,42,.18); }
+.btn-light { background: var(--card); color: var(--ink); box-shadow: var(--shadow-1); }
+.btn-ghost { min-height: 46px; color: var(--ink-2); font-size: 15px; }
+.btn-tangerine { background: var(--tangerine); color: #fff; }
+.btn-mint { background: var(--mint); color: var(--ink); }
+.btn-danger { background: var(--rose-tint); color: var(--rose-fg); }
+.btn[aria-disabled="true"], .btn:disabled { opacity: .35; pointer-events: none; box-shadow: none; }
+
+/* cards, rows */
+.card { background: var(--card); border-radius: var(--r-lg); box-shadow: var(--shadow-1); }
+.row { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border-2); }
+.row:last-child { border-bottom: 0; }
+.row .t { flex: 1; min-width: 0; } .row .t b { display: block; font-size: 15px; font-weight: 600; } .row .t small { font-size: 13px; color: var(--ink-3); }
+.ic-box { width: 40px; height: 40px; border-radius: 13px; background: var(--surface-2); color: var(--ink-2); display: grid; place-items: center; flex: none; }
+.sec-label { font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-3); margin: 24px 4px 10px; }
+
+/* fields */
+.field { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.field label { font-size: 14px; font-weight: 600; }
+.field label em { font-style: normal; font-weight: 400; color: var(--ink-3); }
+.input { display: flex; align-items: center; gap: 10px; min-height: 54px; padding: 0 16px; border-radius: var(--r-md); background: var(--card); box-shadow: inset 0 0 0 1px var(--border); transition: box-shadow .15s; }
+.input:focus-within { box-shadow: inset 0 0 0 2px var(--tangerine), 0 0 0 4px var(--tangerine-tint); }
+.input input, .input textarea { flex: 1; min-width: 0; border: 0; outline: 0; background: none; font-size: 16px; padding: 14px 0; resize: none; }
+.hint { font-size: 13px; color: var(--ink-3); margin: 0; }
+
+/* choice cards (radio) */
+.choice { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; padding: 14px 16px; margin-top: 10px; border-radius: var(--r-lg); background: var(--card); box-shadow: inset 0 0 0 1px var(--border); transition: box-shadow .15s; }
+.choice[aria-checked="true"] { box-shadow: inset 0 0 0 2px var(--ink); }
+.choice .t { flex: 1; } .choice b { display: block; font-size: 16px; font-weight: 600; } .choice small { font-size: 13px; color: var(--ink-3); }
+.choice .r { text-align: right; font-family: var(--display); font-weight: 800; }
+.choice .r small { display: block; font-family: var(--font); font-weight: 500; font-size: 12px; }
+
+/* toggles */
+.switch { width: 50px; height: 30px; border-radius: 15px; background: var(--ink-4); position: relative; flex: none; transition: background-color .2s; }
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.2); transition: transform .3s var(--spring); }
+.switch[aria-checked="true"] { background: var(--ink); } .switch[aria-checked="true"]::after { transform: translateX(20px); }
+
+/* notes */
+.note { display: flex; gap: 12px; padding: 14px 16px; border-radius: var(--r-md); font-size: 14px; color: var(--ink-2); margin-top: 14px; line-height: 1.45; }
+.note i { flex: none; } .note b { color: var(--ink); }
+.note.grey { background: var(--surface-2); } .note.mint { background: var(--mint-tint); } .note.mint i { color: var(--mint-fg); }
+.note.butter { background: var(--butter-tint); } .note.butter i { color: var(--butter-fg); } .note.rose { background: var(--rose-tint); } .note.rose i { color: var(--rose-fg); }
+
+/* pill chips */
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 14px; border-radius: var(--r-pill); background: var(--card); box-shadow: inset 0 0 0 1px var(--border); font-size: 14px; font-weight: 500; color: var(--ink-2); }
+.chip[aria-pressed="true"] { background: var(--ink); color: #fff; box-shadow: none; }
+[hidden] { display: none !important; }
+
+.top { text-align: center; padding-top: 6px; }
+.done { width: 76px; height: 76px; border-radius: 50%; background: var(--mint); color: #fff; display: grid; place-items: center; margin: 0 auto; animation: pop .5s var(--spring); }
+@keyframes pop { from { transform: scale(.6); opacity: 0; } }
+.who { text-align: center; margin-top: 22px; }
+.who img { width: 64px; height: 64px; border-radius: 50%; }
+.stars { display: flex; justify-content: center; gap: 6px; margin: 10px 0 4px; }
+.stars button { width: 50px; height: 50px; display: grid; place-items: center; color: var(--ink-4); }
+.stars button svg { width: 38px; height: 38px; }
+.stars button.on { color: var(--butter); } .stars button.on svg { fill: var(--butter); }
+.center { justify-content: center; }
+
+.toast { position: fixed; left: 50%; top: 18px; z-index: 60; transform: translate(-50%, -150%); background: var(--ink); color: #fff; border-radius: var(--r-pill); padding: 12px 18px; font-size: 14px; font-weight: 600; box-shadow: var(--shadow-float); transition: transform .4s var(--spring); max-width: calc(100% - 32px); }
+.toast:not(.show) { visibility: hidden; transition: transform .4s var(--spring), visibility 0s .4s; }
+.toast.show { transform: translate(-50%, 0); }
+
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="logo" viewBox="0 0 40 40"><rect width="40" height="40" rx="12" fill="#0F172A"/><path d="M8 31 C 12 31, 13 25, 18 25" stroke="#FF5500" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="1 4.2" fill="none"/><path d="M24 8c5.5 0 9 3.9 9 8.6 0 5.6-5.4 9.8-9 12.4-3.6-2.6-9-6.8-9-12.4C15 11.9 18.5 8 24 8Z" fill="#FF5500"/><circle cx="24" cy="16.6" r="3.2" fill="#fff"/></symbol>
+    <symbol id="pin" viewBox="0 0 120 120"><path d="M60 10C88 10 104 30 104 54C104 82 78 102 60 114C42 102 16 82 16 54C16 30 32 10 60 10Z" fill="#34D399"/><path d="M60 10C88 10 104 30 104 54C104 60 103 64 101 68C92 42 74 30 44 30C36 30 30 32 24 35C32 18 44 10 60 10Z" fill="#6EE7B7" opacity=".7"/><path d="M42 56 q6 -7 12 0" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" fill="none"/><path d="M66 56 q6 -7 12 0" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" fill="none"/><path d="M50 70 Q60 80 70 70" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" fill="none"/><circle cx="36" cy="66" r="6" fill="#FF4D6D" opacity=".28"/><circle cx="84" cy="66" r="6" fill="#FF4D6D" opacity=".28"/></symbol>
+    <symbol id="blob" viewBox="0 0 120 120"><path d="M26 64C18 36 42 16 66 20C92 24 108 44 100 70C93 94 70 108 46 100C30 94 30 82 26 64Z" fill="#B9A6FF"/><path d="M40 34C52 24 72 24 86 34C78 30 62 30 50 38Z" fill="#fff" opacity=".5"/><ellipse cx="47" cy="62" rx="4.5" ry="6" fill="#0F172A"/><ellipse cx="73" cy="62" rx="4.5" ry="6" fill="#0F172A"/><circle cx="48.5" cy="60" r="1.6" fill="#fff"/><circle cx="74.5" cy="60" r="1.6" fill="#fff"/><ellipse cx="61" cy="79" rx="5.5" ry="4.5" fill="#0F172A"/><circle cx="35" cy="73" r="6" fill="#FF4D6D" opacity=".3"/><circle cx="85" cy="73" r="6" fill="#FF4D6D" opacity=".3"/></symbol>
+    <symbol id="parcel" viewBox="0 0 120 120"><rect x="16" y="30" width="88" height="74" rx="24" fill="#FF8A4C"/><path d="M16 54 Q60 60 104 54 V52 Q104 30 80 30 H40 Q16 30 16 52Z" fill="#FF9F6B"/><rect x="52" y="30" width="16" height="28" rx="4" fill="#FFD3B8"/><ellipse cx="47" cy="74" rx="4.5" ry="6" fill="#0F172A"/><ellipse cx="73" cy="74" rx="4.5" ry="6" fill="#0F172A"/><circle cx="48.5" cy="72" r="1.6" fill="#fff"/><circle cx="74.5" cy="72" r="1.6" fill="#fff"/><path d="M51 87 Q60 95 69 87" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" fill="none"/></symbol>
+    <symbol id="coin" viewBox="0 0 120 120"><circle cx="60" cy="62" r="44" fill="#FFC94A"/><circle cx="60" cy="62" r="34" fill="none" stroke="#F2A900" stroke-width="3.5"/><path d="M34 40 A34 34 0 0 1 72 30" stroke="#FFE7A3" stroke-width="5" stroke-linecap="round" fill="none"/><ellipse cx="47" cy="60" rx="4.5" ry="6" fill="#0F172A"/><ellipse cx="73" cy="60" rx="4.5" ry="6" fill="#0F172A"/><circle cx="48.5" cy="58" r="1.6" fill="#fff"/><circle cx="74.5" cy="58" r="1.6" fill="#fff"/><path d="M51 73 Q60 81 69 73" stroke="#0F172A" stroke-width="3.5" stroke-linecap="round" fill="none"/></symbol>
+  </defs>
+</svg>
+<div class="app">
+
+  <!-- ============== SIDE MENU (computer) ============== -->
+  <aside class="side" aria-label="Main menu">
+    <a href="02-map-home.html" class="side-brand"><svg aria-hidden="true"><use href="#logo"/></svg>Waydrop</a>
+    <a href="02-map-home.html" class="nav-item "><i data-lucide="map"></i>Map</a>
+    <a href="08c-errand-history.html" class="nav-item active"><i data-lucide="clock-3"></i>Activity</a>
+    <a href="07-wallet.html" class="nav-item "><i data-lucide="wallet"></i>Wallet</a>
+    <a href="02b-notifications.html" class="nav-item "><i data-lucide="bell"></i>Notifications<span class="nav-badge">3</span></a>
+    <a href="08-profile.html" class="nav-item "><i data-lucide="user-round"></i>Me</a>
+    <a href="03-send-errand.html" class="nav-send"><i data-lucide="plus" class="ic-18"></i>Send an errand</a>
+    <div class="side-foot"><img class="avatar" src="img/adaeze.svg" alt=""><div><div class="nm">Adaeze Okafor</div><div class="role">BUK New Site</div></div></div>
+  </aside>
+
+  <!-- ============== MAIN ============== -->
+  <main class="page">
+    <!-- topbar -->
+    <header class="topbar"><a class="icon-btn" href="02-map-home.html" aria-label="Back"><i data-lucide="arrow-left"></i></a><span class="t">Delivered</span></header>
+
+    <div class="content">
+
+      <div class="top"><div class="done"><i data-lucide="check" class="ic-24"></i></div><h1 style="margin-top:14px" id="title"></h1><p class="lede" style="margin:6px 0 0" id="paid"></p></div>
+
+      <section class="card who" style="padding:20px">
+        <img id="photo" alt="">
+        <h1 style="font-size:22px;margin-top:8px" id="ask"></h1>
+        <div class="stars" id="stars" role="radiogroup" aria-label="Rating"></div>
+        <p class="caption" id="label">Tap a star</p>
+
+        <!-- 4–5 stars -->
+        <div id="good" hidden>
+          <div class="chips center" id="tags" style="margin-top:12px"></div>
+          <div class="sec-label" style="text-align:left">Add a tip? <span style="text-transform:none;letter-spacing:0;font-weight:400">100% goes to the runner</span></div>
+          <div class="chips center" id="tips"></div>
+        </div>
+
+        <!-- 1–3 stars -->
+        <div id="bad" hidden style="text-align:left">
+          <div class="sec-label">What went wrong?</div>
+          <div class="chips" id="issues"></div>
+          <div class="input" style="margin-top:12px"><textarea rows="2" placeholder="Anything else? (optional)" aria-label="More details"></textarea></div>
+          <a class="note rose" href="05e-report-a-problem.html"><i data-lucide="life-buoy"></i><span><b>Need a refund or to report it?</b> Open a case with support.</span></a>
+        </div>
+      </section>
+    </div>
+    <!-- main action -->
+    <footer class="footer"><button class="btn btn-dark" id="send" disabled>Send rating</button><a class="btn btn-ghost" href="05d-receipt.html">See receipt</a></footer>
+  </main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- lucide -->
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast.timer); toast.timer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+/* ====================== DATA ====================== */
+/* GET /tasks/:id */
+const task = { item: 'Calculator', paid_to_runner: 450, total: 500, runner: { name: 'Musa', photo_url: 'img/musa.svg' } };
+const praise = ['Quick', 'Friendly', 'Careful with my item', 'Easy to find'];
+const issues = ['Took too long', 'Hard to reach', 'Item not handled well', 'Rude', 'Asked for extra money', 'Other'];
+const tips = [0, 50, 100, 200];
+
+/* ====================== RENDER ====================== */
+const $ = id => document.getElementById(id);
+const naira = n => '₦' + n.toLocaleString('en-NG');
+const LABEL = ['', 'Bad', 'Not great', 'Okay', 'Good', 'Excellent'];
+let stars = 0, tip = 0;
+$('title').textContent = 'Delivered!';
+$('paid').textContent = `Your ${task.item.toLowerCase()} is in your hands. ${task.runner.name} has been paid ${naira(task.paid_to_runner)}.`;
+$('photo').src = task.runner.photo_url;
+$('ask').textContent = `How was ${task.runner.name}?`;
+$('stars').innerHTML = [1, 2, 3, 4, 5].map(i => `<button role="radio" aria-checked="false" aria-label="${i} star${i > 1 ? 's' : ''}" data-v="${i}"><i data-lucide="star"></i></button>`).join('');
+$('tags').innerHTML = praise.map(t => `<button class="chip" aria-pressed="false">${t}</button>`).join('');
+$('issues').innerHTML = issues.map(t => `<button class="chip" aria-pressed="false">${t}</button>`).join('');
+function paintTips() { $('tips').innerHTML = tips.map(t => `<button class="chip" aria-pressed="${t === tip}" data-t="${t}">${t ? naira(t) : 'No tip'}</button>`).join(''); }
+paintTips();
+
+/* ====================== INTERACTIONS ====================== */
+$('stars').addEventListener('click', e => {
+  const b = e.target.closest('[data-v]'); if (!b) return; stars = +b.dataset.v;
+  document.querySelectorAll('#stars button').forEach((x, i) => { x.classList.toggle('on', i < stars); x.setAttribute('aria-checked', String(i + 1 === stars)); });
+  $('label').textContent = LABEL[stars];
+  $('good').hidden = stars <= 3; $('bad').hidden = stars > 3;
+  $('send').disabled = false; $('send').textContent = stars <= 3 ? 'Send feedback' : 'Send rating';
+});
+['tags', 'issues'].forEach(id => $(id).addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true')); }));
+$('tips').addEventListener('click', e => { const b = e.target.closest('[data-t]'); if (b) { tip = +b.dataset.t; paintTips(); } });
+/* POST /tasks/:id/rating { stars, tags, tip, comment } */
+$('send').addEventListener('click', () => { toast('Thanks for the feedback'); location.href = '05d-receipt.html'; });
+
+lucide.createIcons();
+</script>
+</body>
+</html>
